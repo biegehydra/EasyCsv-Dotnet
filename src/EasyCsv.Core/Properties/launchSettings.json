@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "CsvEasy": {
+      "commandName": "Project",
+      "nativeDebugging": false,
+      "sqlDebugging": false
+    }
+  }
+}

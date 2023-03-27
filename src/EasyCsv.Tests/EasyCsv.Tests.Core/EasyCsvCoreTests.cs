@@ -101,7 +101,7 @@ namespace EasyCsv.Tests.Core
             var defaultValues = new Dictionary<string, string> {{"header3", "defaultValue"}};
 
             // Act
-            easyCsv.CreateColumnWithDefaultValue(defaultValues);
+            easyCsv.AddColumns(defaultValues);
 
             // Assert
             var headers = easyCsv.GetHeaders();
@@ -117,7 +117,7 @@ namespace EasyCsv.Tests.Core
             var easyCsv = new EasyCsv.Core.EasyCsv(fileContent);
 
             // Act
-            easyCsv.CreateColumnsWithDefaultValue("header3", "defaultValue");
+            easyCsv.AddColumn("header3", "defaultValue");
 
             // Assert
             var headers = easyCsv.GetHeaders();
@@ -163,12 +163,12 @@ namespace EasyCsv.Tests.Core
         }
 
         [Fact]
-        public void ToList_GeneratesListSuccessfully()
+        public async Task ToList_GeneratesListSuccessfully()
         {
             var fileContent = "header1,header2,header3\nvalue1,value2,value3";
             var easyCsv = new EasyCsv.Core.EasyCsv(fileContent);
 
-            var list = easyCsv.GetRecords<CsvData>();
+            var list = await easyCsv.GetRecords<CsvData>();
 
             foreach (var csvData in list)
             {

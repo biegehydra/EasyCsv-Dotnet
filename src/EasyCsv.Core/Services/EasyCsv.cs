@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using CsvHelper;
+using CsvHelper.Configuration;
 
 [assembly: InternalsVisibleTo("EasyCsv.Files")]
 [assembly: InternalsVisibleTo("EasyCsv.Tests.Files")]
@@ -17,12 +16,15 @@ namespace EasyCsv.Core
 {
     internal class EasyCsv : ICsvService
     {
-        internal bool NormalizeFields { get; set; }
+        private bool NormalizeFields { get; set; }
         public byte[]? FileContentBytes { get; set; }
         public string? FileContentStr { get; set; }
         public List<IDictionary<string, object>>? CsvContent { get; private set; }
 
-        internal EasyCsv() { }
+        internal EasyCsv(bool normalizeFields = false)
+        {
+            NormalizeFields = normalizeFields;
+        }
             
         public EasyCsv(byte[] fileContent, bool normalizeFields = false)
         {
@@ -34,6 +36,24 @@ namespace EasyCsv.Core
 
         public EasyCsv(string fileContent, bool normalizeFields = false)
             : this( Encoding.UTF8.GetBytes(fileContent), normalizeFields)
+        {
+
+        }
+
+        public EasyCsv(Stream fileContentStream, int maxFileSize, bool normalizeFields = false)
+            : this(ReadStreamToEnd(fileContentStream, maxFileSize), normalizeFields)
+        {
+        }
+
+        static byte[] ReadStreamToEnd(Stream stream, int maxFileSize)
+        {
+            using var memoryStream = new MemoryStream(maxFileSize);
+            stream.CopyTo(memoryStream);
+            return memoryStream.ToArray();
+        }
+
+        public EasyCsv(TextReader fileContentReader, bool normalizeFields = false)
+            : this(fileContentReader.ReadToEnd(), normalizeFields)
         {
 
         }
@@ -61,18 +81,15 @@ namespace EasyCsv.Core
             });
         }
 
-        /// <summary>
-        /// Gets the headers of the CSV file.
-        /// </summary>
-        /// <returns>An IEnumerable of string containing the CSV headers.</returns>
+
         public List<string>? GetHeaders()
         {
             return CsvContent?.FirstOrDefault()?.Keys.ToList();
         }
 
-        public void ReplaceHeaderRow(List<string> newHeaderFields)
+        public ICsvService ReplaceHeaderRow(List<string> newHeaderFields)
         {
-            if (CsvContent == null) return;
+            if (CsvContent == null) return this;
             var oldHeaders = GetHeaders()?.ToList();
             if (newHeaderFields.Count() != oldHeaders?.Count())
             {
@@ -97,17 +114,13 @@ namespace EasyCsv.Core
             }
 
             CsvContent = updatedCsvContent;
+            return this;
+
         }
 
-        /// <summary>
-        /// Removes the column of the old header field and upserts all it's values to all the rows of the new header field. CSV.
-        /// </summary>
-        /// <param name="oldHeaderField">The column that will be removed.</param>
-        /// <param name="newHeaderField">The column that will contain all the values of the old column.</param>
-        
-        public void ReplaceColumn(string oldHeaderField, string newHeaderField)
+        public ICsvService ReplaceColumn(string oldHeaderField, string newHeaderField)
         {
-            if (CsvContent == null) return;
+            if (CsvContent == null) return this;
 
             var normalizedNewValue = Normalize(newHeaderField);
             foreach (var row in CsvContent)
@@ -116,17 +129,33 @@ namespace EasyCsv.Core
                 row.Remove(oldHeaderField);
                 row[normalizedNewValue] = temp;
             }
+            return this;
         }
 
-        /// <summary>
-        /// Adds or replaces all the values for multiples columns in the CSV.
-        /// </summary>
-        /// <param name="defaultValues">Header Field, Default Value. Dictionary of the header fields of the columns you want to give a default value to.</param>
-        /// /// <param name="upsert">Determines whether or not an exception is thrown if the column already exists.</param>
-
-        public void CreateColumnWithDefaultValue(Dictionary<string, string> defaultValues, bool upsert = true)
+        public ICsvService AddColumn(string header, string value, bool upsert = true)
         {
-            if (CsvContent == null) return;
+            if (CsvContent == null) return this;
+
+            var normalizedDefaultHeader = Normalize(header);
+            foreach (var record in CsvContent)
+            {
+                if (upsert)
+                {
+                    record[normalizedDefaultHeader] = value;
+                    continue;
+                }
+                if (record.ContainsKey(normalizedDefaultHeader))
+                {
+                    throw new ArgumentException($"Value for key '{header}' already exists.");
+                }
+                record.Add(normalizedDefaultHeader, value);
+            }
+            return this;
+        }
+
+        public ICsvService AddColumns(Dictionary<string, string> defaultValues, bool upsert = true)
+        {
+            if (CsvContent == null) return this;
 
             foreach (var record in CsvContent)
             {
@@ -145,50 +174,18 @@ namespace EasyCsv.Core
                     record.Add(normalizedDefaultHeader, value);
                 }
             }
+            return this;
         }
 
-        /// <summary>
-        /// Adds or replaces all the values for a given column in the CSV.
-        /// </summary>
-        /// <param name="header">The header field of the column you are giving a default value to.</param>
-        /// <param name="value">The value you want every record in a column to have.</param>
-
-        public void CreateColumnsWithDefaultValue(string header, string value, bool upsert = true)
-        {
-            if (CsvContent == null) return;
-
-            var normalizedDefaultHeader = Normalize(header);
-            foreach (var record in CsvContent)
-            {
-                if (upsert)
-                {
-                    record[normalizedDefaultHeader] = value;
-                    continue;
-                }
-                if (record.ContainsKey(normalizedDefaultHeader))
-                {
-                    throw new ArgumentException($"Value for key '{header}' already exists.");
-                }
-                record.Add(normalizedDefaultHeader, value);
-            }
-        }
-
-        /// <summary>
-        /// Removes rows from the CSV content that don't match the predicate.
-        /// </summary>
-        public void FilterRows(Func<IDictionary<string, object>, bool> predicate)
+        public ICsvService FilterRows(Func<IDictionary<string, object>, bool> predicate)
         {
             CsvContent = CsvContent?.Where(predicate).ToList();
+            return this;
         }
 
-
-        /// <summary>
-        /// Replace values in a column based on the valueMapping dictionary
-        /// </summary>
-        /// <param name="headerField">The header field of the column to do value mapping.</param>
-        public void MapValuesInColumn(string headerField, Dictionary<object, object> valueMapping)
+        public ICsvService MapValuesInColumn(string headerField, Dictionary<object, object> valueMapping)
         {
-            if (CsvContent == null) return;
+            if (CsvContent == null) return this;
 
             foreach (var row in CsvContent)
             {
@@ -197,66 +194,32 @@ namespace EasyCsv.Core
                     row[headerField] = valueMapping[row[headerField]];
                 }
             }
+            return this;
         }
 
-        /// <summary>
-        /// Sorts the csv based on provided header field.
-        /// </summary>
-        /// <param name="headerField">The header field that you would like to use as the basis of the sorting.</param>
-
-        public void SortCsvByColumnData(string headerField, bool ascending = true)
+        public ICsvService SortCsv(string headerField, bool ascending = true)
         {
-            if (CsvContent == null) return;
+            if (CsvContent == null) return this;
 
             CsvContent = ascending
                 ? CsvContent.OrderBy(row => row[headerField]).ToList()
                 : CsvContent.OrderByDescending(row => row[headerField]).ToList();
+            return this;
         }
 
-        /// <summary>
-        /// Sorts the csv based on provided header field.
-        /// </summary>
-        /// <param name="headerField">The header field that you would like to use as the basis of the sorting.</param>
-
-        public void SortCsv(string headerField, Func<IDictionary<string, object>, bool> predicate, bool ascending = true)
+        public ICsvService SortRows<TKey>(Func<IDictionary<string, object>, TKey> keySelector, bool ascending = true)
         {
-            if (CsvContent == null) return;
-
-            CsvContent = ascending
-                ? CsvContent.OrderBy(row => row[headerField]).ToList()
-                : CsvContent.OrderByDescending(row => row[headerField]).ToList();
-        }
-
-        /// <summary>
-        /// Sorts the rows in the CSV content based on a custom key selector function.
-        /// </summary>
-        /// <typeparam name="TKey">The type of the key returned by the keySelector function.</typeparam>
-        /// <param name="keySelector">A function that defines how to extract a key from each row for comparison.</param>
-        /// <param name="ascending">A boolean value indicating whether the rows should be sorted in ascending order. If false, the rows will be sorted in descending order. The default value is true.</param>
-        /// <example>
-        /// This example sorts the rows by the length of the string in the "FieldName" column in descending order:
-        /// <code>
-        /// csvService.SortRows(row => row["FieldName"].ToString().Length, ascending: false);
-        /// </code>
-        /// </example>
-
-        public void SortRows<TKey>(Func<IDictionary<string, object>, TKey> keySelector, bool ascending = true)
-        {
-            if (CsvContent == null) return;
+            if (CsvContent == null) return this;
 
             CsvContent = ascending
                 ? CsvContent.OrderBy(keySelector).ToList()
                 : CsvContent.OrderByDescending(keySelector).ToList();
+            return this;
         }
 
-        /// <summary>
-        /// Removes columns from the CSV content.
-        /// </summary>
-        /// <param name="headerFields">The header fields of the columns you want to remove.</param>
-
-        public void RemoveColumns(List<string> headerFields)
+        public ICsvService RemoveColumns(List<string> headerFields)
         {
-            if (CsvContent == null) return;
+            if (CsvContent == null) return this;
             if (headerFields.Any(x => !GetHeaders()?.Contains(x) ?? true))
                 throw new ArgumentException($"At least one of the columns requested for removal did not exist..");
             foreach (var record in CsvContent)
@@ -266,27 +229,23 @@ namespace EasyCsv.Core
                     record.Remove(field);
                 }
             }
+            return this;
         }
 
-        /// <summary>
-        /// Removes a column from the CSV content.
-        /// </summary>
-        /// <param name="headerField">The header field of the column you want to remove.</param>
 
-        public void RemoveColumn(string headerField)
+        public ICsvService RemoveColumn(string headerField)
         {
-            if (CsvContent == null) return;
+            if (CsvContent == null) return this;
             if (!GetHeaders()?.Contains(headerField) ?? true)
                 throw new ArgumentException($"No column existed with headerField: {headerField}.");
             foreach (var record in CsvContent)
             {
                 record.Remove(headerField);
             }
+
+            return this;
         }
 
-        /// <summary>
-        /// Calculates the <code>FileContentStr</code> amd <code>FileContentBytes</code>.
-        /// </summary>
         
         public async Task CalculateFileContent()
         {
@@ -311,69 +270,120 @@ namespace EasyCsv.Core
         /// Gets the records of the CSV content as a list of objects of type T.
         /// </summary>
         /// <typeparam name="T">The type of objects to return.</typeparam>
+        /// <param name="strict">Determine whether property matching is case sensitive</param>
         /// <returns>A list of objects of type T representing the CSV records.</returns>
-        
-        public List<T> GetRecords<T>() where T : new()
+        public async Task<List<T>> GetRecords<T>(bool strict = false)
         {
-            if (CsvContent == null) return new List<T>();
+            var records = new List<T>();
+            if (CsvContent == null) return records;
 
-            List<T> resultList = new List<T>(CsvContent.Count);
-            Dictionary<string, PropertyInfo> propertyCache = new Dictionary<string, PropertyInfo>();
-            Dictionary<string, bool> conversionCache = new Dictionary<string, bool>();
-            var tProperties = typeof(T).GetProperties();
-            foreach (IDictionary<string, object> csvRow in CsvContent)
+            await CalculateFileContent();
+            if (string.IsNullOrEmpty(FileContentStr)) return records;
+
+            if (strict)
             {
-                var obj = new T();
-                foreach (KeyValuePair<string, object> csvField in csvRow)
-                {
-                    if (!propertyCache.TryGetValue(csvField.Key, out PropertyInfo? property))
-                    {
-                        var newPropertyCacheItem = tProperties.FirstOrDefault(p => string.Equals(p.Name, csvField.Key, StringComparison.OrdinalIgnoreCase));
-                        if (newPropertyCacheItem == null) continue;
-                        propertyCache[csvField.Key] = newPropertyCacheItem;
-                        property = newPropertyCacheItem;
-                    }
-
-                    if (property == null) continue;
-
-                    Type propertyType = property.PropertyType;
-                    if (csvField.Value == null) continue;
-
-                    Type entryValueType = csvField.Value.GetType();
-
-                    if (propertyType.IsAssignableFrom(entryValueType))
-                    {
-                        property.SetValue(obj, csvField.Value);
-                        continue;
-                    }
-                    if (entryValueType != typeof(string)) continue;
-
-                    TypeConverter converter = TypeDescriptor.GetConverter(propertyType);
-
-                    if (conversionCache.TryGetValue(csvField.Key, out bool convertible))
-                    {
-                        object convertedValue = converter.ConvertFromInvariantString((string)csvField.Value)!;
-                        property.SetValue(obj, convertedValue);
-                    }
-                    else
-                    {
-                        if (!converter.CanConvertFrom(typeof(string))) continue;
-
-                        try
-                        {
-                            object convertedValue = converter.ConvertFromInvariantString((string)csvField.Value)!;
-                            property.SetValue(obj, convertedValue);
-                            conversionCache[csvField.Key] = true;
-                        }
-                        catch (Exception)
-                        {
-                            conversionCache[csvField.Key] = false;
-                        }
-                    }
-                }
-                resultList.Add(obj);
+                await ReadRecordsStrict(records);
             }
-            return resultList;
+            else
+            {
+                await ReadRecordsNotStrict(records);
+            }
+            return records;
+        }
+
+        /// <summary>
+        /// Gets the records of the CSV content as a list of objects of type T.
+        /// </summary>
+        /// <typeparam name="T">The type of objects to return.</typeparam>
+        /// <param name="prepareHeaderForMatch">Determine whether property matching is case sensitive</param>
+        /// <example><code>
+        /// PrepareHeaderForMatch = args => args.Header.ToLower();
+        /// </code></example>
+        /// <returns>A list of objects of type T representing the CSV records.</returns>
+        public async Task<List<T>> GetRecords<T>(PrepareHeaderForMatch prepareHeaderForMatch)
+        {
+            var records = new List<T>();
+            if (CsvContent == null) return records;
+
+            await CalculateFileContent();
+            if (string.IsNullOrEmpty(FileContentStr)) return records;
+            await ReadRecordsCustom(records, prepareHeaderForMatch);
+            return records;
+        }
+
+        /// <summary>
+        /// Gets the records of the CSV content as a list of objects of type T.
+        /// </summary>
+        /// <typeparam name="T">The type of objects to return.</typeparam>
+        /// <param name="csvConfig">The configuration for reading the csv into records</param>
+        /// <returns>A list of objects of type T representing the CSV records.</returns>
+        public async Task<List<T>> GetRecords<T>(CsvConfiguration csvConfig)
+        {
+            var records = new List<T>();
+            if (CsvContent == null) return records;
+
+            await CalculateFileContent();
+            if (string.IsNullOrEmpty(FileContentStr)) return records;
+            await ReadRecordsCustom(records, csvConfig);
+            return records;
+        }
+
+        private async Task ReadRecordsStrict<T>(List<T> records)
+        {
+            using (var reader = new StreamReader(new MemoryStream(FileContentBytes!), Encoding.UTF8))
+            using (var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture))
+            {
+                await foreach (var record in csvReader.GetRecordsAsync<T>())
+                {
+                    records.Add(record);
+                }
+            }
+        }
+        private async Task ReadRecordsNotStrict<T>(List<T> records)
+        {
+            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                PrepareHeaderForMatch = args => args.Header.ToLower(),
+            };
+            using (var reader = new StreamReader(new MemoryStream(FileContentBytes!), Encoding.UTF8))
+            using (var csvReader = new CsvReader(reader, config))
+            {
+                await foreach (var record in csvReader.GetRecordsAsync<T>())
+                {
+                    records.Add(record);
+                }
+            }
+        }
+
+        private async Task ReadRecordsCustom<T>(List<T> records, PrepareHeaderForMatch prepareHeaderForMatch)
+        {
+            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                PrepareHeaderForMatch = prepareHeaderForMatch,
+            };
+            using (var reader = new StreamReader(new MemoryStream(FileContentBytes!), Encoding.UTF8))
+            using (var csvReader = new CsvReader(reader, config))
+            {
+                await foreach (var record in csvReader.GetRecordsAsync<T>())
+                {
+                    records.Add(record);
+                }
+            }
+        }
+        private async Task ReadRecordsCustom<T>(List<T> records, CsvConfiguration csvConfig)
+        {
+            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                PrepareHeaderForMatch = args => args.Header.ToLower(),
+            };
+            using (var reader = new StreamReader(new MemoryStream(FileContentBytes!), Encoding.UTF8))
+            using (var csvReader = new CsvReader(reader, config))
+            {
+                await foreach (var record in csvReader.GetRecordsAsync<T>())
+                {
+                    records.Add(record);
+                }
+            }
         }
 
         private string Normalize(string header)

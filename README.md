@@ -42,8 +42,12 @@ public void ConfigureServices(IServiceCollection services)
 The is automatically done when you use the 'IEasyCsvServiceFactory' or 'IEasyFileCsvServiceFactory' factory to create your 'ICsvService'.
 
 ```csharp
+[Inject] private IEasyFileCsvServiceFactory EasyCsvServiceFactory { get; set; }
+
+=================================================================================================================
+
 IBrowserFile file = files[0];
-var easyCsv = await EasyFileCsvServiceFactory.CreateFromIBrowserFileAsync(file)
+var easyCsv = await EasyCsvServiceFactory.CreateFromIBrowserFileAsync(file)
 // You can access the FileContentStr, FileContentBytes, and create C# Objects using GetRecords<T> at this point
 ```
 ### Manipulate CSV data

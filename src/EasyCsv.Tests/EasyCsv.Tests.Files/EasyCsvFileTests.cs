@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Moq;
 using System.Text;
+using EasyCsv.Core.Configuration;
 using EasyCsv.Files;
 using Microsoft.AspNetCore.Components.Forms;
 
@@ -8,6 +9,7 @@ namespace EasyCsv.Tests.Files
 {
     public class EasyCsvFileTests
     {
+        private static EasyCsvConfiguration DefaultConfig => EasyCsvConfiguration.Instance;
         private const string SingleLineCsv = "header1,header2\nvalue1,value2";
         [Fact]
         public async Task TryReadFormFileAsync_ReadsFileContentSuccessfully()
@@ -19,14 +21,14 @@ namespace EasyCsv.Tests.Files
             formFileMock.Setup(file => file.CopyToAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
                 .Callback((Stream targetStream, CancellationToken cancellationToken) => stream.CopyTo(targetStream));
 
-            var easyCsv = new Core.EasyCsv();
+            var easyCsv = new Core.EasyCsv(DefaultConfig);
 
             // Act
             var result = await easyCsv.TryReadFileAsync(formFileMock.Object, 1024 * 1024 * 15);
 
             // Assert
             Assert.True(result);
-            Assert.Single(easyCsv.CsvContent);
+            Assert.Single(easyCsv.Content);
         }
 
         [Fact]
@@ -40,14 +42,14 @@ namespace EasyCsv.Tests.Files
             browserFileMock.Setup(file => file.OpenReadStream(It.IsAny<long>(), It.IsAny<CancellationToken>())).Returns(stream);
             
 
-            var easyCsv = new Core.EasyCsv();
+            var easyCsv = new Core.EasyCsv(DefaultConfig);
 
             // Act
             var result = await easyCsv.TryReadFileAsync(browserFileMock.Object, 1024 * 1024 * 15);
 
             // Assert
             Assert.True(result);
-            Assert.Single(easyCsv.CsvContent!);
+            Assert.Single(easyCsv.Content!);
         }
     }
 }

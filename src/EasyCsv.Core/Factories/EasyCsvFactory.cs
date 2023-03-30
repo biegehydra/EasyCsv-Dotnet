@@ -7,7 +7,6 @@ using System.Text;
 using System.Threading.Tasks;
 using EasyCsv.Core.Configuration;
 
-[assembly: InternalsVisibleTo("EasyCsv")]
 [assembly: InternalsVisibleTo("EasyCsv.Tests.Core")]
 namespace EasyCsv.Core
 {

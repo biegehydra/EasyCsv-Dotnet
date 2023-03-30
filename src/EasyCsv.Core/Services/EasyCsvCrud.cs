@@ -26,7 +26,8 @@ namespace EasyCsv.Core
 
             return this;
         }
-        public IEasyCsv InsertRow(List<string> rowValues, int index = -1)
+
+        public IEasyCsv InsertRecord(List<string> rowValues, int index = -1)
         {
             var headers = GetHeaders();
             if (Content == null) return this;
@@ -57,7 +58,7 @@ namespace EasyCsv.Core
             return row;
         }
 
-        public IEasyCsv UpsertRow(IDictionary<string, object> row)
+        public IEasyCsv UpsertRecord(IDictionary<string, object> row)
         {
             if (Content == null) return this;
             var index = Content.FindIndex(r => RowsEqual(r, row));
@@ -73,17 +74,17 @@ namespace EasyCsv.Core
             return this;
         }
 
-        public IEasyCsv UpsertRows(IEnumerable<IDictionary<string, object>> rows)
+        public IEasyCsv UpsertRecords(IEnumerable<IDictionary<string, object>> rows)
         {
             foreach (var row in rows)
             {
-                UpsertRow(row);
+                UpsertRecord(row);
             }
 
             return this;
         }
 
-        public IDictionary<string, object>? GetRow(int index)
+        public IDictionary<string, object>? GetRecord(int index)
         {
             if (Content == null || index < 0 || index >= Content.Count)
             {
@@ -93,13 +94,13 @@ namespace EasyCsv.Core
             return Content[index];
         }
 
-        public T? GetRow<T>(int index) where T : class
+        public T? GetRecord<T>(int index) where T : class
         {
             if (Content == null || index < 0 || index >= Content.Count)
             {
                 return null;
             }
-            var row = GetRow(index);
+            var row = GetRecord(index);
             if (row == null) return null;
             var content = new List<IDictionary<string, object>>() { row };
             var easyCsv = new EasyCsv(content, Config);
@@ -109,7 +110,7 @@ namespace EasyCsv.Core
             return csvReader.GetRecord<T>();
         }
 
-        public IEasyCsv UpdateRow(int index, IDictionary<string, object> newRow)
+        public IEasyCsv UpdateRecord(int index, IDictionary<string, object> newRow)
         {
             if (Content == null || index < 0 || index >= Content.Count)
             {
@@ -120,7 +121,7 @@ namespace EasyCsv.Core
             return this;
         }
 
-        public IEasyCsv DeleteRow(int index)
+        public IEasyCsv DeleteRecord(int index)
         {
             if (Content == null || index < 0 || index >= Content.Count)
             {

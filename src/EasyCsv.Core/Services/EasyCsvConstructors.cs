@@ -44,7 +44,7 @@ namespace EasyCsv.Core
 
         }
 
-        private EasyCsv(List<IDictionary<string, object>> csvContent, EasyCsvConfiguration config)
+        internal EasyCsv(List<IDictionary<string, object>> csvContent, EasyCsvConfiguration config)
         {
             Content = csvContent;
             Config = config;

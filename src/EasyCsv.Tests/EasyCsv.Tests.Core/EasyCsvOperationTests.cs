@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text;
+using EasyCsv.Core;
 using EasyCsv.Core.Configuration;
 
 namespace EasyCsv.Tests.Core
@@ -166,6 +167,72 @@ namespace EasyCsv.Tests.Core
             }
             emptyProperties = emptyProps;
             return emptyProps.Count > 0;
+        }
+
+        private static IEasyCsv CreateCsvWithSampleData()
+        {
+            var data = "Header1,Header2\nValue1,Value2\nValue3,Value4";
+
+            return new EasyCsv.Core.EasyCsv(data, DefaultConfig);
+        }
+
+        [Fact]
+        public void Combine_TwoEasyCsvInstances_CombinesData()
+        {
+            // Arrange
+            var csv1 = CreateCsvWithSampleData();
+            var csv2 = CreateCsvWithSampleData();
+
+            // Act
+            var result = csv1.Combine(csv2);
+
+            // Assert
+            Assert.Equal(4, result.Content!.Count);
+            Assert.Equal("Value1", result.Content[0]["Header1"]);
+            Assert.Equal("Value3", result.Content[1]["Header1"]);
+            Assert.Equal("Value1", result.Content[2]["Header1"]);
+            Assert.Equal("Value3", result.Content[3]["Header1"]);
+        }
+
+        [Fact]
+        public void Combine_TwoEasyCsvInstancesWithMismatchedHeaders_DoesNotCombineData()
+        {
+            // Arrange
+            var csv1 = CreateCsvWithSampleData();
+            var data = "Header3,Header4\nValue5,Value6";
+            var csv2 = new EasyCsv.Core.EasyCsv(data, DefaultConfig);
+
+            // Act
+            var result = csv1.Combine(csv2);
+
+            // Assert
+            Assert.Equal(2, result.Content!.Count);
+            Assert.Equal("Value1", result.Content[0]["Header1"]);
+            Assert.Equal("Value3", result.Content[1]["Header1"]);
+        }
+
+        [Fact]
+        public void Combine_ListOfEasyCsvInstances_CombinesData()
+        {
+            // Arrange
+            var csv1 = CreateCsvWithSampleData();
+            var csv2 = CreateCsvWithSampleData();
+            var csv3 = CreateCsvWithSampleData();
+            var csvList = new List<IEasyCsv?> { csv1, csv2, csv3 };
+
+            // Act
+            var result = csv1.Combine(csvList);
+
+            // Assert
+            Assert.Equal(8, result.Content.Count);
+            Assert.Equal("Value1", result.Content[0]["Header1"]);
+            Assert.Equal("Value3", result.Content[1]["Header1"]);
+            Assert.Equal("Value1", result.Content[2]["Header1"]);
+            Assert.Equal("Value3", result.Content[3]["Header1"]);
+            Assert.Equal("Value1", result.Content[4]["Header1"]);
+            Assert.Equal("Value3", result.Content[5]["Header1"]);
+            Assert.Equal("Value1", result.Content[6]["Header1"]);
+            Assert.Equal("Value3", result.Content[7]["Header1"]);
         }
     }
 }

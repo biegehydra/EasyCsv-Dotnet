@@ -168,11 +168,6 @@ namespace EasyCsv.Core
             return this;
         }
 
-        public IEasyCsv Clear()
-        {
-            Content?.Clear();
-            return this;
-        }
 
         public async Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(bool caseInsensitive)
         {
@@ -192,9 +187,43 @@ namespace EasyCsv.Core
             return await FromObjectsAsync(records, Config);
         }
 
-        private static bool RowsEqual(IDictionary<string, object> row1, IDictionary<string, object> row2)
+        public IEasyCsv Clear()
         {
-            return row1.Count == row2.Count && !row1.Except(row2).Any();
+            Content?.Clear();
+            return this;
+        }
+
+
+        public IEasyCsv Combine(IEasyCsv? otherCsv)
+        {
+            if (Content == null) return this;
+            if (otherCsv == null || otherCsv.Content == null) return this;
+
+            var firstHeaders = GetHeaders();
+            var secondHeaders = otherCsv.GetHeaders();
+
+            if (secondHeaders == null) return this;
+            if (!firstHeaders?.SequenceEqual(secondHeaders) ?? true) return this;
+
+            Content.AddRange(otherCsv.Content);
+            return this;
+        }
+
+        public IEasyCsv Combine(List<IEasyCsv?>? otherCsvs)
+        {
+            if (otherCsvs == null)
+            {
+
+            }
+            if (Content == null) return this;
+            if (otherCsvs == null || otherCsvs.Count <= 0) return this;
+            foreach (var otherCsv in otherCsvs)
+            {
+                Combine(otherCsv);
+            }
+
+
+            return this;
         }
     }
 }

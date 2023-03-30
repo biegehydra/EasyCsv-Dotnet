@@ -10,7 +10,7 @@ namespace EasyCsv.Core
         /// <param name="rowValues">The row to insert, represented as an list of strings representing the values of the row.</param>
         /// <param name="index">The index at which to insert the row. If the index is -1, the row will be appended to the end of the CSV.</param>
         /// <returns>An IEasyCsv instance with the row inserted.</returns>
-        IEasyCsv InsertRow(List<string> rowValues, int index = -1);
+        IEasyCsv InsertRecord(List<string> rowValues, int index = -1);
 
 
         /// <summary>
@@ -18,7 +18,7 @@ namespace EasyCsv.Core
         /// </summary>
         /// <param name="row">The row to update or insert, represented as an IDictionary of field names and their corresponding values.</param>
         /// <returns>An IEasyCsv instance with the row updated or inserted.</returns>
-        IEasyCsv UpsertRow(IDictionary<string, object> row);
+        IEasyCsv UpsertRecord(IDictionary<string, object> row);
 
 
         /// <summary>
@@ -26,7 +26,7 @@ namespace EasyCsv.Core
         /// </summary>
         /// <param name="rows">An IEnumerable of rows to update or insert, each represented as an IDictionary of field names and their corresponding values.</param>
         /// <returns>An IEasyCsv instance with the rows updated or inserted.</returns>
-        IEasyCsv UpsertRows(IEnumerable<IDictionary<string, object>> rows);
+        IEasyCsv UpsertRecords(IEnumerable<IDictionary<string, object>> rows);
 
 
 
@@ -35,7 +35,7 @@ namespace EasyCsv.Core
         /// </summary>
         /// <param name="index">Index of the row you want.</param>
         /// <returns>A <code>IDictionary string, object</code> representing properties and values of row. </returns>
-        IDictionary<string, object>? GetRow(int index);
+        IDictionary<string, object>? GetRecord(int index);
 
 
 
@@ -45,7 +45,7 @@ namespace EasyCsv.Core
         /// <param name="index">Index of the row you want.</param>
         /// <typeparam name="T">The type of object the row will be read into</typeparam>
         /// <returns>A <code>IDictionary string, object</code> representing properties and values of row. </returns>
-        T? GetRow<T>(int index) where T : class;
+        T? GetRecord<T>(int index) where T : class;
 
 
 
@@ -56,7 +56,7 @@ namespace EasyCsv.Core
         /// <param name="newRow">The row to update or insert, represented as an IDictionary of field names and their corresponding values.</param>
         /// <remarks>Very prone to break. Not recommended to use right now. Better implementation will be added that will probably create breaking change</remarks>
         /// <returns></returns>
-        IEasyCsv UpdateRow(int index, IDictionary<string, object> newRow);
+        IEasyCsv UpdateRecord(int index, IDictionary<string, object> newRow);
 
 
 
@@ -65,7 +65,7 @@ namespace EasyCsv.Core
         /// </summary>
         /// <param name="index">Index of row to delete</param>
         /// <returns></returns>
-        IEasyCsv DeleteRow(int index);
+        IEasyCsv DeleteRecord(int index);
 
     }
 }

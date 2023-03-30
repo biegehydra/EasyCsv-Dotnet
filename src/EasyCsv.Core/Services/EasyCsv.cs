@@ -27,6 +27,10 @@ namespace EasyCsv.Core
             return Content?.Any(r => RowsEqual(r, row)) ?? false;
         }
 
+        private static bool RowsEqual(IDictionary<string, object> row1, IDictionary<string, object> row2)
+        {
+            return row1.Count == row2.Count && !row1.Except(row2).Any();
+        }
 
         public List<string>? GetHeaders()
         {
@@ -59,6 +63,7 @@ namespace EasyCsv.Core
             var clonedContent = Content?.Select(row => (dynamic)row).Select(x => (IDictionary<string, object>)x).ToList();
             return new EasyCsv(clonedContent!, Config);
         }
+
 
         private string Normalize(string header)
         {

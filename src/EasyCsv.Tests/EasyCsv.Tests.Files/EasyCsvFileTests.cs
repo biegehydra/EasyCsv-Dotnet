@@ -28,7 +28,7 @@ namespace EasyCsv.Tests.Files
 
             // Assert
             Assert.True(result);
-            Assert.Single(easyCsv.Content);
+            Assert.Single(easyCsv.CsvContent);
         }
 
         [Fact]
@@ -49,7 +49,7 @@ namespace EasyCsv.Tests.Files
 
             // Assert
             Assert.True(result);
-            Assert.Single(easyCsv.Content!);
+            Assert.Single(easyCsv.CsvContent!);
         }
     }
 }

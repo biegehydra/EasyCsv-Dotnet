@@ -12,14 +12,14 @@ namespace EasyCsv.Core
 {
     public static class EasyCsvFactory
     {
-        private static IEasyCsv? NullOrEasyCsv(IEasyCsv? easyCsv) => easyCsv?.Content == null || easyCsv.Content.Count < 0 ? null : easyCsv;
+        private static IEasyCsv? NullOrEasyCsv(IEasyCsv? easyCsv) => easyCsv?.CsvContent == null || easyCsv.CsvContent.Count < 0 ? null : easyCsv;
         private static EasyCsvConfiguration GlobalConfig => EasyCsvConfiguration.Instance;
         private static EasyCsvConfiguration UserConfigOrGlobalConfig(EasyCsvConfiguration? userConfig) => userConfig ?? GlobalConfig;
 
         /// <summary>
         /// Creates <code>ICsvService</code> from <code>byte[]</code> synchronously
         /// </summary>
-        /// <param name="fileContentBytes">Content of the CSV file</param>
+        /// <param name="fileContentBytes">CsvContent of the CSV file</param>
         /// <param name="config">Determines whether to normalize fields. Default normalization makes them all lower, you can also define custom normalization methods</param>
         /// <returns><code>ICsvService</code></returns>
         public static IEasyCsv? FromBytes(byte[] fileContentBytes, EasyCsvConfiguration? config = null)
@@ -32,7 +32,7 @@ namespace EasyCsv.Core
         /// <summary>
         /// Creates <code>ICsvService</code> from <code>byte[]</code> as a background task
         /// </summary>
-        /// <param name="fileContentBytes">Content of CSV</param>
+        /// <param name="fileContentBytes">CsvContent of CSV</param>
         /// <param name="config">Determines whether to normalize fields. Default normalization makes them all lower, you can also define custom normalization methods</param>
         /// <returns><code>ICsvService</code></returns>
         /// <remarks>
@@ -47,7 +47,7 @@ namespace EasyCsv.Core
         /// <summary>
         /// Creates <code>ICsvService</code> from <code>string</code> synchronously
         /// </summary>
-        /// <param name="fileContentStr">Content of CSV</param>
+        /// <param name="fileContentStr">CsvContent of CSV</param>
         /// <param name="config">Determines whether to normalize fields. Default normalization makes them all lower, you can also define custom normalization methods</param>
         /// <returns><code>ICsvService</code></returns>
         public static IEasyCsv? FromString(string fileContentStr, EasyCsvConfiguration? config = null)
@@ -60,7 +60,7 @@ namespace EasyCsv.Core
         /// <summary>
         /// Creates <code>ICsvService</code> from <code>string</code> as a background task
         /// </summary>
-        /// <param name="fileContentStr">Content of CSV</param>
+        /// <param name="fileContentStr">CsvContent of CSV</param>
         /// <param name="config">Determines whether to normalize fields. Default normalization makes them all lower, you can also define custom normalization methods</param>
         /// <returns><code>ICsvService</code></returns>
         /// <remarks>

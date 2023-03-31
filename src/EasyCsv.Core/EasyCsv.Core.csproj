@@ -83,6 +83,7 @@
 	<ItemGroup>
 	  <Folder Include="docs\" />
 	  <Folder Include="Configuration\" />
+	  <Folder Include="Types\" />
 	</ItemGroup>
 	<ItemGroup>
 	  <None Include="Icon.png" Pack="true" PackagePath="\" />

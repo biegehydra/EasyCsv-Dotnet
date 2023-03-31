@@ -16,7 +16,7 @@ namespace EasyCsv.Tests.Core
 
             // Assert
             Assert.NotNull(easyCsv);
-            Assert.Single(easyCsv.Content!);
+            Assert.Single(easyCsv.CsvContent!);
         }
 
         [Fact]
@@ -30,7 +30,7 @@ namespace EasyCsv.Tests.Core
 
             // Assert
             Assert.NotNull(easyCsv);
-            Assert.Single(easyCsv.Content!);
+            Assert.Single(easyCsv.CsvContent!);
         }
 
         [Fact]
@@ -44,7 +44,7 @@ namespace EasyCsv.Tests.Core
 
             // Assert
             Assert.NotNull(easyCsv);
-            Assert.Single(easyCsv.Content!);
+            Assert.Single(easyCsv.CsvContent!);
         }
 
         [Fact]
@@ -58,7 +58,7 @@ namespace EasyCsv.Tests.Core
 
             // Assert
             Assert.NotNull(easyCsv);
-            Assert.Single(easyCsv.Content!);
+            Assert.Single(easyCsv.CsvContent!);
         }
     }
 }

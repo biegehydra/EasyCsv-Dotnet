@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using EasyCsv.Core.Configuration;
 
@@ -45,15 +44,9 @@ namespace EasyCsv.Core
 
         }
 
-        internal EasyCsv(List<IDictionary<string, object>> csvContent, EasyCsvConfiguration config)
+        internal EasyCsv(List<CsvRow> csvContent, EasyCsvConfiguration config)
         {
-            Content = CloneContent(csvContent as List<IDictionary<string, object>>);
-            Config = config;
-            CalculateContent();
-        }
-
-        internal EasyCsv(IEnumerable<dynamic> csvContent, EasyCsvConfiguration config)
-        {
+            CsvContent = CloneContent(csvContent);
             Config = config;
             CalculateContent();
         }

@@ -72,11 +72,11 @@ namespace EasyCsv.Tests.Core
         private static void AssertValidEasyCsv(IEasyCsv easyCsv)
         {
             Assert.NotNull(easyCsv);
-            Assert.Single(easyCsv.Content!);
-            Assert.Contains(easyCsv.Content!, x => x.ContainsKey("header1"));
-            Assert.Contains(easyCsv.Content!, x => x.ContainsKey("header2"));
-            Assert.Contains(easyCsv.Content!, x => x.Values.Contains("value1"));
-            Assert.Contains(easyCsv.Content!, x => x.Values.Contains("value2"));
+            Assert.Single(easyCsv.CsvContent!);
+            Assert.Contains(easyCsv.CsvContent!, x => x.ContainsKey("header1"));
+            Assert.Contains(easyCsv.CsvContent!, x => x.ContainsKey("header2"));
+            Assert.Contains(easyCsv.CsvContent!, x => x.Values.Contains("value1"));
+            Assert.Contains(easyCsv.CsvContent!, x => x.Values.Contains("value2"));
         }
     }
 }

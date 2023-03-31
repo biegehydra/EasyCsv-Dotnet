@@ -65,8 +65,8 @@ namespace EasyCsv.Tests.Core
             Assert.Equal(2, updatedHeaders!.Count);
             Assert.Contains("newHeader1", updatedHeaders);
             Assert.Contains("header2", updatedHeaders);
-            Assert.Equal("value1", easyCsv.Content!.First()["newHeader1"]);
-            Assert.Equal("value2", easyCsv.Content.First()["header2"]);
+            Assert.Equal("value1", easyCsv.CsvContent!.First()["newHeader1"]);
+            Assert.Equal("value2", easyCsv.CsvContent.First()["header2"]);
         }
 
         [Fact]
@@ -83,7 +83,7 @@ namespace EasyCsv.Tests.Core
             // Assert
             var headers = easyCsv.GetHeaders();
             Assert.Equal(3, headers!.Count);
-            Assert.Equal("defaultValue", easyCsv.Content!.First()["header3"]);
+            Assert.Equal("defaultValue", easyCsv.CsvContent!.First()["header3"]);
         }
 
         [Fact]
@@ -99,7 +99,7 @@ namespace EasyCsv.Tests.Core
             // Assert
             var headers = easyCsv.GetHeaders();
             Assert.Equal(3, headers!.Count);
-            Assert.Equal("defaultValue", easyCsv.Content!.First()["header3"]);
+            Assert.Equal("defaultValue", easyCsv.CsvContent!.First()["header3"]);
 
         }
 
@@ -117,7 +117,7 @@ namespace EasyCsv.Tests.Core
             var headers = easyCsv.GetHeaders();
             Assert.Equal(2, headers!.Count);
             Assert.DoesNotContain("header2", headers);
-            Assert.False(easyCsv.Content!.First().ContainsKey("header2"));
+            Assert.False(easyCsv.CsvContent!.First().ContainsKey("header2"));
         }
 
         [Fact]
@@ -135,8 +135,8 @@ namespace EasyCsv.Tests.Core
             Assert.Single(headers!);
             Assert.DoesNotContain("header2", headers);
             Assert.DoesNotContain("header3", headers);
-            Assert.False(easyCsv.Content!.First().ContainsKey("header2"));
-            Assert.False(easyCsv.Content.First().ContainsKey("header3"));
+            Assert.False(easyCsv.CsvContent!.First().ContainsKey("header2"));
+            Assert.False(easyCsv.CsvContent.First().ContainsKey("header3"));
         }
 
         [Fact]
@@ -187,11 +187,11 @@ namespace EasyCsv.Tests.Core
             var result = csv1.Combine(csv2);
 
             // Assert
-            Assert.Equal(4, result.Content!.Count);
-            Assert.Equal("Value1", result.Content[0]["Header1"]);
-            Assert.Equal("Value3", result.Content[1]["Header1"]);
-            Assert.Equal("Value1", result.Content[2]["Header1"]);
-            Assert.Equal("Value3", result.Content[3]["Header1"]);
+            Assert.Equal(4, result.CsvContent!.Count);
+            Assert.Equal("Value1", result.CsvContent[0]["Header1"]);
+            Assert.Equal("Value3", result.CsvContent[1]["Header1"]);
+            Assert.Equal("Value1", result.CsvContent[2]["Header1"]);
+            Assert.Equal("Value3", result.CsvContent[3]["Header1"]);
         }
 
         [Fact]
@@ -206,9 +206,9 @@ namespace EasyCsv.Tests.Core
             var result = csv1.Combine(csv2);
 
             // Assert
-            Assert.Equal(2, result.Content!.Count);
-            Assert.Equal("Value1", result.Content[0]["Header1"]);
-            Assert.Equal("Value3", result.Content[1]["Header1"]);
+            Assert.Equal(2, result.CsvContent!.Count);
+            Assert.Equal("Value1", result.CsvContent[0]["Header1"]);
+            Assert.Equal("Value3", result.CsvContent[1]["Header1"]);
         }
 
         [Fact]
@@ -224,15 +224,15 @@ namespace EasyCsv.Tests.Core
             var result = csv1.Combine(csvList);
 
             // Assert
-            Assert.Equal(8, result.Content.Count);
-            Assert.Equal("Value1", result.Content[0]["Header1"]);
-            Assert.Equal("Value3", result.Content[1]["Header1"]);
-            Assert.Equal("Value1", result.Content[2]["Header1"]);
-            Assert.Equal("Value3", result.Content[3]["Header1"]);
-            Assert.Equal("Value1", result.Content[4]["Header1"]);
-            Assert.Equal("Value3", result.Content[5]["Header1"]);
-            Assert.Equal("Value1", result.Content[6]["Header1"]);
-            Assert.Equal("Value3", result.Content[7]["Header1"]);
+            Assert.Equal(8, result.CsvContent.Count);
+            Assert.Equal("Value1", result.CsvContent[0]["Header1"]);
+            Assert.Equal("Value3", result.CsvContent[1]["Header1"]);
+            Assert.Equal("Value1", result.CsvContent[2]["Header1"]);
+            Assert.Equal("Value3", result.CsvContent[3]["Header1"]);
+            Assert.Equal("Value1", result.CsvContent[4]["Header1"]);
+            Assert.Equal("Value3", result.CsvContent[5]["Header1"]);
+            Assert.Equal("Value1", result.CsvContent[6]["Header1"]);
+            Assert.Equal("Value3", result.CsvContent[7]["Header1"]);
         }
     }
 }

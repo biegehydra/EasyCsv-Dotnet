@@ -8,21 +8,23 @@ namespace EasyCsv.Core
     public partial interface IEasyCsv : ICloneable
     {
         /// <summary>
-        /// Content of the csv file in bytes. Calculate on creation and when <code>CalculateContentAsync</code> is called
+        /// CsvContent of the csv file in bytes. Calculate on creation and when <code>CalculateContentAsync</code> is called
         /// </summary>
         byte[]? ContentBytes { get; }
 
 
         /// <summary>
-        /// Content of the csv file in as a string. Calculated on creation and when <code>CalculateContentAsync</code> is called
+        /// CsvContent of the csv file in as a string. Calculated on creation and when <code>CalculateContentAsync</code> is called
         /// </summary>
         string? ContentStr { get; }
+
+
 
 
         /// <summary>
         /// The content of the CSV file as a list of dictionaries representing kvps of the headers and values.
         /// </summary>
-        List<IDictionary<string, object>>? Content { get; }
+        List<CsvRow>? CsvContent { get; }
 
 
         /// <summary>
@@ -43,7 +45,7 @@ namespace EasyCsv.Core
         /// </summary>
         /// <param name="row">The row to check for, represented as an IDictionary of field names and their corresponding values.</param>
         /// <returns>True if the CSV contains the specified row; otherwise, False.</returns>
-        bool ContainsRow(IDictionary<string, object> row);
+        bool ContainsRow(CsvRow row);
 
 
         /// <summary>
@@ -52,47 +54,6 @@ namespace EasyCsv.Core
         /// <returns>An IEnumerable of string containing the CSV headers.</returns>
         List<string>? GetHeaders();
 
-
-        /// <summary>
-        /// Calculates the <code>ContentStr</code> amd <code>ContentBytes</code> asynchronously.
-        /// </summary>
-        Task CalculateContentAsync();
-
-
-        /// <summary>
-        /// Calculates the <code>ContentStr</code> amd <code>ContentBytes</code> synchronously.
-        /// </summary>
-        void CalculateContent();
-
-
-        /// <summary>
-        /// Removes any header that does match a public property on the type param T
-        /// <typeparam name="T">The type that will be used as the basis for what headers to remove</typeparam>
-        /// <returns>An <code>IEasyCsv</code> to be used for fluent method chaining.</returns>
-        /// <param name="caseInsensitive">Determines whether the operation should be case insensitive when determining if a header field and all the values in it's column should be removed--are UNUSED.</param>
-        /// <remarks>WARNING: Writes and reads all records. Can be an expensive call</remarks>
-        /// </summary>
-        Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(bool caseInsensitive = true);
-
-
-        /// <summary>
-        /// Removes any header that does match a public property on the type param T
-        /// <typeparam name="T">The type that will be used as the basis for what headers to remove</typeparam>
-        /// <returns>An <code>IEasyCsv</code> to be used for fluent method chaining.</returns>
-        /// <param name="prepareHeaderForMatch">Determines whether the operation should be case insensitive when determining if a header field, and all the values in it's column, should be removed--are UNUSED. See GetGetRecordsAsync for information on prepareHeaderForMatch usage.</param>
-        /// <remarks>WARNING: Writes and reads all records. Can be an expensive call</remarks>
-        /// </summary>
-        Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(PrepareHeaderForMatch prepareHeaderForMatch);
-
-
-        /// <summary>
-        /// Removes any header that does match a public property on the type param T
-        /// <typeparam name="T">The type that will be used as the basis for what headers to remove</typeparam>
-        /// <returns>An <code>IEasyCsv</code> to be used for fluent method chaining.</returns>
-        /// <param name="csvConfig">The CSVHelper csv configuration configuration for reading the csv into records, which ultimately removes unused headers</param>
-        /// <remarks>WARNING: Writes and reads all records. Can be an expensive call</remarks>
-        /// </summary>
-        Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(CsvConfiguration csvConfig);
 
 
         /// <summary>

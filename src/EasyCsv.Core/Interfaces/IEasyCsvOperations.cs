@@ -1,9 +1,12 @@
 ﻿using System.Collections.Generic;
 using System;
+using CsvHelper.Configuration;
+using CsvHelper;
+using System.Threading.Tasks;
 
 namespace EasyCsv.Core
 {
-    public partial interface IEasyCsv
+    public interface IEasyCsvOperations
     {
         /// <summary>
         /// Replaces all the headers of the CSV.
@@ -37,7 +40,7 @@ namespace EasyCsv.Core
         /// <param name="defaultValues">Header Field, Default Value. Dictionary of the header fields of the columns you want to give a default value to.</param>
         /// /// <param name="upsert">Determines whether or not an exception is thrown if the column already exists.</param>
         /// <returns>An <code>IEasyCsv</code> to be used for fluent method chaining.</returns>
-        IEasyCsv AddColumns(Dictionary<string, string> defaultValues, bool upsert = true);
+        IEasyCsv AddColumns(IDictionary<string, string> defaultValues, bool upsert = true);
 
 
         /// <summary>
@@ -45,7 +48,7 @@ namespace EasyCsv.Core
         /// <param name="predicate">Predicate to filter rows</param>
         /// </summary>
         /// <returns>An <code>IEasyCsv</code> to be used for fluent method chaining.</returns>
-        IEasyCsv FilterRows(Func<IDictionary<string, object>, bool> predicate);
+        IEasyCsv FilterRows(Func<CsvRow, bool> predicate);
 
 
         /// <summary>
@@ -53,7 +56,7 @@ namespace EasyCsv.Core
         /// </summary>
         /// <param name="headerField">The header field of the column to do value mapping.</param>
         /// <returns>An <code>IEasyCsv</code> to be used for fluent method chaining.</returns>
-        IEasyCsv MapValuesInColumn(string headerField, Dictionary<object, object> valueMapping);
+        IEasyCsv MapValuesInColumn(string headerField, IDictionary<object, object> valueMapping);
 
 
         /// <summary>
@@ -77,7 +80,7 @@ namespace EasyCsv.Core
         /// </code>
         /// </example>
         /// <returns>An <code>IEasyCsv</code> to be used for fluent method chaining.</returns>
-        IEasyCsv SortCsv<TKey>(Func<IDictionary<string, object>, TKey> keySelector, bool ascending = true);
+        IEasyCsv SortCsv<TKey>(Func<CsvRow, TKey> keySelector, bool ascending = true);
 
 
         /// <summary>
@@ -96,9 +99,39 @@ namespace EasyCsv.Core
         IEasyCsv RemoveColumns(List<string> headerFields);
 
 
+        /// <summary>
+        /// Removes any header that does match a public property on the type param T
+        /// <typeparam name="T">The type that will be used as the basis for what headers to remove</typeparam>
+        /// <returns>An <code>IEasyCsv</code> to be used for fluent method chaining.</returns>
+        /// <param name="caseInsensitive">Determines whether the operation should be case insensitive when determining if a header field and all the values in it's column should be removed--are UNUSED.</param>
+        /// <remarks>WARNING: Writes and reads all records. Can be an expensive call</remarks>
+        /// </summary>
+        Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(bool caseInsensitive = true);
+
 
         /// <summary>
-        /// Sets <code>Content</code> to null. 
+        /// Removes any header that does match a public property on the type param T
+        /// <typeparam name="T">The type that will be used as the basis for what headers to remove</typeparam>
+        /// <returns>An <code>IEasyCsv</code> to be used for fluent method chaining.</returns>
+        /// <param name="prepareHeaderForMatch">Determines whether the operation should be case insensitive when determining if a header field, and all the values in it's column, should be removed--are UNUSED. See GetGetRecordsAsync for information on prepareHeaderForMatch usage.</param>
+        /// <remarks>WARNING: Writes and reads all records. Can be an expensive call</remarks>
+        /// </summary>
+        Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(PrepareHeaderForMatch prepareHeaderForMatch);
+
+
+        /// <summary>
+        /// Removes any header that does match a public property on the type param T
+        /// <typeparam name="T">The type that will be used as the basis for what headers to remove</typeparam>
+        /// <returns>An <code>IEasyCsv</code> to be used for fluent method chaining.</returns>
+        /// <param name="csvConfig">The CSVHelper csv configuration configuration for reading the csv into records, which ultimately removes unused headers</param>
+        /// <remarks>WARNING: Writes and reads all records. Can be an expensive call</remarks>
+        /// </summary>
+        Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(CsvConfiguration csvConfig);
+
+
+
+        /// <summary>
+        /// Sets <code>CsvContent</code> to null. 
         /// </summary>
         /// <remarks>WARNING: Writes and reads all records. Can be an expensive call</remarks>
         IEasyCsv Clear();

@@ -8,20 +8,20 @@ namespace EasyCsv.Core
 {
     internal partial class EasyCsv
     {
-        public IEasyCsv AddRecords(List<string> rowValues, int index = -1)
+        public IEasyCsv AddRecord(List<string> rowValues, int index = -1)
         {
             var headers = GetHeaders();
-            if (Content == null) return this;
+            if (CsvContent == null) return this;
             if (headers?.Count == null || headers.Count == 0 || headers.Count != rowValues.Count) return this;
-            if (index == -1 || index >= Content.Count)
+            if (index == -1 || index >= CsvContent.Count)
             {
                 var newRow = RowFromHeadersAndValues(headers, rowValues);
-                Content.Add(newRow);
+                CsvContent.Add(new CsvRow(newRow));
             }
             else
             {
                 var newRow = RowFromHeadersAndValues(headers, rowValues);
-                Content.Insert(index, newRow);
+                CsvContent.Insert(index, new CsvRow(newRow));
             }
 
             return this;
@@ -30,51 +30,53 @@ namespace EasyCsv.Core
         public IEasyCsv InsertRecord(List<string> rowValues, int index = -1)
         {
             var headers = GetHeaders();
-            if (Content == null) return this;
+            if (CsvContent == null) return this;
             if (headers?.Count == null || headers.Count == 0 || headers.Count != rowValues.Count) return this;
-            if (index == -1 || index >= Content.Count)
+            if (index == -1 || index >= CsvContent.Count)
             {
                 var newRow = RowFromHeadersAndValues(headers, rowValues);
-                Content.Add(newRow);
+                CsvContent.Add(newRow);
             }
             else
             {
                 var newRow = RowFromHeadersAndValues(headers, rowValues);
-                Content.Insert(index, newRow);
+                CsvContent.Insert(index, newRow);
             }
 
             return this;
         }
 
-        private static Dictionary<string, object> RowFromHeadersAndValues(IEnumerable<string> headers, List<string> values)
+        private static CsvRow RowFromHeadersAndValues(IEnumerable<string> headers, List<string> values)
         {
-            var row = new Dictionary<string, object>();
-            var i = 0;
-            foreach (var key in headers)
-            {
-                row[key] = values.ElementAt(i);
-                i++;
-            }
+            var row = new CsvRow(headers, values);
             return row;
         }
 
-        public IEasyCsv UpsertRecord(IDictionary<string, object> row)
+        public IEasyCsv UpsertRecord(CsvRow row, int index = -1)
         {
-            if (Content == null) return this;
-            var index = Content.FindIndex(r => RowsEqual(r, row));
-            if (index >= 0)
+            if (CsvContent == null) return this;
+
+            if (index >= 0 && index < CsvContent.Count)
             {
-                Content[index] = row;
+                CsvContent[index] = row;
             }
             else
             {
-                Content.Add(row);
+                int existingIndex = CsvContent.FindIndex(r => RowsEqual(r, row));
+                if (existingIndex >= 0)
+                {
+                    CsvContent[existingIndex] = row;
+                }
+                else
+                {
+                    CsvContent.Add(row);
+                }
             }
 
             return this;
         }
 
-        public IEasyCsv UpsertRecords(IEnumerable<IDictionary<string, object>> rows)
+        public IEasyCsv UpsertRecords(IEnumerable<CsvRow> rows)
         {
             foreach (var row in rows)
             {
@@ -84,25 +86,25 @@ namespace EasyCsv.Core
             return this;
         }
 
-        public IDictionary<string, object>? GetRecord(int index)
+        public CsvRow? GetRecord(int index)
         {
-            if (Content == null || index < 0 || index >= Content.Count)
+            if (CsvContent == null || index < 0 || index >= CsvContent.Count)
             {
                 return null;
             }
 
-            return Content[index];
+            return CsvContent.ElementAt(index);
         }
 
         public T? GetRecord<T>(int index) where T : class
         {
-            if (Content == null || index < 0 || index >= Content.Count)
+            if (CsvContent == null || index < 0 || index >= CsvContent.Count)
             {
                 return null;
             }
             var row = GetRecord(index);
             if (row == null) return null;
-            var content = new List<IDictionary<string, object>>() { row };
+            var content = new List<CsvRow>() { row };
             var easyCsv = new EasyCsv(content, Config);
             if(easyCsv.ContentBytes == null) return null;
             using var reader = new StreamReader(new MemoryStream(easyCsv.ContentBytes), Encoding.UTF8);
@@ -110,25 +112,25 @@ namespace EasyCsv.Core
             return csvReader.GetRecord<T>();
         }
 
-        public IEasyCsv UpdateRecord(int index, IDictionary<string, object> newRow)
+        public IEasyCsv UpdateRecord(int index, CsvRow newRow)
         {
-            if (Content == null || index < 0 || index >= Content.Count)
+            if (CsvContent == null || index < 0 || index >= CsvContent.Count)
             {
                 return this;
             }
 
-            Content[index] = newRow;
+            CsvContent[index] = newRow;
             return this;
         }
 
         public IEasyCsv DeleteRecord(int index)
         {
-            if (Content == null || index < 0 || index >= Content.Count)
+            if (CsvContent == null || index < 0 || index >= CsvContent.Count)
             {
                 return this;
             }
 
-            Content.RemoveAt(index);
+            CsvContent.RemoveAt(index);
             return this;
         }
     }

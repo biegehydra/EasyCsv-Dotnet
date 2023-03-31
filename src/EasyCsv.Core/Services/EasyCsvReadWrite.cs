@@ -17,7 +17,7 @@ namespace EasyCsv.Core
             if (ContentBytes == null) return;
             using var reader = new StreamReader(new MemoryStream(ContentBytes), Encoding.Default);
             using var csv = new CsvReader(reader, EasyCsvConfiguration.Instance.CsvHelperConfig);
-            Content = csv.GetRecords<dynamic>().Select(x => (IDictionary<string, object>)x).ToList();
+            CsvContent = csv.GetRecords<dynamic>().Select(x => new CsvRow((IDictionary<string, object>) x)).ToList();
         }
 
         internal async Task CreateCsvContentInBackGround()
@@ -27,7 +27,7 @@ namespace EasyCsv.Core
             {
                 using var reader = new StreamReader(new MemoryStream(ContentBytes), Encoding.Default);
                 using var csv = new CsvReader(reader, EasyCsvConfiguration.Instance.CsvHelperConfig);
-                Content = csv.GetRecords<dynamic>().Select(x => (IDictionary<string, object>)x).ToList();
+                CsvContent = csv.GetRecords<dynamic>().Select(x => new CsvRow((IDictionary<string, object>) x)).ToList();
             });
         }
 
@@ -63,22 +63,22 @@ namespace EasyCsv.Core
             return new EasyCsv(csvContent, config);
         }
 
-        public async Task CalculateContentAsync()
+        internal async Task CalculateContentAsync()
         {
             await using var writer = new StringWriter();
             await using var csvWriter = new CsvWriter(writer, Config.CsvHelperConfig);
-            var dynamicContent = Content?.Cast<dynamic>();
+            var dynamicContent = CsvContent?.Cast<dynamic>();
             await csvWriter.WriteRecordsAsync(dynamicContent);
             var str = writer.ToString();
             ContentBytes = Encoding.UTF8.GetBytes(str);
             ContentStr = str;
         }
 
-        public void CalculateContent()
+        internal void CalculateContent()
         {
             using var writer = new StringWriter();
             using var csv = new CsvWriter(writer, Config.CsvHelperConfig);
-            var dynamicContent = Content?.Cast<dynamic>();
+            var dynamicContent = CsvContent?.Cast<dynamic>();
             csv.WriteRecords(dynamicContent);
             var str = writer.ToString();
             ContentBytes = Encoding.UTF8.GetBytes(str);
@@ -88,7 +88,7 @@ namespace EasyCsv.Core
         public async Task<List<T>> GetRecordsAsync<T>(bool caseInsensitive = false)
         {
             var records = new List<T>();
-            if (Content == null) return records;
+            if (CsvContent == null) return records;
 
             await CalculateContentAsync();
             if (string.IsNullOrEmpty(ContentStr)) return records;
@@ -130,7 +130,7 @@ namespace EasyCsv.Core
         public async Task<List<T>> GetRecordsAsync<T>(PrepareHeaderForMatch prepareHeaderForMatch)
         {
             var records = new List<T>();
-            if (Content == null) return records;
+            if (CsvContent == null) return records;
 
             await CalculateContentAsync();
             if (string.IsNullOrEmpty(ContentStr)) return records;
@@ -155,7 +155,7 @@ namespace EasyCsv.Core
         public async Task<List<T>> GetRecordsAsync<T>(CsvConfiguration csvConfig)
         {
             var records = new List<T>();
-            if (Content == null) return records;
+            if (CsvContent == null) return records;
 
             await CalculateContentAsync();
             if (string.IsNullOrEmpty(ContentStr)) return records;

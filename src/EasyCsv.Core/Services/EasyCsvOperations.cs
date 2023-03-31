@@ -9,43 +9,31 @@ namespace EasyCsv.Core
 {
     internal partial class EasyCsv
     {
-        public IEasyCsv ReplaceHeaderRow(List<string> newHeaderFields)
+        internal IEasyCsv ReplaceHeaderRow(List<string> newHeaderFields)
         {
-            if (Content == null) return this;
+            if (CsvContent == null) return this;
             var oldHeaders = GetHeaders()?.ToList();
             if (newHeaderFields.Count != oldHeaders?.Count)
             {
                 throw new ArgumentException("Replacement header row field count does not match the current header row field count");
             }
-
-            var updatedCsvContent = new List<IDictionary<string, object>>(Content.Count);
-
-            foreach (var row in Content)
+            var newRecords = new List<CsvRow>(CsvContent.Count);
+            foreach (var row in CsvContent)
             {
-                var newRow = new Dictionary<string, object>();
-                var i = 0;
-
-                foreach (var oldHeaderField in oldHeaders)
-                {
-                    var newHeaderField = newHeaderFields.ElementAt(i);
-                    newRow[newHeaderField] = row[oldHeaderField];
-                    i++;
-                }
-
-                updatedCsvContent.Add(newRow);
+                var newRow = new CsvRow(newHeaderFields, row.Values.Select(x => (string) x).ToList());
+                newRecords.Add(newRow);
             }
-
-            Content = updatedCsvContent;
+            CsvContent = newRecords;
             return this;
 
         }
 
-        public IEasyCsv ReplaceColumn(string oldHeaderField, string newHeaderField)
+        internal IEasyCsv ReplaceColumn(string oldHeaderField, string newHeaderField)
         {
-            if (Content == null) return this;
+            if (CsvContent == null) return this;
 
             var normalizedNewValue = Normalize(newHeaderField);
-            foreach (var row in Content)
+            foreach (var row in CsvContent)
             {
                 if (!row.TryGetValue(oldHeaderField, out var temp)) continue;
                 row.Remove(oldHeaderField);
@@ -54,12 +42,12 @@ namespace EasyCsv.Core
             return this;
         }
 
-        public IEasyCsv AddColumn(string header, string value, bool upsert = true)
+        internal IEasyCsv AddColumn(string header, string value, bool upsert = true)
         {
-            if (Content == null) return this;
+            if (CsvContent == null) return this;
 
             var normalizedDefaultHeader = Normalize(header);
-            foreach (var record in Content)
+            foreach (var record in CsvContent)
             {
                 if (upsert)
                 {
@@ -75,11 +63,11 @@ namespace EasyCsv.Core
             return this;
         }
 
-        public IEasyCsv AddColumns(Dictionary<string, string> defaultValues, bool upsert = true)
+        internal IEasyCsv AddColumns(IDictionary<string, string> defaultValues, bool upsert = true)
         {
-            if (Content == null) return this;
+            if (CsvContent == null) return this;
 
-            foreach (var record in Content)
+            foreach (var record in CsvContent)
             {
                 foreach (var (key, value) in defaultValues)
                 {
@@ -99,17 +87,17 @@ namespace EasyCsv.Core
             return this;
         }
 
-        public IEasyCsv FilterRows(Func<IDictionary<string, object>, bool> predicate)
+        internal IEasyCsv FilterRows(Func<CsvRow, bool> predicate)
         {
-            Content = Content?.Where(predicate).ToList();
+            CsvContent = CsvContent?.Where(predicate).ToList();
             return this;
         }
 
-        public IEasyCsv MapValuesInColumn(string headerField, Dictionary<object, object> valueMapping)
+        internal IEasyCsv MapValuesInColumn(string headerField, IDictionary<object, object> valueMapping)
         {
-            if (Content == null) return this;
+            if (CsvContent == null) return this;
 
-            foreach (var row in Content)
+            foreach (var row in CsvContent)
             {
                 if (row.ContainsKey(headerField) && valueMapping.ContainsKey(row[headerField]))
                 {
@@ -119,33 +107,33 @@ namespace EasyCsv.Core
             return this;
         }
 
-        public IEasyCsv SortCsv(string headerField, bool ascending = true)
+        internal IEasyCsv SortCsv(string headerField, bool ascending = true)
         {
-            if (Content == null) return this;
+            if (CsvContent == null) return this;
 
-            Content = ascending
-                ? Content.OrderBy(row => row[headerField]).ToList()
-                : Content.OrderByDescending(row => row[headerField]).ToList();
+            CsvContent = ascending
+                ? CsvContent.OrderBy(row => row[headerField]).ToList()
+                : CsvContent.OrderByDescending(row => row[headerField]).ToList();
             return this;
         }
 
-        public IEasyCsv SortCsv<TKey>(Func<IDictionary<string, object>, TKey> keySelector, bool ascending = true)
+        internal IEasyCsv SortCsv<TKey>(Func<CsvRow, TKey> keySelector, bool ascending = true)
         {
-            if (Content == null) return this;
+            if (CsvContent == null) return this;
 
-            Content = ascending
-                ? Content.OrderBy(keySelector).ToList()
-                : Content.OrderByDescending(keySelector).ToList();
+            CsvContent = ascending
+                ? CsvContent.OrderBy(keySelector).ToList()
+                : CsvContent.OrderByDescending(keySelector).ToList();
             return this;
         }
 
 
-        public IEasyCsv RemoveColumn(string headerField)
+        internal IEasyCsv RemoveColumn(string headerField)
         {
-            if (Content == null) return this;
+            if (CsvContent == null) return this;
             if (!GetHeaders()?.Contains(headerField) ?? true)
                 throw new ArgumentException($"No column existed with headerField: {headerField}.");
-            foreach (var record in Content)
+            foreach (var record in CsvContent)
             {
                 record.Remove(headerField);
             }
@@ -153,12 +141,12 @@ namespace EasyCsv.Core
             return this;
         }
 
-        public IEasyCsv RemoveColumns(List<string> headerFields)
+        internal IEasyCsv RemoveColumns(List<string> headerFields)
         {
-            if (Content == null) return this;
+            if (CsvContent == null) return this;
             if (headerFields.Any(x => !GetHeaders()?.Contains(x) ?? true))
                 throw new ArgumentException($"At least one of the columns requested for removal did not exist..");
-            foreach (var record in Content)
+            foreach (var record in CsvContent)
             {
                 foreach (var field in headerFields)
                 {
@@ -169,19 +157,19 @@ namespace EasyCsv.Core
         }
 
 
-        public async Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(bool caseInsensitive)
+        internal async Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(bool caseInsensitive)
         {
             var records = await GetRecordsAsync<T>(caseInsensitive);
             return await FromObjectsAsync<T>(records, Config);
         }
 
-        public async Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(PrepareHeaderForMatch prepareHeaderForMatch)
+        internal async Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(PrepareHeaderForMatch prepareHeaderForMatch)
         {
             var records = await GetRecordsAsync<T>(prepareHeaderForMatch);
             return await FromObjectsAsync(records, Config);
         }
 
-        public async Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(CsvConfiguration csvConfig)
+        internal async Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(CsvConfiguration csvConfig)
         {
             var records = await GetRecordsAsync<T>(csvConfig);
             return await FromObjectsAsync(records, Config);
@@ -189,15 +177,15 @@ namespace EasyCsv.Core
 
         public IEasyCsv Clear()
         {
-            Content?.Clear();
+            CsvContent?.Clear();
             return this;
         }
 
 
         public IEasyCsv Combine(IEasyCsv? otherCsv)
         {
-            if (Content == null) return this;
-            if (otherCsv == null || otherCsv.Content == null) return this;
+            if (CsvContent == null) return this;
+            if (otherCsv == null || otherCsv.CsvContent == null) return this;
 
             var firstHeaders = GetHeaders();
             var secondHeaders = otherCsv.GetHeaders();
@@ -205,7 +193,7 @@ namespace EasyCsv.Core
             if (secondHeaders == null) return this;
             if (!firstHeaders?.SequenceEqual(secondHeaders) ?? true) return this;
 
-            Content.AddRange(otherCsv.Content);
+            CsvContent.AddRange(otherCsv.CsvContent);
             return this;
         }
 
@@ -215,7 +203,7 @@ namespace EasyCsv.Core
             {
 
             }
-            if (Content == null) return this;
+            if (CsvContent == null) return this;
             if (otherCsvs == null || otherCsvs.Count <= 0) return this;
             foreach (var otherCsv in otherCsvs)
             {

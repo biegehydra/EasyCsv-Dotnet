@@ -11,7 +11,7 @@
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageId>EasyCsv.Core</PackageId>
 		<Product>EasyCsv</Product>
-		<Version>1.0.8</Version>
+		<Version>1.0.11</Version>
 		<Title>EasyCsv.Core</Title>
 		<Description>A package built ontop of CSV Helper to make working with CSVs even easier</Description>
 		<Copyright>Copyright © 2023 Connor Hallman</Copyright>

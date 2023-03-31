@@ -3,7 +3,7 @@ using System;
 
 namespace EasyCsv.Core
 {
-    public interface IEasyCsv : IEasyCsvBase, IInternalCrud, IInternalOperations, IEasyCombine, IGetRecords, IEasyClear
+    public interface IEasyCsv : IEasyCsvBase<IEasyCsv>, IInternalCrud, IInternalOperations, IGetRecords
     {
         /// <summary>
         /// Performs synchronous mutations on the CSV content using the provided delegate.

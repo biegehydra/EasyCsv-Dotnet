@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using CsvHelper;
 using CsvHelper.Configuration;
 
 namespace EasyCsv.Core
 {
-    public class CSVMutationScope : IEasyCsvBase, IEasyMutations, IGetRecords
+    public class CSVMutationScope : IEasyMutations
     {
         private readonly IEasyCsv _csv;
 
@@ -41,155 +40,154 @@ namespace EasyCsv.Core
             return _csv.GetHeaders();
         }
 
-        public async Task<List<T>> GetRecordsAsync<T>(bool caseInsensitive = false)
+        public Task<List<T>> GetRecordsAsync<T>(bool caseInsensitive = false)
         {
-            return await _csv.GetRecordsAsync<T>(caseInsensitive);
+            return _csv.GetRecordsAsync<T>(caseInsensitive);
         }
 
-        public async Task<List<T>> GetRecordsAsync<T>(PrepareHeaderForMatch prepareHeaderForMatch)
+        public Task<List<T>> GetRecordsAsync<T>(PrepareHeaderForMatch prepareHeaderForMatch)
         {
-            return await _csv.GetRecordsAsync<T>(prepareHeaderForMatch);
+            return _csv.GetRecordsAsync<T>(prepareHeaderForMatch);
         }
 
-        public async Task<List<T>> GetRecordsAsync<T>(CsvConfiguration csvConfig)
+        public Task<List<T>> GetRecordsAsync<T>(CsvConfiguration csvConfig)
         {
-            return await _csv.GetRecordsAsync<T>(csvConfig);
+            return _csv.GetRecordsAsync<T>(csvConfig);
         }
 
-        public IEasyCsv Clone()
+        public IEasyMutations Clone()
         {
-            return _csv.Clone();
+            return new CSVMutationScope(_csv.Clone());
         }
 
-        public IEasyCsv ReplaceHeaderRow(List<string> newHeaderFields)
+        public IEasyMutations ReplaceHeaderRow(List<string> newHeaderFields)
         {
             _csv.ReplaceHeaderRow(newHeaderFields);
-            return _csv;
+            return this;
         }
 
-        public IEasyCsv ReplaceColumn(string oldHeaderField, string newHeaderField)
+        public IEasyMutations ReplaceColumn(string oldHeaderField, string newHeaderField)
         {
             _csv.ReplaceColumn(oldHeaderField, newHeaderField);
-            return _csv;
+            return this;
         }
 
-        public IEasyCsv AddColumn(string header, string value, bool upsert = true)
+        public IEasyMutations AddColumn(string header, string value, bool upsert = true)
         {
             _csv.AddColumn(header, value, upsert);
-            return _csv;
+            return this;
         }
 
-        public IEasyCsv AddColumns(IDictionary<string, string> defaultValues, bool upsert = true)
+        public IEasyMutations AddColumns(IDictionary<string, string> defaultValues, bool upsert = true)
         {
             _csv.AddColumns(defaultValues, upsert);
-            return _csv;
+            return this;
         }
 
-        public IEasyCsv FilterRows(Func<CsvRow, bool> predicate)
+        public IEasyMutations FilterRows(Func<CsvRow, bool> predicate)
         {
             _csv.FilterRows(predicate);
-            return _csv;
+            return this;
         }
 
-        public IEasyCsv MapValuesInColumn(string headerField, IDictionary<object, object> valueMapping)
+        public IEasyMutations MapValuesInColumn(string headerField, IDictionary<object, object> valueMapping)
         {
             _csv.MapValuesInColumn(headerField, valueMapping);
-            return _csv;
+            return this;
         }
 
-        public IEasyCsv SortCsv(string headerField, bool ascending = true)
+        public IEasyMutations SortCsv(string headerField, bool ascending = true)
         {
             _csv.SortCsv(headerField, ascending);
-            return _csv;
+            return this;
         }
 
-        public IEasyCsv SortCsv<TKey>(Func<CsvRow, TKey> keySelector, bool ascending = true)
+        public IEasyMutations SortCsv<TKey>(Func<CsvRow, TKey> keySelector, bool ascending = true)
         {
             _csv.SortCsv(keySelector, ascending);
-            return _csv;
+            return this;
         }
 
-        public IEasyCsv RemoveColumn(string headerField)
+        public IEasyMutations RemoveColumn(string headerField)
         {
             _csv.RemoveColumn(headerField);
-            return _csv;
+            return this;
         }
 
-        public IEasyCsv RemoveColumns(List<string> headerFields)
+        public IEasyMutations RemoveColumns(List<string> headerFields)
         {
             _csv.RemoveColumns(headerFields);
-            return _csv;
+            return this;
         }
 
-        public async Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(bool caseInsensitive = true)
+        public async Task<IEasyMutations> RemoveUnusedHeadersAsync<T>(bool caseInsensitive = true)
         {
             await _csv.RemoveUnusedHeadersAsync<T>(caseInsensitive);
-            return _csv;
+            return this;
         }
 
-        public async Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(PrepareHeaderForMatch prepareHeaderForMatch)
+        public async Task<IEasyMutations> RemoveUnusedHeadersAsync<T>(PrepareHeaderForMatch prepareHeaderForMatch)
         {
             await _csv.RemoveUnusedHeadersAsync<T>(prepareHeaderForMatch);
-            return _csv;
+            return this;
         }
 
-        public async Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(CsvConfiguration csvConfig)
+        public async Task<IEasyMutations> RemoveUnusedHeadersAsync<T>(CsvConfiguration csvConfig)
         {
             await _csv.RemoveUnusedHeadersAsync<T>(csvConfig);
-            return _csv;
+            return this;
         }
 
-        public IEasyCsv Clear()
+        public IEasyMutations Clear()
         {
             _csv.Clear();
-            return _csv;
+            return this;
         }
 
-        public IEasyCsv Combine(IEasyCsv? otherCsv)
+        public IEasyMutations Combine(IEasyCsv? otherCsv)
         {
             if (otherCsv != null)
             {
                 _csv.Combine(otherCsv);
             }
-            return _csv;
+            return this;
         }
 
-        public IEasyCsv Combine(List<IEasyCsv?>? otherCsvs)
+        public IEasyMutations Combine(List<IEasyCsv?>? otherCsvs)
         {
             if (otherCsvs != null)
             {
                 _csv.Combine(otherCsvs);
             }
-            return _csv;
+            return this;
         }
 
-        public IEasyCsv AddRecord(List<string> rowValues, int index = -1)
+        public IEasyMutations AddRecord(List<string> rowValues, int index = -1)
         {
             _csv.AddRecord(rowValues, index);
-            return _csv;
+            return this;
         }
 
-        public IEasyCsv InsertRecord(List<string> rowValues, int index = -1)
+        public IEasyMutations InsertRecord(List<string> rowValues, int index = -1)
         {
             _csv.InsertRecord(rowValues, index);
-            return _csv;
+            return this;
         }
 
-        public IEasyCsv UpsertRecord(CsvRow row, int index = -1)
+        public IEasyMutations UpsertRecord(CsvRow row, int index = -1)
         {
             _csv.UpsertRecord(row, index);
-            return _csv;
+            return this;
         }
 
-        public IEasyCsv UpsertRecords(IEnumerable<CsvRow> rows)
+        public IEasyMutations UpsertRecords(IEnumerable<CsvRow> rows)
         {
             _csv.UpsertRecords(rows);
-            return _csv;
+            return this;
         }
 
         public CsvRow? GetRecord(int index)
         {
-
             return _csv.GetRecord(index);
         }
 
@@ -198,14 +196,16 @@ namespace EasyCsv.Core
             return _csv.GetRecord<T>(index);
         }
 
-        public IEasyCsv UpdateRecord(int index, CsvRow newRow)
+        public IEasyMutations UpdateRecord(int index, CsvRow newRow)
         {
-            return _csv.UpdateRecord(index, newRow);
+             _csv.UpdateRecord(index, newRow);
+             return this;
         }
 
-        public IEasyCsv DeleteRecord(int index)
+        public IEasyMutations DeleteRecord(int index)
         {
-            return _csv.DeleteRecord(index);
+            _csv.DeleteRecord(index);
+            return this;
         }
     }
 }

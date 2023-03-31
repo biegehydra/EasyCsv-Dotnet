@@ -2,14 +2,14 @@
 
 namespace EasyCsv.Core
 {
-    public interface IEasyCombine
+    public interface IEasyCombine<T>
     {
         /// <summary>
         /// If all the headers match, adds all the data from other csv to this csv.
         /// </summary>
         /// <param name="otherCsv">The csv with the data you would like to be added to this one</param>
         /// <returns></returns>
-        IEasyCsv Combine(IEasyCsv? otherCsv);
+        T Combine(IEasyCsv? otherCsv);
 
 
         /// <summary>
@@ -17,6 +17,6 @@ namespace EasyCsv.Core
         /// </summary>
         /// <param name="otherCsv">The csvs with the data you would like to be added to this one</param>
         /// <returns></returns>
-        IEasyCsv Combine(List<IEasyCsv?> otherCsv);
+        T Combine(List<IEasyCsv?> otherCsv);
     }
 }

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace EasyCsv.Core
 {
-    public interface IEasyCsvBase
+    public interface IEasyCsvBase<T> : IEasyCombine<T>, IEasyClear<T>
     {
         /// <summary>
         /// CsvContent of the csv file in bytes. Calculate on creation and when <code>CalculateContentBytesAndStrAsync</code> is called
@@ -87,6 +87,6 @@ namespace EasyCsv.Core
         /// Create deep clone
         /// <returns>Deep clone of current <code>IEasyCsv</code></returns>
         /// </summary>
-        IEasyCsv Clone();
+        T Clone();
     }
 }

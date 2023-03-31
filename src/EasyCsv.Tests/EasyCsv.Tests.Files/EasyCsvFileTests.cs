@@ -3,8 +3,9 @@ using Moq;
 using System.Text;
 using EasyCsv.Core.Configuration;
 using EasyCsv.Files;
+#if NET5_0_OR_GREATER
 using Microsoft.AspNetCore.Components.Forms;
-
+#endif
 namespace EasyCsv.Tests.Files
 {
     public class EasyCsvFileTests
@@ -30,7 +31,7 @@ namespace EasyCsv.Tests.Files
             Assert.True(result);
             Assert.Single(easyCsv.CsvContent);
         }
-
+#if NET5_0_OR_GREATER
         [Fact]
         public async Task TryReadBrowserFileAsync_ReadsFileContentSuccessfully()
         {
@@ -51,5 +52,6 @@ namespace EasyCsv.Tests.Files
             Assert.True(result);
             Assert.Single(easyCsv.CsvContent!);
         }
+#endif
     }
 }

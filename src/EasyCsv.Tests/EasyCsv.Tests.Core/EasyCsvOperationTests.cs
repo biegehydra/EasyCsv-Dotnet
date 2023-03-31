@@ -70,6 +70,27 @@ namespace EasyCsv.Tests.Core
         }
 
         [Fact]
+        public void ReplaceColumn_ReplacesColumnHeaderSuccessfullyStrAndBytes()
+        {
+            // Arrange
+            var fileContent = "header1,header2\nvalue1,value2";
+            var firstEasyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+
+            // Act
+            firstEasyCsv.Mutate(x => x.ReplaceColumn("header1", "newHeader1"));
+
+            var newCsv = new EasyCsv.Core.EasyCsv(firstEasyCsv.ContentBytes!, DefaultConfig);
+
+            // Assert
+            var updatedHeaders = newCsv.GetHeaders();
+            Assert.Equal(2, updatedHeaders!.Count);
+            Assert.Contains("newHeader1", updatedHeaders);
+            Assert.Contains("header2", updatedHeaders);
+            Assert.Equal("value1", newCsv.CsvContent!.First()["newHeader1"]);
+            Assert.Equal("value2", newCsv.CsvContent.First()["header2"]);
+        }
+
+        [Fact]
         public void GiveColumnsDefaultValues_InsertsDefaultValuesSuccessfully()
         {
             // Arrange

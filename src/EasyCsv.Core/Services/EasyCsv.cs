@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using CsvHelper;
 using EasyCsv.Core.Configuration;
 
 [assembly: InternalsVisibleTo("EasyCsv.Files")]
@@ -28,6 +29,33 @@ namespace EasyCsv.Core
             return CsvContent?.Any(r => RowsEqual(r, row)) ?? false;
         }
 
+        public void Mutate(Action<CSVMutationScope> mutations, bool saveChanges = true, bool safe = true)
+        {
+            var scope = new CSVMutationScope(safe ? Clone() : this);
+            mutations(scope);
+            if (safe)
+            {
+                CsvContent = scope.CsvContent;
+            }
+            if (saveChanges)
+            {
+                CalculateContentBytesAndStr();
+            }
+        }
+        public async Task MutateAsync(Func<CSVMutationScope, Task> mutations, bool saveChanges = true, bool safe = false)
+        {
+            var scope = new CSVMutationScope(safe ? Clone() : this);
+            await mutations(scope);
+            if (safe)
+            {
+                CsvContent = scope.CsvContent;
+            }
+            if (saveChanges)
+            {
+                await CalculateContentBytesAndStrAsync();
+            }
+        }
+
         private static bool RowsEqual(CsvRow row1, CsvRow row2)
         {
             return row1.Count == row2.Count && row1.Keys.All(key => row2.ContainsKey(key) && Equals(row1[key], row2[key]));
@@ -38,7 +66,7 @@ namespace EasyCsv.Core
             return CsvContent?.FirstOrDefault()?.Keys.ToList();
         }
 
-        private List<CsvRow> CloneContent(List<CsvRow> content)
+        private static List<CsvRow> CloneContent(List<CsvRow> content)
         {
             return content.Select(row => new CsvRow(row)).ToList();
         }
@@ -52,11 +80,6 @@ namespace EasyCsv.Core
         private string Normalize(string header)
         {
             return Config.NormalizeFields ? Config.NormalizeFieldsFunc(header) : header;
-        }
-
-        object ICloneable.Clone()
-        {
-            return Clone();
         }
     }
 }

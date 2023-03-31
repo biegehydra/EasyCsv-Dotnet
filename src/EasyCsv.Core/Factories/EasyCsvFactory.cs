@@ -196,7 +196,24 @@ namespace EasyCsv.Core
             {
                 throw new InvalidOperationException("File size too large");
             }
+#if NETSTANDARD2_0
+            return await ReadAllBytesAsync(filePath);
+            async Task<byte[]> ReadAllBytesAsync(string filePath)
+            {
+                using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.Asynchronous);
+                byte[] buffer = new byte[fileStream.Length];
+                int bytesRead, totalBytesRead = 0;
+
+                while ((bytesRead = await fileStream.ReadAsync(buffer, totalBytesRead, buffer.Length - totalBytesRead)) > 0)
+                {
+                    totalBytesRead += bytesRead;
+                }
+
+                return buffer;
+            }
+#else
             return await File.ReadAllBytesAsync(filePath);
+#endif
         }
 
 

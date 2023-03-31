@@ -48,7 +48,7 @@ namespace EasyCsv.Core
         {
             CsvContent = CloneContent(csvContent);
             Config = config;
-            CalculateContent();
+            CalculateContentBytesAndStr();
         }
     }
 }

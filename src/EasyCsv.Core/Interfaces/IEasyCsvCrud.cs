@@ -76,7 +76,5 @@ namespace EasyCsv.Core
         /// <returns></returns>
         IEasyCsv DeleteRecord(int index);
 
-
-
     }
 }

@@ -9,7 +9,7 @@ namespace EasyCsv.Core
 {
     internal partial class EasyCsv
     {
-        internal IEasyCsv ReplaceHeaderRow(List<string> newHeaderFields)
+        public IEasyCsv ReplaceHeaderRow(List<string> newHeaderFields)
         {
             if (CsvContent == null) return this;
             var oldHeaders = GetHeaders()?.ToList();
@@ -28,7 +28,7 @@ namespace EasyCsv.Core
 
         }
 
-        internal IEasyCsv ReplaceColumn(string oldHeaderField, string newHeaderField)
+        public IEasyCsv ReplaceColumn(string oldHeaderField, string newHeaderField)
         {
             if (CsvContent == null) return this;
 
@@ -42,7 +42,7 @@ namespace EasyCsv.Core
             return this;
         }
 
-        internal IEasyCsv AddColumn(string header, string value, bool upsert = true)
+        public IEasyCsv AddColumn(string header, string value, bool upsert = true)
         {
             if (CsvContent == null) return this;
 
@@ -63,14 +63,16 @@ namespace EasyCsv.Core
             return this;
         }
 
-        internal IEasyCsv AddColumns(IDictionary<string, string> defaultValues, bool upsert = true)
+        public IEasyCsv AddColumns(IDictionary<string, string> defaultValues, bool upsert = true)
         {
             if (CsvContent == null) return this;
 
             foreach (var record in CsvContent)
             {
-                foreach (var (key, value) in defaultValues)
+                foreach (KeyValuePair<string, string> pair in defaultValues)
                 {
+                    string key = pair.Key;
+                    string value = pair.Value;
                     var normalizedDefaultHeader = Normalize(key);
                     if (upsert)
                     {
@@ -87,13 +89,13 @@ namespace EasyCsv.Core
             return this;
         }
 
-        internal IEasyCsv FilterRows(Func<CsvRow, bool> predicate)
+        public IEasyCsv FilterRows(Func<CsvRow, bool> predicate)
         {
             CsvContent = CsvContent?.Where(predicate).ToList();
             return this;
         }
 
-        internal IEasyCsv MapValuesInColumn(string headerField, IDictionary<object, object> valueMapping)
+        public IEasyCsv MapValuesInColumn(string headerField, IDictionary<object, object> valueMapping)
         {
             if (CsvContent == null) return this;
 
@@ -107,7 +109,7 @@ namespace EasyCsv.Core
             return this;
         }
 
-        internal IEasyCsv SortCsv(string headerField, bool ascending = true)
+        public IEasyCsv SortCsv(string headerField, bool ascending = true)
         {
             if (CsvContent == null) return this;
 
@@ -117,7 +119,7 @@ namespace EasyCsv.Core
             return this;
         }
 
-        internal IEasyCsv SortCsv<TKey>(Func<CsvRow, TKey> keySelector, bool ascending = true)
+        public IEasyCsv SortCsv<TKey>(Func<CsvRow, TKey> keySelector, bool ascending = true)
         {
             if (CsvContent == null) return this;
 
@@ -128,7 +130,7 @@ namespace EasyCsv.Core
         }
 
 
-        internal IEasyCsv RemoveColumn(string headerField)
+        public IEasyCsv RemoveColumn(string headerField)
         {
             if (CsvContent == null) return this;
             if (!GetHeaders()?.Contains(headerField) ?? true)
@@ -141,7 +143,7 @@ namespace EasyCsv.Core
             return this;
         }
 
-        internal IEasyCsv RemoveColumns(List<string> headerFields)
+        public IEasyCsv RemoveColumns(List<string> headerFields)
         {
             if (CsvContent == null) return this;
             if (headerFields.Any(x => !GetHeaders()?.Contains(x) ?? true))
@@ -157,19 +159,19 @@ namespace EasyCsv.Core
         }
 
 
-        internal async Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(bool caseInsensitive)
+        public async Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(bool caseInsensitive)
         {
             var records = await GetRecordsAsync<T>(caseInsensitive);
             return await FromObjectsAsync<T>(records, Config);
         }
 
-        internal async Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(PrepareHeaderForMatch prepareHeaderForMatch)
+        public async Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(PrepareHeaderForMatch prepareHeaderForMatch)
         {
             var records = await GetRecordsAsync<T>(prepareHeaderForMatch);
             return await FromObjectsAsync(records, Config);
         }
 
-        internal async Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(CsvConfiguration csvConfig)
+        public async Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(CsvConfiguration csvConfig)
         {
             var records = await GetRecordsAsync<T>(csvConfig);
             return await FromObjectsAsync(records, Config);

@@ -11,8 +11,7 @@ public class EasyCsvCrudTests
     public void AddRecordTest()
     {
         var easyCsv = CreateCsvWithSampleData();
-        easyCsv.AddRecord(new List<string> { "Value3", "Value4" });
-        easyCsv.CalculateContent();
+        easyCsv.Mutate(x => x.AddRecord(new List<string> { "Value3", "Value4" }));
 
         Assert.Equal(3, easyCsv.CsvContent!.Count);
         Assert.Equal("Value3", easyCsv.CsvContent[2]["Header1"]);
@@ -91,7 +90,6 @@ public class EasyCsvCrudTests
 
     private static IEasyCsv CreateCsvWithSampleData()
     {
-
         var data = new List<CsvRow>
         {
             new (new Dictionary<string, object> { { "Header1", "Value1" }, { "Header2", "Value2" } }),

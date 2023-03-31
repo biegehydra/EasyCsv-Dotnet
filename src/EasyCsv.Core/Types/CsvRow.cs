@@ -1,11 +1,23 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Dynamic;
+using System.Runtime.InteropServices;
 
 namespace EasyCsv.Core
 {
     public class CsvRow : DynamicObject
     {
         private IDictionary<string, object> _innerDictionary;
+
+        internal CsvRow(IEnumerable<string> headers)
+        {
+            foreach (var header in headers)
+            {
+                this[header] = null;
+            }
+        }
 
         public CsvRow(CsvRow csvRow)
         {
@@ -102,10 +114,87 @@ namespace EasyCsv.Core
             _innerDictionary[binder.Name] = value;
             return true;
         }
+
+        public override IEnumerable<string> GetDynamicMemberNames()
+        {
+            return Keys;
+        }
+
         public Dictionary<string, object> ToDictionary()
         {
             return new Dictionary<string, object>(_innerDictionary);
         }
 
+        #region ICustomTypeDescriptor
+
+        // Implement ICustomTypeDescriptor methods
+        public AttributeCollection GetAttributes() => new AttributeCollection();
+
+        public string GetClassName() => GetType().Name;
+
+        public string GetComponentName() => null;
+
+        public TypeConverter GetConverter() => null;
+
+        public EventDescriptor GetDefaultEvent() => null;
+
+        public PropertyDescriptor GetDefaultProperty() => null;
+
+        public object GetEditor(Type editorBaseType) => null;
+
+        public EventDescriptorCollection GetEvents(Attribute[] attributes) => new EventDescriptorCollection(null);
+
+        public EventDescriptorCollection GetEvents() => new EventDescriptorCollection(null);
+
+        public PropertyDescriptorCollection GetProperties(Attribute[] attributes) => GetProperties();
+
+        public PropertyDescriptorCollection GetProperties()
+        {
+            var properties = new List<PropertyDescriptor>();
+
+            foreach (var key in Keys)
+            {
+                properties.Add(new CsvRowPropertyDescriptor(key));
+            }
+
+            return new PropertyDescriptorCollection(properties.ToArray());
+        }
+
+        public object GetPropertyOwner(PropertyDescriptor pd) => this;
+
+        private class CsvRowPropertyDescriptor : PropertyDescriptor
+        {
+            public CsvRowPropertyDescriptor(string name) : base(name, null) { }
+
+            public override Type ComponentType => typeof(CsvRow);
+
+            public override bool IsReadOnly => false;
+
+            public override Type PropertyType => typeof(object);
+
+            public override bool CanResetValue(object component) => false;
+
+            public override object GetValue(object component)
+            {
+                if (component is CsvRow csvRow)
+                {
+                    return csvRow[Name];
+                }
+                return null;
+            }
+
+            public override void ResetValue(object component) { }
+
+            public override void SetValue(object component, object value)
+            {
+                if (component is CsvRow csvRow)
+                {
+                    csvRow[Name] = value;
+                }
+            }
+
+            public override bool ShouldSerializeValue(object component) => false;
+        }
+        #endregion
     }
 }

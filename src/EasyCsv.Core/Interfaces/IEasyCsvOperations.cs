@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EasyCsv.Core
 {
-    public interface IEasyCsvOperations
+    public interface IEasyCsvOperations : IEasyCombine, IEasyClear
     {
         /// <summary>
         /// Replaces all the headers of the CSV.
@@ -127,30 +127,5 @@ namespace EasyCsv.Core
         /// <remarks>WARNING: Writes and reads all records. Can be an expensive call</remarks>
         /// </summary>
         Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(CsvConfiguration csvConfig);
-
-
-
-        /// <summary>
-        /// Sets <code>CsvContent</code> to null. 
-        /// </summary>
-        /// <remarks>WARNING: Writes and reads all records. Can be an expensive call</remarks>
-        IEasyCsv Clear();
-
-
-
-        /// <summary>
-        /// If all the headers match, adds all the data from other csv to this csv.
-        /// </summary>
-        /// <param name="otherCsv">The csv with the data you would like to be added to this one</param>
-        /// <returns></returns>
-        IEasyCsv Combine(IEasyCsv? otherCsv);
-
-
-        /// <summary>
-        /// Performs combine on multiple csvs. See <see cref="Combine(IEasyCsv?)"/>
-        /// </summary>
-        /// <param name="otherCsv">The csvs with the data you would like to be added to this one</param>
-        /// <returns></returns>
-        IEasyCsv Combine(List<IEasyCsv?>? otherCsv);
     }
 }

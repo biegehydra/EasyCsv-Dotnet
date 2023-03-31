@@ -46,12 +46,16 @@ namespace EasyCsv.Core
 
             return new EasyCsv(csvContent, config);
         }
-
         internal static async Task<IEasyCsv> FromObjectsAsync<T>(IEnumerable<T> objects, EasyCsvConfiguration config)
         {
             using var memoryStream = new MemoryStream();
+#if NETSTANDARD2_1_OR_GREATER
             await using (var streamWriter = new StreamWriter(memoryStream, Encoding.UTF8))
             await using (var csvWriter = new CsvWriter(streamWriter, EasyCsvConfiguration.Instance.CsvHelperConfig))
+#else
+            using var streamWriter = new StreamWriter(memoryStream, Encoding.UTF8);
+            using var csvWriter = new CsvWriter(streamWriter, EasyCsvConfiguration.Instance.CsvHelperConfig);
+#endif
             {
                 await csvWriter.WriteRecordsAsync(objects);
             }
@@ -63,10 +67,15 @@ namespace EasyCsv.Core
             return new EasyCsv(csvContent, config);
         }
 
-        internal async Task CalculateContentAsync()
+        internal async Task CalculateContentBytesAndStrAsync()
         {
+#if NETSTANDARD2_1_OR_GREATER
             await using var writer = new StringWriter();
             await using var csvWriter = new CsvWriter(writer, Config.CsvHelperConfig);
+#else
+            using var writer = new StringWriter();
+            using var csvWriter = new CsvWriter(writer, Config.CsvHelperConfig);
+#endif
             var dynamicContent = CsvContent?.Cast<dynamic>();
             await csvWriter.WriteRecordsAsync(dynamicContent);
             var str = writer.ToString();
@@ -74,7 +83,7 @@ namespace EasyCsv.Core
             ContentStr = str;
         }
 
-        internal void CalculateContent()
+        internal void CalculateContentBytesAndStr()
         {
             using var writer = new StringWriter();
             using var csv = new CsvWriter(writer, Config.CsvHelperConfig);
@@ -90,7 +99,7 @@ namespace EasyCsv.Core
             var records = new List<T>();
             if (CsvContent == null) return records;
 
-            await CalculateContentAsync();
+            await CalculateContentBytesAndStrAsync();
             if (string.IsNullOrEmpty(ContentStr)) return records;
 
             if (caseInsensitive)
@@ -132,7 +141,7 @@ namespace EasyCsv.Core
             var records = new List<T>();
             if (CsvContent == null) return records;
 
-            await CalculateContentAsync();
+            await CalculateContentBytesAndStrAsync();
             if (string.IsNullOrEmpty(ContentStr)) return records;
             await ReadRecords(records, prepareHeaderForMatch);
             return records;
@@ -157,7 +166,7 @@ namespace EasyCsv.Core
             var records = new List<T>();
             if (CsvContent == null) return records;
 
-            await CalculateContentAsync();
+            await CalculateContentBytesAndStrAsync();
             if (string.IsNullOrEmpty(ContentStr)) return records;
             await ReadRecords(records, csvConfig);
             return records;

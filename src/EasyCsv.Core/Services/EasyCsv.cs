@@ -37,31 +37,14 @@ namespace EasyCsv.Core
             return Content?.FirstOrDefault()?.Keys.ToList();
         }
 
+        private List<IDictionary<string, object>> CloneContent(List<IDictionary<string, object>> content)
+        {
+            return content.Select(row => (dynamic)row).Select(x => (IDictionary<string, object>)x).ToList();
+        }
+
         public IEasyCsv Clone()
         {
-            var clonedContent = Content?.Select(row => (dynamic) row).Select(x => (IDictionary<string, object>)x).ToList();
-            return new EasyCsv(clonedContent!, Config);
-        }
-
-
-        public IEasyCsv Clone(bool confirmPendingOperations)
-        {
-            if (confirmPendingOperations)
-            {
-                CalculateContent();
-            }
-            var clonedContent = Content?.Select(row => (dynamic)row).Select(x => (IDictionary<string, object>)x).ToList();
-            return new EasyCsv(clonedContent!, Config);
-        }
-
-        public async Task<IEasyCsv?> CloneAsync(bool confirmPendingOperations)
-        {
-            if (confirmPendingOperations)
-            {
-                await CalculateContentAsync();
-            }
-            var clonedContent = Content?.Select(row => (dynamic)row).Select(x => (IDictionary<string, object>)x).ToList();
-            return new EasyCsv(clonedContent!, Config);
+            return new EasyCsv(CloneContent(Content), Config);
         }
 
 

@@ -126,16 +126,8 @@ namespace EasyCsv.Core
 
         /// <summary>
         /// Create deep clone
-        /// <param name="confirmPendingOperations">Determines whether the cloned csv should be based on the current csv content or the content at the last time <code>CalculateCsvContentAsync</code> was called.</param>
         /// <returns>Deep clone of current <code>IEasyCsv</code></returns>
         /// </summary>
-        IEasyCsv Clone(bool confirmPendingOperations);
-
-        /// <summary>
-        /// Only provides performances boost to <code>Clone</code> if confirmPendingOperations is true.
-        /// <param name="confirmPendingOperations">Determines whether the cloned csv should be based on the current csv content or the content at the last time <code>CalculateCsvContentAsync</code> was called.</param>
-        /// <returns>Deep clone of current <code>IEasyCsv</code></returns>
-        /// </summary>
-        Task<IEasyCsv?> CloneAsync(bool confirmPendingOperations);
+        IEasyCsv Clone();
     }
 }

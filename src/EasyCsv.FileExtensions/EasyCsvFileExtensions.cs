@@ -3,7 +3,9 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+#if NET5_0_OR_GREATER
 using Microsoft.AspNetCore.Components.Forms;
+#endif
 using Microsoft.AspNetCore.Http;
 
 [assembly: InternalsVisibleTo("EasyCsv.Tests.Files")]
@@ -11,6 +13,7 @@ namespace EasyCsv.Files
 {
     internal static class EasyCsvFileExtensions
     {
+#if NET5_0_OR_GREATER
         internal static async Task<bool> TryReadFileAsync(this Core.EasyCsv easyCsv, IBrowserFile file, long maxFileSize)
         {
             try
@@ -56,7 +59,7 @@ namespace EasyCsv.Files
                 throw new InvalidOperationException("An error occurred while reading the file.", ex);
             }
         }
-
+#endif
         internal static async Task<bool> TryReadFileAsync(this Core.EasyCsv easyCsv, IFormFile file, long maxFileSize)
         {
             try
@@ -66,7 +69,11 @@ namespace EasyCsv.Files
                     //_logger.($"File size exceeds the maximum allowed size of {maxFileSize} bytes.");
                     return false;
                 }
+#if NETSTANDARD2_1_OR_GREATER
                 await using var memoryStream = new MemoryStream();
+#else
+                using var memoryStream = new MemoryStream();
+#endif
                 await file.CopyToAsync(memoryStream);
                 easyCsv.ContentBytes = memoryStream.ToArray();
                 easyCsv.ContentStr = Encoding.UTF8.GetString(easyCsv.ContentBytes);

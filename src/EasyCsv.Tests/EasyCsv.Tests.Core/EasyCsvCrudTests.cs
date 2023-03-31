@@ -1,5 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using EasyCsv.Core;
+﻿using EasyCsv.Core;
 using EasyCsv.Core.Configuration;
 
 namespace EasyCsv.Tests.Core;

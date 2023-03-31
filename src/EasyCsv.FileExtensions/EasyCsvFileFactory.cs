@@ -1,7 +1,9 @@
 ﻿using System.Threading.Tasks;
 using EasyCsv.Core;
 using EasyCsv.Core.Configuration;
+#if NET5_0_OR_GREATER
 using Microsoft.AspNetCore.Components.Forms;
+#endif
 using Microsoft.AspNetCore.Http;
 
 namespace EasyCsv.Files
@@ -10,8 +12,9 @@ namespace EasyCsv.Files
     {
         private static IEasyCsv? NullOrEasyCsv(IEasyCsv? easyCsv) => easyCsv?.CsvContent == null || easyCsv.CsvContent.Count < 0 ? null : easyCsv;
         private static EasyCsvConfiguration GlobalConfig => EasyCsvConfiguration.Instance;
-        private static EasyCsvConfiguration UserConfigOrGlobalConfig(EasyCsvConfiguration? userConfig) => userConfig ?? GlobalConfig; 
+        private static EasyCsvConfiguration UserConfigOrGlobalConfig(EasyCsvConfiguration? userConfig) => userConfig ?? GlobalConfig;
 
+#if NET5_0_OR_GREATER
         /// <summary>
         /// Creates <code>ICsvService</code> from <code>IBrowserFile</code> synchronously
         /// </summary>
@@ -26,7 +29,6 @@ namespace EasyCsv.Files
             return NullOrEasyCsv(easyCsv);
         }
 
-
         /// <summary>
         /// Creates <code>ICsvService</code> from <code>IBrowserFile</code> asynchronously
         /// </summary>
@@ -40,7 +42,7 @@ namespace EasyCsv.Files
             await easyCsv.CreateCsvContentInBackGround();
             return NullOrEasyCsv(easyCsv);
         }
-
+#endif
 
         /// <summary>
         /// Creates <code>ICsvService</code> from <code>IBrowserFile</code> synchronously

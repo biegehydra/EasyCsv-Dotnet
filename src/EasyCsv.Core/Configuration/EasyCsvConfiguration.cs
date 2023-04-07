@@ -12,19 +12,19 @@ namespace EasyCsv.Core.Configuration
         /// <summary>
         /// Determines whether to normalize fields when generating <code>ContentStr</code> and <code>ContentBytes</code>
         /// </summary>
-        public bool NormalizeFields { get; } = DefaultEasyConfiguration.NormalizeHeaders;
+        public bool NormalizeFields { get; set; } = DefaultEasyConfiguration.NormalizeHeaders;
 
 
         /// <summary>
         /// Function to be used to normalize fields when generating <code>ContentStr</code> and <code>ContentBytes</code>. Only called when <see cref="NormalizeHeaders"/> is true
         /// </summary>
-        public Func<string, string> NormalizeFieldsFunc { get; } = DefaultEasyConfiguration.NormalizeHeadersFunc;
+        public Func<string, string> NormalizeFieldsFunc { get; set; } = DefaultEasyConfiguration.NormalizeHeadersFunc;
 
 
         /// <summary>
         /// CsvHelper configuration that will be used through EasyCsv to read and write csv data when not explicitly given.
         /// </summary>
-        public CsvConfiguration CsvHelperConfig { get; } = DefaultEasyConfiguration.CsvConfiguration;
+        public CsvConfiguration CsvHelperConfig { get; set; } = DefaultEasyConfiguration.CsvConfiguration;
 
         public static EasyCsvConfiguration Instance
         {
@@ -46,7 +46,7 @@ namespace EasyCsv.Core.Configuration
 
     }
 
-    public static class DefaultEasyConfiguration
+    internal static class DefaultEasyConfiguration
     {
         /// <summary>
         /// If true will use the <see cref="NormalizeHeadersFunc"/> to normalize fields when generating <code>ContentStr</code> and <code>ContentBytes</code>

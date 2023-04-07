@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.Collections.Generic;
 using System.Dynamic;
-using System.Runtime.InteropServices;
 
 namespace EasyCsv.Core
 {
@@ -26,7 +22,7 @@ namespace EasyCsv.Core
 
         public CsvRow(IDictionary<string, object> row)
         {
-            _innerDictionary = row;
+            _innerDictionary = new Dictionary<string, object>(row);
         }
 
         public CsvRow(IEnumerable<string> headers, List<string> values)
@@ -47,8 +43,6 @@ namespace EasyCsv.Core
         }
 
         public int Count => _innerDictionary.Count;
-
-        public bool IsReadOnly => false;
 
         public ICollection<string> Keys => _innerDictionary.Keys;
 

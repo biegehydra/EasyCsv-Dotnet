@@ -38,10 +38,11 @@ namespace EasyCsv.Core
             using (var csvWriter = new CsvWriter(streamWriter, config.CsvHelperConfig))
             {
                 csvWriter.WriteRecords(objects);
+                csvWriter.Flush();
             }
 
-            memoryStream.Position = 0;
-            using var streamReader = new StreamReader(memoryStream);
+            using var memoryStream2 = new MemoryStream(memoryStream.ToArray());
+            using var streamReader = new StreamReader(memoryStream2);
             var csvContent = streamReader.ReadToEnd();
 
             return new EasyCsv(csvContent, config);
@@ -58,10 +59,11 @@ namespace EasyCsv.Core
 #endif
             {
                 await csvWriter.WriteRecordsAsync(objects);
+                await csvWriter.FlushAsync();
             }
 
-            memoryStream.Position = 0;
-            using var streamReader = new StreamReader(memoryStream);
+            using var memoryStream2 = new MemoryStream(memoryStream.ToArray());
+            using var streamReader = new StreamReader(memoryStream2);
             var csvContent = await streamReader.ReadToEndAsync();
 
             return new EasyCsv(csvContent, config);

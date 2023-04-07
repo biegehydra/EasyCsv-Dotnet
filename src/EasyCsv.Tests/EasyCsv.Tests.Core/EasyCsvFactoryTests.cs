@@ -78,5 +78,51 @@ namespace EasyCsv.Tests.Core
             Assert.Contains(easyCsv.CsvContent!, x => x.Values.Contains("value1"));
             Assert.Contains(easyCsv.CsvContent!, x => x.Values.Contains("value2"));
         }
+
+        private class TestObject
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+        }
+
+        [Fact]
+        public void FromObjects_CreatesCsvContentFromObjects()
+        {
+            // Arrange
+            var config = new EasyCsvConfiguration();
+            var objects = new List<TestObject>
+            {
+                new TestObject { Id = 1, Name = "Alice" },
+                new TestObject { Id = 2, Name = "Bob" }
+            };
+
+            // Act
+            var easyCsv = EasyCsvFactory.FromObjects(objects, config);
+
+            // Assert
+            Assert.Contains("Id,Name", easyCsv!.ContentStr);
+            Assert.Contains("1,Alice", easyCsv.ContentStr);
+            Assert.Contains("2,Bob", easyCsv.ContentStr);
+        }
+
+        [Fact]
+        public async Task FromObjectsAsync_CreatesCsvContentFromObjectsAsync()
+        {
+            // Arrange
+            var config = new EasyCsvConfiguration();
+            var objects = new List<TestObject>
+            {
+                new TestObject { Id = 1, Name = "Alice" },
+                new TestObject { Id = 2, Name = "Bob" }
+            };
+
+            // Act
+            var easyCsv = await EasyCsvFactory.FromObjectsAsync(objects, config);
+
+            // Assert
+            Assert.Contains("Id,Name", easyCsv!.ContentStr);
+            Assert.Contains("1,Alice", easyCsv.ContentStr);
+            Assert.Contains("2,Bob", easyCsv.ContentStr);
+        }
     }
 }

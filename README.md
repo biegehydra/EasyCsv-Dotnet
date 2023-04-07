@@ -1,4 +1,5 @@
-# EasyCsv [Nuget](https://www.nuget.org/packages/EasyCsv)
+[![NuGet](https://img.shields.io/nuget/dt/EasyCsv?label=NuGet%20Downloads&style=plastic)](https://www.nuget.org/packages/EasyCsv/)
+# EasyCsv
 
 EasyCsv is a simple and efficient .NET library for handling CSV files in your projects. With a **fluent** user-friendly API, it allows you to easily read, write, and manipulate CSV files with a minimal amount of code.
 

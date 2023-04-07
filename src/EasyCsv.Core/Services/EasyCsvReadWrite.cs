@@ -16,7 +16,7 @@ namespace EasyCsv.Core
         {
             if (ContentBytes == null) return;
             using var reader = new StreamReader(new MemoryStream(ContentBytes), Encoding.Default);
-            using var csv = new CsvReader(reader, EasyCsvConfiguration.Instance.CsvHelperConfig);
+            using var csv = new CsvReader(reader, Config.CsvHelperConfig);
             CsvContent = csv.GetRecords<dynamic>().Select(x => new CsvRow((IDictionary<string, object>) x)).ToList();
         }
 
@@ -26,7 +26,7 @@ namespace EasyCsv.Core
             await Task.Run(() =>
             {
                 using var reader = new StreamReader(new MemoryStream(ContentBytes), Encoding.Default);
-                using var csv = new CsvReader(reader, EasyCsvConfiguration.Instance.CsvHelperConfig);
+                using var csv = new CsvReader(reader, Config.CsvHelperConfig);
                 CsvContent = csv.GetRecords<dynamic>().Select(x => new CsvRow((IDictionary<string, object>) x)).ToList();
             });
         }
@@ -35,7 +35,7 @@ namespace EasyCsv.Core
         {
             using var memoryStream = new MemoryStream();
             using (var streamWriter = new StreamWriter(memoryStream, Encoding.UTF8))
-            using (var csvWriter = new CsvWriter(streamWriter, EasyCsvConfiguration.Instance.CsvHelperConfig))
+            using (var csvWriter = new CsvWriter(streamWriter, config.CsvHelperConfig))
             {
                 csvWriter.WriteRecords(objects);
             }
@@ -51,10 +51,10 @@ namespace EasyCsv.Core
             using var memoryStream = new MemoryStream();
 #if NETSTANDARD2_1_OR_GREATER
             await using (var streamWriter = new StreamWriter(memoryStream, Encoding.UTF8))
-            await using (var csvWriter = new CsvWriter(streamWriter, EasyCsvConfiguration.Instance.CsvHelperConfig))
+            await using (var csvWriter = new CsvWriter(streamWriter, config.CsvHelperConfig))
 #else
             using var streamWriter = new StreamWriter(memoryStream, Encoding.UTF8);
-            using var csvWriter = new CsvWriter(streamWriter, EasyCsvConfiguration.Instance.CsvHelperConfig);
+            using var csvWriter = new CsvWriter(streamWriter, config.CsvHelperConfig);
 #endif
             {
                 await csvWriter.WriteRecordsAsync(objects);
@@ -115,7 +115,7 @@ namespace EasyCsv.Core
             async Task ReadRecordsStrict(List<T> records)
             {
                 using var reader = new StreamReader(new MemoryStream(ContentBytes!), Encoding.UTF8);
-                using var csvReader = new CsvReader(reader, EasyCsvConfiguration.Instance.CsvHelperConfig);
+                using var csvReader = new CsvReader(reader, Config.CsvHelperConfig);
                 await foreach (var record in csvReader.GetRecordsAsync<T>())
                 {
                     records.Add(record);

@@ -26,11 +26,14 @@ namespace EasyCsv.Core
 
         }
 
-        internal EasyCsv(Stream fileContentStream, EasyCsvConfiguration config)
+        internal EasyCsv(Stream fileContentStream, EasyCsvConfiguration config, bool calculateContentByteAndStr = true)
         {
             Config = config;
             CreateCsvContent(fileContentStream);
-            CalculateContentBytesAndStr();
+            if (calculateContentByteAndStr)
+            {
+                CalculateContentBytesAndStr();
+            }
         }
 
         internal EasyCsv(TextReader fileContentReader, EasyCsvConfiguration config)

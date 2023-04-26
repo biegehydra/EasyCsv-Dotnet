@@ -12,6 +12,23 @@ namespace EasyCsv.Core
 {
     internal partial class EasyCsv
     {
+        private void CreateCsvContent(Stream stream)
+        {
+            using var reader = new StreamReader(stream, Encoding.Default);
+            using var csv = new CsvReader(reader, Config.CsvHelperConfig);
+            CsvContent = csv.GetRecords<dynamic>().Select(x => new CsvRow((IDictionary<string, object>)x)).ToList();
+        }
+
+        internal async Task CreateCsvContentInBackGround(Stream stream)
+        {
+            await Task.Run(() =>
+            {
+                using var reader = new StreamReader(stream, Encoding.Default);
+                using var csv = new CsvReader(reader, Config.CsvHelperConfig);
+                CsvContent = csv.GetRecords<dynamic>().Select(x => new CsvRow((IDictionary<string, object>)x)).ToList();
+            });
+        }
+
         internal void CreateCsvContent()
         {
             if (ContentBytes == null) return;

@@ -26,16 +26,11 @@ namespace EasyCsv.Core
 
         }
 
-        internal EasyCsv(Stream fileContentStream, int maxFileSize, EasyCsvConfiguration config)
-            : this(ReadStreamToEnd(fileContentStream, maxFileSize), config)
+        internal EasyCsv(Stream fileContentStream, EasyCsvConfiguration config)
         {
-        }
-
-        private static byte[] ReadStreamToEnd(Stream stream, int maxFileSize)
-        {
-            using var memoryStream = new MemoryStream(maxFileSize);
-            stream.CopyTo(memoryStream);
-            return memoryStream.ToArray();
+            Config = config;
+            CreateCsvContent(fileContentStream);
+            CalculateContentBytesAndStr();
         }
 
         internal EasyCsv(TextReader fileContentReader, EasyCsvConfiguration config)

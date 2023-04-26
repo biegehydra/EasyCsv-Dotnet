@@ -53,7 +53,7 @@ namespace EasyCsv.Tests.Core
             var stream = new MemoryStream(Encoding.UTF8.GetBytes(SingleRecordCsv));
 
             // Act
-            var easyCsv = new EasyCsv.Core.EasyCsv(stream, 1024 * 1024 * 15, DefaultConfig);
+            var easyCsv = new EasyCsv.Core.EasyCsv(stream, DefaultConfig);
 
             // Assert
             Assert.NotNull(easyCsv);

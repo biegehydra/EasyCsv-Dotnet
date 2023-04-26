@@ -90,9 +90,9 @@ namespace EasyCsv.Core
         /// <param name="maxFileSize">Will throw exception if file is larger than file size</param>
         /// <param name="config">Determines whether to normalize fields. Default normalization makes them all lower, you can also define custom normalization methods</param>
         /// <returns><code>ICsvService</code></returns>
-        public static IEasyCsv? FromStream(Stream fileStream, int maxFileSize, EasyCsvConfiguration? config = null)
+        public static IEasyCsv? FromStream(Stream fileStream, EasyCsvConfiguration? config = null)
         {
-            var easyCsv = new EasyCsv(fileStream, maxFileSize, UserConfigOrGlobalConfig(config));
+            var easyCsv = new EasyCsv(fileStream, UserConfigOrGlobalConfig(config));
             return NullOrEasyCsv(easyCsv);
         }
 
@@ -228,7 +228,7 @@ namespace EasyCsv.Core
         {
             using var httpClient = new HttpClient();
             using var responseStream = httpClient.GetStreamAsync(url).GetAwaiter().GetResult();
-            var easyCsv = new EasyCsv(responseStream, maxFileSize, UserConfigOrGlobalConfig(config));
+            var easyCsv = new EasyCsv(responseStream, UserConfigOrGlobalConfig(config));
             return NullOrEasyCsv(easyCsv);
         }
 

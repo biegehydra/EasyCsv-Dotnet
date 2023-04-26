@@ -23,9 +23,7 @@ namespace EasyCsv.Files
         /// <returns><code>ICsvService</code></returns>
         public static IEasyCsv? FromBrowserFile(IBrowserFile file, EasyCsvConfiguration? config = null)
         {
-            var easyCsv = new Core.EasyCsv(UserConfigOrGlobalConfig(config));
-            if (!easyCsv.TryReadFile(file)) return null;
-            easyCsv.CreateCsvContent();
+            var easyCsv = new Core.EasyCsv(file.OpenReadStream(), UserConfigOrGlobalConfig(config));
             return NullOrEasyCsv(easyCsv);
         }
 
@@ -38,8 +36,8 @@ namespace EasyCsv.Files
         public static async Task<IEasyCsv?> FromBrowserFileAsync(IBrowserFile file, EasyCsvConfiguration? config = null)
         {
             var easyCsv = new Core.EasyCsv(UserConfigOrGlobalConfig(config));
-            if (!await easyCsv.TryReadFileAsync(file)) return null;
-            await easyCsv.CreateCsvContentInBackGround();
+            await easyCsv.CreateCsvContentInBackGround(file.OpenReadStream());
+            await easyCsv.CalculateContentBytesAndStrAsync();
             return NullOrEasyCsv(easyCsv);
         }
 #endif
@@ -52,9 +50,7 @@ namespace EasyCsv.Files
         /// <returns><code>ICsvService</code></returns>
         public static IEasyCsv? FromFormFile(IFormFile file, EasyCsvConfiguration? config = null)
         {
-            var easyCsv = new Core.EasyCsv(UserConfigOrGlobalConfig(config));
-            if (!easyCsv.TryReadFile(file)) return null;
-            easyCsv.CreateCsvContent();
+            var easyCsv = new Core.EasyCsv(file.OpenReadStream(), UserConfigOrGlobalConfig(config));
             return NullOrEasyCsv(easyCsv);
 
         }
@@ -69,8 +65,8 @@ namespace EasyCsv.Files
         public static async Task<IEasyCsv?> FromFormFileAsync(IFormFile file, EasyCsvConfiguration? config = null)
         {
             var easyCsv = new Core.EasyCsv(UserConfigOrGlobalConfig(config));
-            if (!await easyCsv.TryReadFileAsync(file)) return null;
-            await easyCsv.CreateCsvContentInBackGround();
+            await easyCsv.CreateCsvContentInBackGround(file.OpenReadStream());
+            await easyCsv.CalculateContentBytesAndStrAsync();
             return NullOrEasyCsv(easyCsv);
         }
     }

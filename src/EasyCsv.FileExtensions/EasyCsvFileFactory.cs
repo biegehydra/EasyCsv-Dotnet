@@ -21,10 +21,10 @@ namespace EasyCsv.Files
         /// <param name="file"></param>
         /// <param name="maxFileSize"></param>
         /// <returns><code>ICsvService</code></returns>
-        public static IEasyCsv? FromBrowserFile(IBrowserFile file, long maxFileSize, EasyCsvConfiguration? config = null)
+        public static IEasyCsv? FromBrowserFile(IBrowserFile file, EasyCsvConfiguration? config = null)
         {
             var easyCsv = new Core.EasyCsv(UserConfigOrGlobalConfig(config));
-            if (!easyCsv.TryReadFile(file, maxFileSize)) return null;
+            if (!easyCsv.TryReadFile(file)) return null;
             easyCsv.CreateCsvContent();
             return NullOrEasyCsv(easyCsv);
         }
@@ -35,10 +35,10 @@ namespace EasyCsv.Files
         /// <param name="file"></param>
         /// <param name="maxFileSize"></param>
         /// <returns><code>ICsvService</code></returns>
-        public static async Task<IEasyCsv?> FromBrowserFileAsync(IBrowserFile file, long maxFileSize, EasyCsvConfiguration? config = null)
+        public static async Task<IEasyCsv?> FromBrowserFileAsync(IBrowserFile file, EasyCsvConfiguration? config = null)
         {
             var easyCsv = new Core.EasyCsv(UserConfigOrGlobalConfig(config));
-            if (!await easyCsv.TryReadFileAsync(file, maxFileSize)) return null;
+            if (!await easyCsv.TryReadFileAsync(file)) return null;
             await easyCsv.CreateCsvContentInBackGround();
             return NullOrEasyCsv(easyCsv);
         }
@@ -50,10 +50,10 @@ namespace EasyCsv.Files
         /// <param name="file"></param>
         /// <param name="maxFileSize"></param>
         /// <returns><code>ICsvService</code></returns>
-        public static IEasyCsv? FromFormFile(IFormFile file, long maxFileSize, EasyCsvConfiguration? config = null)
+        public static IEasyCsv? FromFormFile(IFormFile file, EasyCsvConfiguration? config = null)
         {
             var easyCsv = new Core.EasyCsv(UserConfigOrGlobalConfig(config));
-            if (!easyCsv.TryReadFile(file, maxFileSize)) return null;
+            if (!easyCsv.TryReadFile(file)) return null;
             easyCsv.CreateCsvContent();
             return NullOrEasyCsv(easyCsv);
 
@@ -66,10 +66,10 @@ namespace EasyCsv.Files
         /// <param name="file"></param>
         /// <param name="maxFileSize"></param>
         /// <returns><code>ICsvService</code></returns>
-        public static async Task<IEasyCsv?> FromFormFileAsync(IFormFile file, long maxFileSize, EasyCsvConfiguration? config = null)
+        public static async Task<IEasyCsv?> FromFormFileAsync(IFormFile file, EasyCsvConfiguration? config = null)
         {
             var easyCsv = new Core.EasyCsv(UserConfigOrGlobalConfig(config));
-            if (!await easyCsv.TryReadFileAsync(file, maxFileSize)) return null;
+            if (!await easyCsv.TryReadFileAsync(file)) return null;
             await easyCsv.CreateCsvContentInBackGround();
             return NullOrEasyCsv(easyCsv);
         }

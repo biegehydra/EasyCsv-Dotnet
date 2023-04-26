@@ -25,7 +25,7 @@ namespace EasyCsv.Tests.Files
             var easyCsv = new Core.EasyCsv(DefaultConfig);
 
             // Act
-            var result = await easyCsv.TryReadFileAsync(formFileMock.Object, 1024 * 1024 * 15);
+            var result = await easyCsv.TryReadFileAsync(formFileMock.Object);
 
             // Assert
             Assert.True(result);
@@ -46,7 +46,7 @@ namespace EasyCsv.Tests.Files
             var easyCsv = new Core.EasyCsv(DefaultConfig);
 
             // Act
-            var result = await easyCsv.TryReadFileAsync(browserFileMock.Object, 1024 * 1024 * 15);
+            var result = await easyCsv.TryReadFileAsync(browserFileMock.Object);
 
             // Assert
             Assert.True(result);

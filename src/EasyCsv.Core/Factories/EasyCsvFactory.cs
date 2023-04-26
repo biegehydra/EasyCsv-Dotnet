@@ -252,7 +252,7 @@ namespace EasyCsv.Core
         /// </summary>
         /// <param name="objects">Objects to create the csv from</param>
         /// <param name="config">Determines whether to normalize fields. Default normalization makes them all lower, you can also define custom normalization methods</param>
-        public static async Task<IEasyCsv?> FromObjectsAsync<T>(List<T> objects, EasyCsvConfiguration? config)
+        public static async Task<IEasyCsv?> FromObjectsAsync<T>(List<T> objects, EasyCsvConfiguration? config = null)
         {
             var easyCsv = await EasyCsv.FromObjectsAsync(objects, UserConfigOrGlobalConfig(config));
             return NullOrEasyCsv(easyCsv);
@@ -264,7 +264,7 @@ namespace EasyCsv.Core
         /// </summary>
         /// <param name="objects">Objects to create the csv from</param>
         /// <param name="config">Determines whether to normalize fields. Default normalization makes them all lower, you can also define custom normalization methods</param>
-        public static IEasyCsv? FromObjects<T>(List<T> objects, EasyCsvConfiguration? config)
+        public static IEasyCsv? FromObjects<T>(List<T> objects, EasyCsvConfiguration? config = null)
         {
             var easyCsv = EasyCsv.FromObjects(objects, UserConfigOrGlobalConfig(config));
             return NullOrEasyCsv(easyCsv);

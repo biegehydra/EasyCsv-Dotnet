@@ -14,17 +14,13 @@ namespace EasyCsv.Files
     internal static class EasyCsvFileExtensions
     {
 #if NET5_0_OR_GREATER
-        internal static async Task<bool> TryReadFileAsync(this Core.EasyCsv easyCsv, IBrowserFile file, long maxFileSize)
+        internal static async Task<bool> TryReadFileAsync(this Core.EasyCsv easyCsv, IBrowserFile file)
         {
             try
             {
-                if (file.Size > maxFileSize)
-                {
-                    throw new InvalidOperationException("File size too large");
-                }
                 await using (var memoryStream = new MemoryStream())
                 {
-                    await file.OpenReadStream(maxFileSize).CopyToAsync(memoryStream);
+                    await file.OpenReadStream().CopyToAsync(memoryStream);
                     easyCsv.ContentBytes = memoryStream.ToArray();
                     easyCsv.ContentStr = Encoding.UTF8.GetString(easyCsv.ContentBytes);
                 }
@@ -37,17 +33,13 @@ namespace EasyCsv.Files
             }
         }
 
-        internal static bool TryReadFile(this Core.EasyCsv easyCsv, IBrowserFile file, long maxFileSize)
+        internal static bool TryReadFile(this Core.EasyCsv easyCsv, IBrowserFile file)
         {
             try
             {
-                if (file.Size > maxFileSize)
-                {
-                    throw new InvalidOperationException("File size too large");
-                }
                 using (var memoryStream = new MemoryStream())
                 {
-                    file.OpenReadStream(maxFileSize).CopyToAsync(memoryStream);
+                    file.OpenReadStream().CopyToAsync(memoryStream);
                     easyCsv.ContentBytes = memoryStream.ToArray();
                     easyCsv.ContentStr = Encoding.UTF8.GetString(easyCsv.ContentBytes);
                 }
@@ -60,15 +52,10 @@ namespace EasyCsv.Files
             }
         }
 #endif
-        internal static async Task<bool> TryReadFileAsync(this Core.EasyCsv easyCsv, IFormFile file, long maxFileSize)
+        internal static async Task<bool> TryReadFileAsync(this Core.EasyCsv easyCsv, IFormFile file)
         {
             try
             {
-                if (file.Length > maxFileSize)
-                {
-                    //_logger.($"File size exceeds the maximum allowed size of {maxFileSize} bytes.");
-                    return false;
-                }
 #if NETSTANDARD2_1_OR_GREATER
                 await using var memoryStream = new MemoryStream();
 #else
@@ -86,16 +73,10 @@ namespace EasyCsv.Files
             }
         }
 
-        internal static bool TryReadFile(this Core.EasyCsv easyCsv, IFormFile file, long maxFileSize)
+        internal static bool TryReadFile(this Core.EasyCsv easyCsv, IFormFile file)
         {
             try
             {
-                if (file.Length > maxFileSize)
-                {
-                    //_logger.($"File size exceeds the maximum allowed size of {maxFileSize} bytes.");
-                    return false;
-                }
-
                 using var memoryStream = new MemoryStream();
                 file.CopyToAsync(memoryStream);
                 easyCsv.ContentBytes = memoryStream.ToArray();

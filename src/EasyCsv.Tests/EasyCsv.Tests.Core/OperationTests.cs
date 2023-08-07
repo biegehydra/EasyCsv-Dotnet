@@ -6,7 +6,7 @@ using EasyCsv.Core.Configuration;
 
 namespace EasyCsv.Tests.Core
 {
-    public class EasyCsvOperationTests
+    public class OperationTests
     {
         private class CsvData
         {

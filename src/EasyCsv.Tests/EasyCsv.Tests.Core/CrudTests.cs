@@ -3,7 +3,7 @@ using EasyCsv.Core.Configuration;
 
 namespace EasyCsv.Tests.Core;
 
-public class EasyCsvCrudTests
+public class CrudTests
 {
     private static EasyCsvConfiguration DefaultConfig => EasyCsvConfiguration.Instance;
     [Fact]

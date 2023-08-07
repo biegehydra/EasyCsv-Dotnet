@@ -58,9 +58,9 @@ namespace EasyCsv.Core
         /// Gets the records of the CSV content as a list of objects of type T.
         /// </summary>
         /// <typeparam name="T">The type of objects to return.</typeparam>
-        /// <param name="caseInsensitive">Determine whether property matching is case sensitive</param>
+        /// <param name="strict">Determine whether property matching is case sensitive</param>
         /// <returns>A list of objects of type T representing the CSV records.</returns>
-        Task<List<T>> GetRecordsAsync<T>(bool caseInsensitive = false);
+        Task<List<T>> GetRecordsAsync<T>(bool strict = false);
 
 
         /// <summary>

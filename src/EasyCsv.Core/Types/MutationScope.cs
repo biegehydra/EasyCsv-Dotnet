@@ -40,9 +40,9 @@ namespace EasyCsv.Core
             return _csv.GetHeaders();
         }
 
-        public Task<List<T>> GetRecordsAsync<T>(bool caseInsensitive = false)
+        public Task<List<T>> GetRecordsAsync<T>(bool strict = false)
         {
-            return _csv.GetRecordsAsync<T>(caseInsensitive);
+            return _csv.GetRecordsAsync<T>(strict);
         }
 
         public Task<List<T>> GetRecordsAsync<T>(PrepareHeaderForMatch prepareHeaderForMatch)

@@ -3,7 +3,7 @@ using EasyCsv.Core.Configuration;
 
 namespace EasyCsv.Tests.Core
 {
-    public class EasyCsvConstructorTests
+    public class ConstructorTests
     {
         private const string SingleRecordCsv = "header1,header2\nvalue1,value2";
         private static EasyCsvConfiguration DefaultConfig => EasyCsvConfiguration.Instance;

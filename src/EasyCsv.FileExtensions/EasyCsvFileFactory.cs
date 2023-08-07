@@ -11,7 +11,7 @@ namespace EasyCsv.Files
 {
     public static class EasyCsvFileFactory
     {
-        private static IEasyCsv? NullOrEasyCsv(IEasyCsv? easyCsv) => easyCsv?.CsvContent == null || easyCsv.CsvContent.Count < 0 ? null : easyCsv;
+        private static IEasyCsv? NullOrEasyCsv(IEasyCsv? easyCsv) => easyCsv?.CsvContent is not {Count: > 0} ? null : easyCsv;
         private static EasyCsvConfiguration GlobalConfig => EasyCsvConfiguration.Instance;
         private static EasyCsvConfiguration UserConfigOrGlobalConfig(EasyCsvConfiguration? userConfig) => userConfig ?? GlobalConfig;
 

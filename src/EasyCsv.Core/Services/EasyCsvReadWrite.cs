@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using EasyCsv.Core.Configuration;
 
@@ -113,7 +114,7 @@ namespace EasyCsv.Core
             ContentStr = str;
         }
 
-        public async Task<List<T>> GetRecordsAsync<T>(bool caseInsensitive = false)
+        public async Task<List<T>> GetRecordsAsync<T>(bool strict = false)
         {
             var records = new List<T>();
             if (CsvContent == null) return records;
@@ -121,7 +122,7 @@ namespace EasyCsv.Core
             await CalculateContentBytesAndStrAsync();
             if (string.IsNullOrEmpty(ContentStr)) return records;
 
-            if (caseInsensitive)
+            if (strict)
             {
                 await ReadRecordsStrict(records);
             }
@@ -144,7 +145,7 @@ namespace EasyCsv.Core
             {
                 var config = new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
-                    PrepareHeaderForMatch = args => args.Header.ToLower(CultureInfo.InvariantCulture)
+                    PrepareHeaderForMatch = args => Regex.Replace(args.Header, @"\W", "").ToLower(CultureInfo.InvariantCulture)
                 };
                 using var reader = new StreamReader(new MemoryStream(ContentBytes!), Encoding.UTF8);
                 using var csvReader = new CsvReader(reader, config);

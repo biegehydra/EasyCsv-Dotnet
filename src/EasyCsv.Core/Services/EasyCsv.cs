@@ -81,9 +81,9 @@ namespace EasyCsv.Core
             return CsvContent?.FirstOrDefault()?.Keys.ToList();
         }
 
-        private static List<CsvRow> CloneContent(List<CsvRow> content)
+        private static List<CsvRow> CloneContent(List<CsvRow>? content)
         {
-            return content.Select(row => new CsvRow(row)).ToList();
+            return content?.Select(row => new CsvRow(row)).ToList() ?? new List<CsvRow>();
         }
 
         public IEasyCsv Clone()

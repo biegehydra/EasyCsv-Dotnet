@@ -3,6 +3,8 @@ using System;
 using CsvHelper.Configuration;
 using CsvHelper;
 using System.Threading.Tasks;
+using CsvHelper.TypeConversion;
+using EasyCsv.Core.Configuration;
 
 namespace EasyCsv.Core
 {
@@ -101,31 +103,31 @@ namespace EasyCsv.Core
 
         /// <summary>
         /// Removes any header that does match a public property on the type param T
-        /// <typeparam name="T">The type that will be used as the basis for what headers to remove</typeparam>
+        /// <typeparam name="TClass">The type that will be used as the basis for what headers to remove</typeparam>
         /// <returns>An <code>IEasyCsv</code> to be used for fluent method chaining.</returns>
-        /// <param name="caseInsensitive">Determines whether the operation should be case insensitive when determining if a header field and all the values in it's column should be removed--are UNUSED.</param>
+        /// <param name="strict">Determines whether the operation should be lenient in getting values and matching headers.</param>
         /// <remarks>WARNING: Writes and reads all records. Can be an expensive call</remarks>
         /// </summary>
-        Task<T> RemoveUnusedHeadersAsync<TC>(bool caseInsensitive = true);
+        Task<T> RemoveUnusedHeadersAsync<TClass>(bool strict = true, CsvContextProfile? csvContextProfile = null);
 
 
         /// <summary>
         /// Removes any header that does match a public property on the type param T
-        /// <typeparam name="T">The type that will be used as the basis for what headers to remove</typeparam>
+        /// <typeparam name="TClass">The type that will be used as the basis for what headers to remove</typeparam>
         /// <returns>An <code>IEasyCsv</code> to be used for fluent method chaining.</returns>
         /// <param name="prepareHeaderForMatch">Determines whether the operation should be case insensitive when determining if a header field, and all the values in it's column, should be removed--are UNUSED. See GetGetRecordsAsync for information on prepareHeaderForMatch usage.</param>
         /// <remarks>WARNING: Writes and reads all records. Can be an expensive call</remarks>
         /// </summary>
-        Task<T> RemoveUnusedHeadersAsync<TC>(PrepareHeaderForMatch prepareHeaderForMatch);
+        Task<T> RemoveUnusedHeadersAsync<TClass>(PrepareHeaderForMatch prepareHeaderForMatch, CsvContextProfile? csvContextProfile = null);
 
 
         /// <summary>
         /// Removes any header that does match a public property on the type param T
-        /// <typeparam name="T">The type that will be used as the basis for what headers to remove</typeparam>
+        /// <typeparam name="TClass">The type that will be used as the basis for what headers to remove</typeparam>
         /// <returns>An <code>IEasyCsv</code> to be used for fluent method chaining.</returns>
         /// <param name="csvConfig">The CSVHelper csv configuration configuration for reading the csv into records, which ultimately removes unused headers</param>
         /// <remarks>WARNING: Writes and reads all records. Can be an expensive call</remarks>
         /// </summary>
-        Task<T> RemoveUnusedHeadersAsync<TC>(CsvConfiguration csvConfig);
+        Task<T> RemoveUnusedHeadersAsync<TClass>(CsvConfiguration csvConfig, CsvContextProfile? csvContextProfile = null);
     }
 }

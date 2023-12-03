@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System;
+using EasyCsv.Core.Configuration;
 
 namespace EasyCsv.Core
 {
@@ -159,22 +160,22 @@ namespace EasyCsv.Core
         }
 
 
-        public async Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(bool caseInsensitive)
+        public async Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(bool caseInsensitive, CsvContextProfile? csvContextProfile = null)
         {
             var records = await GetRecordsAsync<T>(caseInsensitive);
-            return await FromObjectsAsync<T>(records, Config);
+            return await FromObjectsAsync<T>(records, Config, csvContextProfile);
         }
 
-        public async Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(PrepareHeaderForMatch prepareHeaderForMatch)
+        public async Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(PrepareHeaderForMatch prepareHeaderForMatch, CsvContextProfile? csvContextProfile = null)
         {
             var records = await GetRecordsAsync<T>(prepareHeaderForMatch);
-            return await FromObjectsAsync(records, Config);
+            return await FromObjectsAsync(records, Config, csvContextProfile);
         }
 
-        public async Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(CsvConfiguration csvConfig)
+        public async Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(CsvConfiguration csvConfig, CsvContextProfile? csvContextProfile = null)
         {
             var records = await GetRecordsAsync<T>(csvConfig);
-            return await FromObjectsAsync(records, Config);
+            return await FromObjectsAsync(records, Config, csvContextProfile);
         }
 
         public IEasyCsv Clear()

@@ -3,6 +3,7 @@ using CsvHelper.TypeConversion;
 using CsvHelper;
 using EasyCsv.Core;
 using System.Globalization;
+using CsvHelper.Configuration.Attributes;
 using EasyCsv.Core.Configuration;
 
 namespace EasyCsv.Tests.Core;
@@ -25,7 +26,9 @@ public class UniqueCaseTests
     public class Person
     {
         public string Name { get; set; }
+        [TypeConverter(typeof(EasyDefaultTypeConverter<DateTime>))]
         public DateTime DateOfBirth { get; set; }
+        [NumberStyles(NumberStyles.AllowCurrencySymbol)]
         public int Num { get; set; }
     }
 
@@ -69,7 +72,7 @@ public class UniqueCaseTests
     [Fact]
     public async Task TypeConverterTest()
     {
-        var service = await EasyCsvFactory.FromStringAsync("Name,DateOfBirth,Num\nJohn,2000-01-01,1");
+        var service = await EasyCsvFactory.FromStringAsync("Name,DateOfBirth,Num\nJohn,01/01/2000,1");
         var csvContextProfile = new CsvContextProfile()
         {
             TypeConverters = new Dictionary<Type, ITypeConverter>()
@@ -95,6 +98,11 @@ public class UniqueCaseTests
         };
         var records = await service.GetRecordsAsync<Person>(csvContextProfile: csvContextProfile);
         Assert.Equal(new DateTime(2000, 1, 1), records[0].DateOfBirth);
+    }
+
+    public class MyTp : TypeConverterOptions
+    {
+        
     }
 
     public class IncorrectPersonMap : ClassMap<Person>

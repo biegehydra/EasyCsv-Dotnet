@@ -161,6 +161,22 @@ namespace EasyCsv.Tests.Core
         }
 
         [Fact]
+        public void RemoveUnusedHeaders()
+        {
+            // Arrange
+            var fileContent = "header1,header2,header3\nvalue1,value2,";
+            var easyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+
+            // Act
+            easyCsv.RemoveUnusedHeaders();
+
+            // Assert
+            var headers = easyCsv.GetHeaders();
+            Assert.Equal(2, headers!.Count);
+            Assert.DoesNotContain("header3", headers);
+        }
+
+        [Fact]
         public async Task ToList_GeneratesListSuccessfully()
         {
             var fileContent = "header1,header2,header3\nvalue1,value2,value3";

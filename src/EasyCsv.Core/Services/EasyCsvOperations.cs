@@ -160,6 +160,21 @@ namespace EasyCsv.Core
         }
 
 
+        public IEasyCsv RemoveUnusedHeaders()
+        {
+            if (CsvContent == null) return this;
+            var keys = GetHeaders();
+            if (keys == null) return this;
+            foreach (var key in keys)
+            {
+                if (CsvContent.All(x => string.IsNullOrWhiteSpace(x[key] as string)))
+                {
+                    RemoveColumn(key);
+                }
+            }
+            return this;
+        }
+
         public async Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(bool caseInsensitive, CsvContextProfile? csvContextProfile = null)
         {
             var records = await GetRecordsAsync<T>(caseInsensitive);

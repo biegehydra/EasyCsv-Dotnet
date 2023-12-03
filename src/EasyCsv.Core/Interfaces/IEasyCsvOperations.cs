@@ -100,6 +100,11 @@ namespace EasyCsv.Core
         /// <returns>An <code>IEasyCsv</code> to be used for fluent method chaining.</returns>
         T RemoveColumns(List<string> headerFields);
 
+        /// <summary>
+        /// Removes all the columns where the value of the column is null or whitespace in all rows.
+        /// </summary>
+        /// <returns></returns>
+        T RemoveUnusedHeaders();
 
         /// <summary>
         /// Removes any header that does match a public property on the type param T

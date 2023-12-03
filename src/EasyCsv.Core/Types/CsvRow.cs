@@ -5,10 +5,11 @@ namespace EasyCsv.Core
 {
     public class CsvRow : DynamicObject
     {
-        private IDictionary<string, object> _innerDictionary;
+        private readonly IDictionary<string, object?> _innerDictionary;
 
         internal CsvRow(IEnumerable<string> headers)
         {
+            _innerDictionary = new Dictionary<string, object?>();
             foreach (var header in headers)
             {
                 this[header] = null;
@@ -17,17 +18,17 @@ namespace EasyCsv.Core
 
         public CsvRow(CsvRow csvRow)
         {
-            _innerDictionary = new Dictionary<string, object>(csvRow._innerDictionary);
+            _innerDictionary = new Dictionary<string, object?>(csvRow._innerDictionary);
         }
 
-        public CsvRow(IDictionary<string, object> row)
+        public CsvRow(IDictionary<string, object?> row)
         {
-            _innerDictionary = new Dictionary<string, object>(row);
+            _innerDictionary = new Dictionary<string, object?>(row);
         }
 
         public CsvRow(IEnumerable<string> headers, List<string> values)
         {
-            _innerDictionary = new Dictionary<string, object>();
+            _innerDictionary = new Dictionary<string, object?>();
             var i = 0;
             foreach (var key in headers)
             {
@@ -36,7 +37,7 @@ namespace EasyCsv.Core
             }
         }
 
-        public object this[string key]
+        public object? this[string key]
         {
             get => _innerDictionary[key];
             set => _innerDictionary[key] = value;
@@ -46,7 +47,7 @@ namespace EasyCsv.Core
 
         public ICollection<string> Keys => _innerDictionary.Keys;
 
-        public ICollection<object> Values => _innerDictionary.Values;
+        public ICollection<object?> Values => _innerDictionary.Values;
 
         public void Add(string key, object value)
         {
@@ -63,12 +64,12 @@ namespace EasyCsv.Core
             return _innerDictionary.Remove(key);
         }
 
-        public bool TryGetValue(string key, out object value)
+        public bool TryGetValue(string key, out object? value)
         {
             return _innerDictionary.TryGetValue(key, out value);
         }
 
-        public void Add(KeyValuePair<string, object> item)
+        public void Add(KeyValuePair<string, object?> item)
         {
             _innerDictionary.Add(item.Key, item.Value);
         }
@@ -78,32 +79,32 @@ namespace EasyCsv.Core
             _innerDictionary.Clear();
         }
 
-        public bool Contains(KeyValuePair<string, object> item)
+        public bool Contains(KeyValuePair<string, object?> item)
         {
             return _innerDictionary.Contains(item);
         }
 
-        public void CopyTo(KeyValuePair<string, object>[] array, int arrayIndex)
+        public void CopyTo(KeyValuePair<string, object?>[] array, int arrayIndex)
         {
             _innerDictionary.CopyTo(array, arrayIndex);
         }
 
-        public bool Remove(KeyValuePair<string, object> item)
+        public bool Remove(KeyValuePair<string, object?> item)
         {
             return _innerDictionary.Remove(item.Key);
         }
 
-        public IEnumerator<KeyValuePair<string, object>> GetEnumerator()
+        public IEnumerator<KeyValuePair<string, object?>> GetEnumerator()
         {
             return _innerDictionary.GetEnumerator();
         }
 
-        public override bool TryGetMember(GetMemberBinder binder, out object result)
+        public override bool TryGetMember(GetMemberBinder binder, out object? result)
         {
             return _innerDictionary.TryGetValue(binder.Name, out result);
         }
 
-        public override bool TrySetMember(SetMemberBinder binder, object value)
+        public override bool TrySetMember(SetMemberBinder binder, object? value)
         {
             _innerDictionary[binder.Name] = value;
             return true;
@@ -114,9 +115,9 @@ namespace EasyCsv.Core
             return Keys;
         }
 
-        public Dictionary<string, object> ToDictionary()
+        public Dictionary<string, object?> ToDictionary()
         {
-            return new Dictionary<string, object>(_innerDictionary);
+            return new Dictionary<string, object?>(_innerDictionary);
         }
     }
 }

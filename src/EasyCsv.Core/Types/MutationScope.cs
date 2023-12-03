@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using CsvHelper;
 using CsvHelper.Configuration;
-using CsvHelper.TypeConversion;
 using EasyCsv.Core.Configuration;
 
 namespace EasyCsv.Core
@@ -124,6 +123,12 @@ namespace EasyCsv.Core
         public IEasyMutations RemoveColumns(List<string> headerFields)
         {
             _csv.RemoveColumns(headerFields);
+            return this;
+        }
+
+        public IEasyMutations RemoveUnusedHeaders()
+        { 
+            _csv.RemoveUnusedHeaders();
             return this;
         }
 

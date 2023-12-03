@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using CsvHelper;
 using EasyCsv.Core.Configuration;
 
 [assembly: InternalsVisibleTo("EasyCsv.Files")]

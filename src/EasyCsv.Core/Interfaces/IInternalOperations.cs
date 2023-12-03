@@ -3,6 +3,8 @@ using CsvHelper;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System;
+using CsvHelper.TypeConversion;
+using EasyCsv.Core.Configuration;
 
 namespace EasyCsv.Core
 {
@@ -18,8 +20,8 @@ namespace EasyCsv.Core
         internal IEasyCsv SortCsv<TKey>(Func<CsvRow, TKey> keySelector, bool ascending = true);
         internal IEasyCsv RemoveColumn(string headerField);
         internal IEasyCsv RemoveColumns(List<string> headerFields);
-        internal Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(bool caseInsensitive = true);
-        internal Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(PrepareHeaderForMatch prepareHeaderForMatch);
-        internal Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(CsvConfiguration csvConfig);
+        internal Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(bool caseInsensitive = true, CsvContextProfile? csvContextProfile = null);
+        internal Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(PrepareHeaderForMatch prepareHeaderForMatch, CsvContextProfile? csvContextProfile = null);
+        internal Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(CsvConfiguration csvConfig, CsvContextProfile? csvContextProfile = null);
     }
 }

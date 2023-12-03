@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using CsvHelper;
 using CsvHelper.Configuration;
+using CsvHelper.TypeConversion;
+using EasyCsv.Core.Configuration;
 
 namespace EasyCsv.Core
 {
@@ -40,19 +42,24 @@ namespace EasyCsv.Core
             return _csv.GetHeaders();
         }
 
-        public Task<List<T>> GetRecordsAsync<T>(bool strict = false)
+        public Task<List<T>> GetRecordsAsync<T>(bool strict = false, CsvContextProfile? csvContextProfile = null)
         {
-            return _csv.GetRecordsAsync<T>(strict);
+            return _csv.GetRecordsAsync<T>(strict, csvContextProfile);
         }
 
-        public Task<List<T>> GetRecordsAsync<T>(PrepareHeaderForMatch prepareHeaderForMatch)
+        public Task<List<T>> GetRecordsAsync<T>(PrepareHeaderForMatch prepareHeaderForMatch, CsvContextProfile? csvContextProfile = null)
         {
-            return _csv.GetRecordsAsync<T>(prepareHeaderForMatch);
+            return _csv.GetRecordsAsync<T>(prepareHeaderForMatch, csvContextProfile);
         }
 
-        public Task<List<T>> GetRecordsAsync<T>(CsvConfiguration csvConfig)
+        public Task<List<T>> GetRecordsAsync<T>(CsvConfiguration csvConfig, CsvContextProfile? csvContextProfile = null)
         {
-            return _csv.GetRecordsAsync<T>(csvConfig);
+            return _csv.GetRecordsAsync<T>(csvConfig, csvContextProfile);
+        }
+
+        public IAsyncEnumerable<T> ReadRecordsAsync<T>(CsvConfiguration csvConfig, CsvContextProfile? csvContextProfile = null)
+        {
+            return _csv.ReadRecordsAsync<T>(csvConfig, csvContextProfile);
         }
 
         public IEasyMutations Clone()
@@ -120,21 +127,21 @@ namespace EasyCsv.Core
             return this;
         }
 
-        public async Task<IEasyMutations> RemoveUnusedHeadersAsync<T>(bool caseInsensitive = true)
+        public async Task<IEasyMutations> RemoveUnusedHeadersAsync<T>(bool strict = true, CsvContextProfile? csvContextProfile = null)
         {
-            await _csv.RemoveUnusedHeadersAsync<T>(caseInsensitive);
+            await _csv.RemoveUnusedHeadersAsync<T>(strict, csvContextProfile);
             return this;
         }
 
-        public async Task<IEasyMutations> RemoveUnusedHeadersAsync<T>(PrepareHeaderForMatch prepareHeaderForMatch)
+        public async Task<IEasyMutations> RemoveUnusedHeadersAsync<T>(PrepareHeaderForMatch prepareHeaderForMatch, CsvContextProfile? csvContextProfile = null)
         {
-            await _csv.RemoveUnusedHeadersAsync<T>(prepareHeaderForMatch);
+            await _csv.RemoveUnusedHeadersAsync<T>(prepareHeaderForMatch, csvContextProfile);
             return this;
         }
 
-        public async Task<IEasyMutations> RemoveUnusedHeadersAsync<T>(CsvConfiguration csvConfig)
+        public async Task<IEasyMutations> RemoveUnusedHeadersAsync<T>(CsvConfiguration csvConfig, CsvContextProfile? csvContextProfile = null)
         {
-            await _csv.RemoveUnusedHeadersAsync<T>(csvConfig);
+            await _csv.RemoveUnusedHeadersAsync<T>(csvConfig, csvContextProfile);
             return this;
         }
 

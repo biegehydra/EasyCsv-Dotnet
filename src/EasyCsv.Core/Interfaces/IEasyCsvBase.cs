@@ -1,11 +1,14 @@
-﻿using CsvHelper.Configuration;
+﻿using System;
+using CsvHelper.Configuration;
 using CsvHelper;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using CsvHelper.TypeConversion;
+using EasyCsv.Core.Configuration;
 
 namespace EasyCsv.Core
 {
-    public interface IEasyCsvBase<T> : IEasyCombine<T>, IEasyClear<T>
+    public interface IEasyCsvBase<T>
     {
         /// <summary>
         /// CsvContent of the csv file in bytes. Calculate on creation and when <code>CalculateContentBytesAndStrAsync</code> is called
@@ -57,36 +60,67 @@ namespace EasyCsv.Core
         /// <summary>
         /// Gets the records of the CSV content as a list of objects of type T.
         /// </summary>
-        /// <typeparam name="T">The type of objects to return.</typeparam>
+        /// <typeparam name="TRecord">The type of objects to return.</typeparam>
         /// <param name="strict">Determine whether property matching is case sensitive</param>
         /// <returns>A list of objects of type T representing the CSV records.</returns>
-        Task<List<T>> GetRecordsAsync<T>(bool strict = false);
+        Task<List<TRecord>> GetRecordsAsync<TRecord>(bool strict = false, CsvContextProfile? csvContextProfile = null);
 
 
         /// <summary>
         /// Gets the records of the CSV content as a list of objects of type T.
         /// </summary>
-        /// <typeparam name="T">The type of objects to return.</typeparam>
+        /// <typeparam name="TRecord">The type of objects to return.</typeparam>
         /// <param name="prepareHeaderForMatch">Determine whether property matching is case sensitive</param>
         /// <example><code>
         /// PrepareHeaderForMatch = args => args.Header.ToLower();
         /// </code></example>
         /// <returns>A list of objects of type T representing the CSV records.</returns>
-        Task<List<T>> GetRecordsAsync<T>(PrepareHeaderForMatch prepareHeaderForMatch);
+        Task<List<TRecord>> GetRecordsAsync<TRecord>(PrepareHeaderForMatch prepareHeaderForMatch, CsvContextProfile? csvContextProfile = null);
 
 
         /// <summary>
         /// Gets the records of the CSV content as a list of objects of type T.
         /// </summary>
-        /// <typeparam name="T">The type of objects to return.</typeparam>
+        /// <typeparam name="TRecord">The type of objects to return.</typeparam>
         /// <param name="csvConfig">The CSVHelper csv configuration configuration for reading the csv into records</param>
         /// <returns>A list of objects of type T representing the CSV records.</returns>
-        Task<List<T>> GetRecordsAsync<T>(CsvConfiguration csvConfig);
+        Task<List<TRecord>> GetRecordsAsync<TRecord>(CsvConfiguration csvConfig, CsvContextProfile? csvContextProfile = null);
+
+
+        /// <summary>
+        /// Gets the records of the CSV content as a list of objects of type T.
+        /// </summary>
+        /// <typeparam name="TRecord">The type of objects to return.</typeparam>
+        /// <param name="csvConfig">The CSVHelper csv configuration configuration for reading the csv into records</param>
+        /// <returns>A list of objects of type T representing the CSV records.</returns>
+        IAsyncEnumerable<TRecord> ReadRecordsAsync<TRecord>(CsvConfiguration csvConfig, CsvContextProfile? csvContextProfile = null);
+
+        /// <summary>
+        /// If all the headers match, adds all the data from other csv to this csv.
+        /// </summary>
+        /// <param name="otherCsv">The csv with the data you would like to be added to this one</param>
+        /// <returns></returns>
+        T Combine(IEasyCsv? otherCsv);
+
+
+        /// <summary>
+        /// Performs combine on multiple csvs. See <see cref="Combine(IEasyCsv?)"/>
+        /// </summary>
+        /// <param name="otherCsv">The csvs with the data you would like to be added to this one</param>
+        /// <returns></returns>
+        T Combine(List<IEasyCsv?> otherCsv);
+
 
         /// <summary>
         /// Create deep clone
         /// <returns>Deep clone of current <code>IEasyCsv</code></returns>
         /// </summary>
         T Clone();
+
+        /// <summary>
+        /// Sets <code>CsvContent</code> to null. 
+        /// </summary>
+        /// <remarks>WARNING: Writes and reads all records. Can be an expensive call</remarks>
+        T Clear();
     }
 }

@@ -49,12 +49,14 @@ namespace EasyCsv.Core
             });
         }
 
-        internal static IEasyCsv FromObjects<T>(IEnumerable<T> objects, EasyCsvConfiguration config)
+        internal static IEasyCsv FromObjects<T>(IEnumerable<T> objects, EasyCsvConfiguration config, CsvContextProfile? csvContextProfile = null)
         {
             using var memoryStream = new MemoryStream();
             using (var streamWriter = new StreamWriter(memoryStream, Encoding.UTF8))
             using (var csvWriter = new CsvWriter(streamWriter, config.CsvHelperConfig))
             {
+                AddSettingsToCsvContext<T>(csvWriter.Context, csvContextProfile);
+
                 csvWriter.WriteRecords(objects);
                 csvWriter.Flush();
             }
@@ -65,7 +67,7 @@ namespace EasyCsv.Core
 
             return new EasyCsv(csvContent, config);
         }
-        internal static async Task<IEasyCsv> FromObjectsAsync<T>(IEnumerable<T> objects, EasyCsvConfiguration config)
+        internal static async Task<IEasyCsv> FromObjectsAsync<T>(IEnumerable<T> objects, EasyCsvConfiguration config, CsvContextProfile? csvContextProfile = null)
         {
             using var memoryStream = new MemoryStream();
 #if NETSTANDARD2_1_OR_GREATER
@@ -76,6 +78,8 @@ namespace EasyCsv.Core
             using var csvWriter = new CsvWriter(streamWriter, config.CsvHelperConfig);
 #endif
             {
+                AddSettingsToCsvContext<T>(csvWriter.Context, csvContextProfile);
+
                 await csvWriter.WriteRecordsAsync(objects);
                 await csvWriter.FlushAsync();
             }
@@ -114,7 +118,7 @@ namespace EasyCsv.Core
             ContentStr = str;
         }
 
-        public async Task<List<T>> GetRecordsAsync<T>(bool strict = false)
+        public async Task<List<T>> GetRecordsAsync<T>(bool strict = false, CsvContextProfile? csvContextProfile = null)
         {
             var records = new List<T>();
             if (CsvContent == null) return records;
@@ -124,24 +128,27 @@ namespace EasyCsv.Core
 
             if (strict)
             {
-                await ReadRecordsStrict(records);
+                await ReadRecordsStrict();
             }
             else
             {
-                await ReadRecordsNotStrict(records);
+                await ReadRecordsNotStrict();
             }
             return records;
 
-            async Task ReadRecordsStrict(List<T> records)
+            async Task ReadRecordsStrict()
             {
                 using var reader = new StreamReader(new MemoryStream(ContentBytes!), Encoding.UTF8);
                 using var csvReader = new CsvReader(reader, Config.CsvHelperConfig);
+
+                AddSettingsToCsvContext<T>(csvReader.Context, csvContextProfile);
+
                 await foreach (var record in csvReader.GetRecordsAsync<T>())
                 {
                     records.Add(record);
                 }
             }
-            async Task ReadRecordsNotStrict(List<T> records)
+            async Task ReadRecordsNotStrict()
             {
                 var config = new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
@@ -149,6 +156,9 @@ namespace EasyCsv.Core
                 };
                 using var reader = new StreamReader(new MemoryStream(ContentBytes!), Encoding.UTF8);
                 using var csvReader = new CsvReader(reader, config);
+
+                AddSettingsToCsvContext<T>(csvReader.Context, csvContextProfile);
+
                 await foreach (var record in csvReader.GetRecordsAsync<T>())
                 {
                     records.Add(record);
@@ -156,17 +166,44 @@ namespace EasyCsv.Core
             }
         }
 
-        public async Task<List<T>> GetRecordsAsync<T>(PrepareHeaderForMatch prepareHeaderForMatch)
+        private static void AddSettingsToCsvContext<T>(CsvContext context, CsvContextProfile? csvContextProfile = null)
+        {
+            if (csvContextProfile?.TypeConverters != null)
+            {
+                foreach (var typeConverter in csvContextProfile.TypeConverters)
+                {
+                    context.TypeConverterCache.AddConverter(typeConverter.Key, typeConverter.Value);
+                }
+            }
+
+            if (csvContextProfile?.ClassMaps != null)
+            {
+                foreach (var classMap in csvContextProfile.ClassMaps)
+                {
+                    context.RegisterClassMap(classMap);
+                }
+            }
+
+            if (csvContextProfile?.TypeConvertersOptionsDict != null)
+            {
+                foreach (var typeConverterOption in csvContextProfile.TypeConvertersOptionsDict)
+                {
+                    context.TypeConverterOptionsCache.AddOptions(typeConverterOption.Key, typeConverterOption.Value);
+                }
+            }
+        }
+
+        public async Task<List<T>> GetRecordsAsync<T>(PrepareHeaderForMatch prepareHeaderForMatch, CsvContextProfile? csvContextProfile = null)
         {
             var records = new List<T>();
             if (CsvContent == null) return records;
 
             await CalculateContentBytesAndStrAsync();
             if (string.IsNullOrEmpty(ContentStr)) return records;
-            await ReadRecords(records, prepareHeaderForMatch);
+            await ReadRecords();
             return records;
 
-            async Task ReadRecords(List<T> records, PrepareHeaderForMatch prepareHeaderForMatch)
+            async Task ReadRecords()
             {
                 var config = new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
@@ -174,6 +211,9 @@ namespace EasyCsv.Core
                 };
                 using var reader = new StreamReader(new MemoryStream(ContentBytes!), Encoding.UTF8);
                 using var csvReader = new CsvReader(reader, config);
+
+                AddSettingsToCsvContext<T>(csvReader.Context, csvContextProfile);
+
                 await foreach (var record in csvReader.GetRecordsAsync<T>())
                 {
                     records.Add(record);
@@ -181,20 +221,23 @@ namespace EasyCsv.Core
             }
         }
 
-        public async Task<List<T>> GetRecordsAsync<T>(CsvConfiguration csvConfig)
+        public async Task<List<T>> GetRecordsAsync<T>(CsvConfiguration csvConfig, CsvContextProfile? csvContextProfile = null)
         {
             var records = new List<T>();
             if (CsvContent == null) return records;
 
             await CalculateContentBytesAndStrAsync();
             if (string.IsNullOrEmpty(ContentStr)) return records;
-            await ReadRecords(records, csvConfig);
+            await ReadRecords();
             return records;
 
-            async Task ReadRecords(ICollection<T> records, CsvConfiguration csvConfig)
+            async Task ReadRecords()
             {
                 using var reader = new StreamReader(new MemoryStream(ContentBytes!), Encoding.UTF8);
                 using var csvReader = new CsvReader(reader, csvConfig);
+
+                AddSettingsToCsvContext<T>(csvReader.Context, csvContextProfile);
+
                 await foreach (var record in csvReader.GetRecordsAsync<T>())
                 {
                     records.Add(record);
@@ -202,10 +245,13 @@ namespace EasyCsv.Core
             }
         }
 
-        public async IAsyncEnumerable<T> ReadRecordsAsync<T>(CsvConfiguration config)
+        public async IAsyncEnumerable<T> ReadRecordsAsync<T>(CsvConfiguration config, CsvContextProfile? csvContextProfile = null)
         {
             using var reader = new StreamReader(new MemoryStream(ContentBytes!), Encoding.UTF8);
             using var csvReader = new CsvReader(reader, config);
+
+            AddSettingsToCsvContext<T>(csvReader.Context, csvContextProfile);
+
             await foreach (var record in csvReader.GetRecordsAsync<T>())
             {
                 yield return record;

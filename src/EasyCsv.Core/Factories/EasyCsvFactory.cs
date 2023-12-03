@@ -5,6 +5,8 @@ using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using CsvHelper.Configuration;
+using CsvHelper.TypeConversion;
 using EasyCsv.Core.Configuration;
 
 [assembly: InternalsVisibleTo("EasyCsv.Tests.Core")]
@@ -17,11 +19,11 @@ namespace EasyCsv.Core
         private static EasyCsvConfiguration UserConfigOrGlobalConfig(EasyCsvConfiguration? userConfig) => userConfig ?? GlobalConfig;
 
         /// <summary>
-        /// Creates <code>ICsvService</code> from <code>byte[]</code> synchronously
+        /// Creates IEasyCsv from byte[] synchronously
         /// </summary>
         /// <param name="fileContentBytes">CsvContent of the CSV file</param>
         /// <param name="config">Determines whether to normalize fields. Default normalization makes them all lower, you can also define custom normalization methods</param>
-        /// <returns><code>ICsvService</code></returns>
+        /// <returns>IEasyCsv</returns>
         public static IEasyCsv? FromBytes(byte[] fileContentBytes, EasyCsvConfiguration? config = null)
         {
             var easyCsv = new EasyCsv(fileContentBytes, UserConfigOrGlobalConfig(config));
@@ -30,11 +32,11 @@ namespace EasyCsv.Core
 
 
         /// <summary>
-        /// Creates <code>ICsvService</code> from <code>byte[]</code> as a background task
+        /// Creates IEasyCsv from byte[] as a background task
         /// </summary>
         /// <param name="fileContentBytes">CsvContent of CSV</param>
         /// <param name="config">Determines whether to normalize fields. Default normalization makes them all lower, you can also define custom normalization methods</param>
-        /// <returns><code>ICsvService</code></returns>
+        /// <returns>IEasyCsv</returns>
         /// <remarks>
         /// Background tasks are not the same as asynchronous calls, though similar. Understand the differences when using this function
         /// </remarks>
@@ -45,11 +47,11 @@ namespace EasyCsv.Core
 
 
         /// <summary>
-        /// Creates <code>ICsvService</code> from <code>string</code> synchronously
+        /// Creates IEasyCsv from string synchronously
         /// </summary>
         /// <param name="fileContentStr">CsvContent of CSV</param>
         /// <param name="config">Determines whether to normalize fields. Default normalization makes them all lower, you can also define custom normalization methods</param>
-        /// <returns><code>ICsvService</code></returns>
+        /// <returns>IEasyCsv</returns>
         public static IEasyCsv? FromString(string fileContentStr, EasyCsvConfiguration? config = null)
         {
             var easyCsv = new EasyCsv(fileContentStr, UserConfigOrGlobalConfig(config));
@@ -58,11 +60,11 @@ namespace EasyCsv.Core
 
 
         /// <summary>
-        /// Creates <code>ICsvService</code> from <code>string</code> as a background task
+        /// Creates IEasyCsv from string as a background task
         /// </summary>
         /// <param name="fileContentStr">CsvContent of CSV</param>
         /// <param name="config">Determines whether to normalize fields. Default normalization makes them all lower, you can also define custom normalization methods</param>
-        /// <returns><code>ICsvService</code></returns>
+        /// <returns>IEasyCsv</returns>
         /// <remarks>
         /// Background tasks are not the same as asynchronous calls, though similar. Understand the differences when using this function
         /// </remarks>
@@ -84,12 +86,12 @@ namespace EasyCsv.Core
 
 
         /// <summary>
-        /// Creates <code>ICsvService</code> from <code>Stream</code> synchronously
+        /// Creates IEasyCsv from Stream synchronously
         /// </summary>
         /// <param name="fileStream">Stream of csv file</param>
         /// <param name="maxFileSize">Will throw exception if file is larger than file size</param>
         /// <param name="config">Determines whether to normalize fields. Default normalization makes them all lower, you can also define custom normalization methods</param>
-        /// <returns><code>ICsvService</code></returns>
+        /// <returns>IEasyCsv</returns>
         public static IEasyCsv? FromStream(Stream fileStream, EasyCsvConfiguration? config = null)
         {
             var easyCsv = new EasyCsv(fileStream, UserConfigOrGlobalConfig(config));
@@ -98,12 +100,12 @@ namespace EasyCsv.Core
 
 
         /// <summary>
-        /// Creates <code>ICsvService</code> from <code>Stream</code> asynchronously
+        /// Creates IEasyCsv from Stream asynchronously
         /// </summary>
         /// <param name="fileStream">Stream of csv file</param>
         /// <param name="maxFileSize">Will throw exception if file is larger than file size</param>
         /// <param name="config">Determines whether to normalize fields. Default normalization makes them all lower, you can also define custom normalization methods</param>
-        /// <returns><code>ICsvService</code></returns>
+        /// <returns>IEasyCsv</returns>
         private static async Task<IEasyCsv?> FromStreamAsync(Stream fileStream, int maxFileSize, EasyCsvConfiguration? config = null)
         {
             var fileContent = await ReadStreamToEndAsync(fileStream, maxFileSize);
@@ -119,7 +121,7 @@ namespace EasyCsv.Core
         }
 
         /// <summary>
-        /// Creates <code>ICsvService</code> from <code>TextReader</code> synchronously
+        /// Creates IEasyCsv from TextReader synchronously
         /// </summary>
         /// <param name="textReader">Stream of csv file</param>
         /// <param name="config">Determines whether to normalize fields. Default normalization makes them all lower, you can also define custom normalization methods</param>
@@ -134,7 +136,7 @@ namespace EasyCsv.Core
 
 
         /// <summary>
-        /// Creates <code>ICsvService</code> from <code>TextReader</code> as a background task
+        /// Creates IEasyCsv from TextReader as a background task
         /// </summary>
         /// <param name="textReader">Stream of csv file</param>
         /// <param name="config">Determines whether to normalize fields. Default normalization makes them all lower, you can also define custom normalization methods</param>
@@ -150,7 +152,7 @@ namespace EasyCsv.Core
 
 
         /// <summary>
-        /// Creates <code>ICsvService</code> from <code>File</code> synchronously
+        /// Creates IEasyCsv from File synchronously
         /// </summary>
         /// <param name="filePath">Path to csv file</param>
         /// <param name="maxFileSize">If file is larger an exception will be thrown</param>
@@ -176,7 +178,7 @@ namespace EasyCsv.Core
 
 
         /// <summary>
-        /// Creates <code>ICsvService</code> from <code>File</code> asynchronously
+        /// Creates IEasyCsv from File asynchronously
         /// </summary>
         /// <param name="filePath">Path to csv file</param>
         /// <param name="maxFileSize">If file is larger an exception will be thrown</param>
@@ -219,7 +221,7 @@ namespace EasyCsv.Core
 
 
         /// <summary>
-        /// Creates <code>ICsvService</code> from <code>Url</code> synchronously
+        /// Creates IEasyCsv from Url synchronously
         /// </summary>
         /// <param name="url">Path to csv file</param>
         /// <param name="maxFileSize">If file is larger an exception will be thrown</param>
@@ -234,7 +236,7 @@ namespace EasyCsv.Core
 
 
         /// <summary>
-        /// Creates <code>ICsvService</code> from <code>Url</code> asynchronously
+        /// Creates IEasyCsv from >Url asynchronously
         /// </summary>
         /// <param name="url">Path to csv file</param>
         /// <param name="maxFileSize">If file is larger an exception will be thrown</param>
@@ -248,25 +250,25 @@ namespace EasyCsv.Core
 
 
         /// <summary>
-        /// Creates <code>ICsvService</code> from <code>List<T> objects</T></code> synchronously. Public instance variables become header names and values make up the rows
+        /// Creates IEasyCsv from List asynchronously. Public instance variables become header names and values make up the rows
         /// </summary>
         /// <param name="objects">Objects to create the csv from</param>
         /// <param name="config">Determines whether to normalize fields. Default normalization makes them all lower, you can also define custom normalization methods</param>
-        public static async Task<IEasyCsv?> FromObjectsAsync<T>(List<T> objects, EasyCsvConfiguration? config = null)
+        public static async Task<IEasyCsv?> FromObjectsAsync<T>(List<T> objects, EasyCsvConfiguration? config = null, CsvContextProfile? csvContextProfile = null)
         {
-            var easyCsv = await EasyCsv.FromObjectsAsync(objects, UserConfigOrGlobalConfig(config));
+            var easyCsv = await EasyCsv.FromObjectsAsync(objects, UserConfigOrGlobalConfig(config), csvContextProfile);
             return NullOrEasyCsv(easyCsv);
         }
 
 
         /// <summary>
-        /// Creates <code>ICsvService</code> from <code>List<T> objects</T></code> synchronously. Public instance variables become header names and values make up the rows
+        /// Creates IEasyCsv from List synchronously. Public instance variables become header names and values make up the rows
         /// </summary>
         /// <param name="objects">Objects to create the csv from</param>
         /// <param name="config">Determines whether to normalize fields. Default normalization makes them all lower, you can also define custom normalization methods</param>
-        public static IEasyCsv? FromObjects<T>(List<T> objects, EasyCsvConfiguration? config = null)
+        public static IEasyCsv? FromObjects<T>(List<T> objects, EasyCsvConfiguration? config = null, CsvContextProfile? csvContextProfile = null)
         {
-            var easyCsv = EasyCsv.FromObjects(objects, UserConfigOrGlobalConfig(config));
+            var easyCsv = EasyCsv.FromObjects(objects, UserConfigOrGlobalConfig(config), csvContextProfile);
             return NullOrEasyCsv(easyCsv);
         }
     }

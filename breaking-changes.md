@@ -2,7 +2,7 @@
 
 ## 1.0.13
 
-Do not use 1.0.13, or 1.0.14. 1.0.15 is the stable release. However, starting in 1.0.13 all mutations are done through a manipulation context.
+Starting in 1.0.13 all mutations are done through a manipulation context.
 ```csharp
 // 1.0.12
 easyCsv.RemoveColumn("Column1")

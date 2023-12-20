@@ -5,8 +5,35 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<langversion>preview</langversion>
+
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Title>EasyCsv.Components</Title>
+		<Authors>Connor Hallman</Authors>
+		<Company>Connor Hallman</Company>
+		<Product>EasyCsv</Product>
+		<Description>A collection of blazor components for reading and mapping csvs.</Description>
+		<Copyright>Copyright © 2023 Connor Hallman</Copyright>
+		<PackageIcon>Icon.png</PackageIcon>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<RepositoryUrl>https://github.com/biegehydra/CsvEasy</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageTags>csv;easycsv;column;row</PackageTags>
+		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+		<Version>1.0.0</Version>
+		<IncludeSymbols>True</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+		<DocumentationFile>$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+		<NoWarn>1701;1702;1591;1573</NoWarn>
 	</PropertyGroup>
 
+
+	<ItemGroup>
+		<None Include="Icon.png" Pack="true" PackagePath="\" />
+		<None Include="LICENSE.txt" Pack="true" PackagePath="\" />
+		<None Include="README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<SupportedPlatform Include="browser" />
@@ -33,4 +60,7 @@
 		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="7.0.14" />
 	</ItemGroup>
 
+	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+		<Exec Command="xcopy &quot;$(SolutionDir)\README.md&quot; &quot;$(ProjectDir)&quot; /Y" />
+	</Target>
 </Project>

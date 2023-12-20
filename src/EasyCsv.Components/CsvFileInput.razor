@@ -1,0 +1,149 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using EasyCsv.Files
+@using EasyCsv.Core.Configuration
+@using System.Globalization
+@using System.Text.RegularExpressions
+@using CsvHelper
+<style>
+    .drag-drop-zone {
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        align-items: center;
+        justify-content: center;
+        transition: all .4s;
+        min-height: 75px;
+        padding: 8px;
+        text-align: center;
+        background-color: rgb(75 75 80);
+        color: white;
+    }
+    .drag-drop-input {
+        position: absolute;
+        width: 100%;
+        height: 90%;
+        cursor: pointer;
+        z-index: 2;
+    }
+    .drag-enter {
+        box-shadow: var(--mud-elevation-10);
+    }
+</style>
+
+@{
+    var successStyle = CsvValid ? "border: 2px solid var(--mud-palette-success); min-height: 150px;" : "min-height: 150px;";
+}
+<div @onmouseover="@(() => _dragEnterClass = "drag-enter")"
+     @onmouseleave="@(() => _dragEnterClass = null)">
+    <MudPaper Style="@successStyle"
+              Class=@("drag-drop-zone " + _dragEnterClass)>
+        @if (_loading)
+        {
+            <MudProgressLinear Indeterminate="true" Size="Size.Large" />
+        }
+        <div class="align-center justify-center mud-width-full" style="display: flex; flex-direction: column; @(_loading ? "display: none" : null)">
+            <InputFile OnChange="OnFileChange" class="drag-drop-input" style="opacity: 0;" accept=".csv" />
+            Drop a single csv file here or click to browse 
+        </div>
+        <MudIcon Style="@(_loading ? "display: none" : null)" Icon="@Icons.Material.Filled.AttachFile"></MudIcon>
+        @if (!string.IsNullOrWhiteSpace(FileName) && CsvValid)
+        {
+            <MudChip Style="@(_loading ? "display: none" : null)" Color="Color.Dark" Text="@FileName" />
+        }
+    </MudPaper>
+</div>
+
+@code {
+    [Inject] private ISnackbar? SnackBar { get; set; }
+    private string? _dragEnterClass;
+    private bool _loading;
+
+    /// <summary>
+    /// Controls whether the input box will be highlighted with a green border or not.
+    /// </summary>
+    [Parameter]
+    public bool CsvValid { get; set; }
+
+    private string? _fileName;
+
+    [Parameter]
+    public string? FileName
+    {
+        get => _fileName;
+        set
+        {
+            if (_fileName != value)
+            {
+                _fileName = value;
+                FileNameChanged.InvokeAsync(value);
+            }
+        }
+    }
+
+    [Parameter] public EventCallback<string?> FileNameChanged { get; set; }
+ 
+    [Parameter]
+    public EventCallback<(IEasyCsv Csv, string FileName)> OnCsvUpload { get; set; }
+
+    [Parameter]
+    public EasyCsvConfiguration EasyCsvConfig { get; set; } = new()
+    {
+        CsvHelperConfig = new(CultureInfo.InvariantCulture)
+        {
+            HeaderValidated = null,
+            MissingFieldFound = null,
+            PrepareHeaderForMatch = new PrepareHeaderForMatch(x => Regex.Replace(x.Header, @"\W", "").ToLower(CultureInfo.InvariantCulture)),
+            ShouldUseConstructorParameters = x => true,
+            GetConstructor = x => x.ClassType.GetConstructors().FirstOrDefault(c => c.GetParameters().Length == 0)
+        }
+    };
+
+
+    private async Task OnFileChange(InputFileChangeEventArgs args)
+    {
+        _loading = true;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            _dragEnterClass = null;
+            var files = args.GetMultipleFiles();
+            if (files.Count == 0)
+            {
+                return;
+            }
+            if (files.Count > 1)
+            {
+                SnackBar?.Add($"Only one file can be uploaded at a time", Severity.Error, x => x.VisibleStateDuration = 300);
+                return;
+            }
+            var file = files.FirstOrDefault();
+            if (file == null)
+            {
+                return;
+            }
+
+            if (files.Count > 0)
+            {
+                if (Path.GetExtension(file.Name) != ".csv")
+                {
+                    SnackBar?.Add($"Only csv files can be uploaded", Severity.Error, x => x.VisibleStateDuration = 300);
+                    return;
+                }
+
+                _fileName = file.Name;
+                await FileNameChanged.InvokeAsync(file.Name);
+                var easyCsv = await EasyCsvFileFactory.FromBrowserFileAsync(file, config: EasyCsvConfig);
+                if (easyCsv == null)
+                {
+                    SnackBar?.Add($"Failed to read csv file", Severity.Error, x => x.VisibleStateDuration = 300);
+                    return;
+                }
+                await OnCsvUpload.InvokeAsync((easyCsv, _fileName));
+            }
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

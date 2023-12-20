@@ -1,0 +1,81 @@
+﻿@page "/"
+@using EasyCsv.Components
+@using EasyCsv.Core
+
+<PageTitle>Index</PageTitle>
+
+@if (_easyCsv == null)
+{
+    <MudText Typo="Typo.h4">Csv File Input</MudText>
+
+    <br/>
+
+    <CsvFileInput CsvValid="_easyCsv != null" OnCsvUpload="x => _easyCsv = x.Csv" > </CsvFileInput>
+}
+else
+{
+    <MudText Typo="Typo.h4">Csv Table Header Matcher</MudText>
+
+    <br/>
+
+    <CsvTableHeaderMatcher @ref="_tableHeaderMatcher" T="Person" Csv="_easyCsv" Frozen="_frozen" AllHeadersValidChanged="StateHasChanged" ExpectedHeaders="_expectedHeaders" AutoMatch="AutoMatching.Lenient"   ></CsvTableHeaderMatcher>
+    <div style="display: flex; flex-direction: row; align-items: center; gap: 12px;" >
+        <MudCheckBox @bind-Checked="_frozen" Color="Color.Primary">Frozen</MudCheckBox>
+        <MudButton Disabled="!_tableHeaderMatcher?.ValidateRequiredHeaders() ?? true" Color="Color.Primary" Variant="Variant.Filled" OnClick="GetRecords" >Get Records</MudButton>
+    </div>
+}
+
+@if (_records != null)
+{
+    <MudTable Items="_records" Outlined Bordered Dense Hover Striped>
+        <HeaderContent>
+            <MudTh >First Name</MudTh>
+            <MudTh >Last Name</MudTh>
+            <MudTh >Email</MudTh>
+            <MudTh >Zip</MudTh>
+            <MudTh >Age</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.FirstName</MudTd>
+            <MudTd>@context.LastName</MudTd>
+            <MudTd>@context.Email</MudTd>
+            <MudTd>@context.Zip</MudTd>
+            <MudTd>@context.Age</MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    private CsvTableHeaderMatcher<Person>? _tableHeaderMatcher;
+    private IEasyCsv? _easyCsv;
+    private bool _frozen;
+
+    private List<Person>? _records;
+
+    private readonly List<ExpectedHeader> _expectedHeaders = new ()
+    {
+        new ExpectedHeader(nameof(Person.FirstName), required: true),
+        new ExpectedHeader(nameof(Person.LastName), required: true),
+        new ExpectedHeader(nameof(Person.Email), required: true),
+        new ExpectedHeader(new List<string>() { nameof(Person.Zip), "Postal Code" }, allowDefaultValue: true, alternativeDisplayName: "Postal Code"),
+        new ExpectedHeader(nameof(Person.Age)),
+    };
+
+    private async Task GetRecords()
+    {
+        if (_tableHeaderMatcher == null)
+        {
+            return;
+        }
+        _records = await _tableHeaderMatcher.GetRecords();
+    }
+
+    private class Person
+    {
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; }
+        public string? Email { get; set; }
+        public string? Zip { get; set; }
+        public int Age { get; set; }
+    }
+}

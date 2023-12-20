@@ -1,0 +1,176 @@
+﻿@typeparam T
+
+<style>
+    .mud-input-control-input-container:has(.mud-input-outlined) {
+        margin-top: 0px !important;
+    }
+    .extra-dense {
+        padding: 2px 10px !important;
+    }
+    .text-field-margin-fix .mud-input-slot {
+	    padding-top: 16px !important;
+    }
+    .csv-table-header-matcher .mud-table-container {
+        max-height: 60vh;
+    }
+
+</style>
+
+@if (ExpectedHeaders != null)
+{
+    string? tableStyle = null;
+    if (TableStyleFunc != null)
+    {
+        tableStyle = TableStyleFunc(AllHeadersValid);
+    }
+    <MudTable T="ExpectedHeader" Class="csv-table-header-matcher" Style="@tableStyle" FixedHeader="true" RowsPerPage="100" Items="ExpectedHeaders" 
+              Striped="true" Bordered Dense Hover Elevation="2">
+         <HeaderContent>
+             <MudTh>Matched</MudTh>
+             <MudTh>Expected Header</MudTh>
+             <MudTh>Preview Information</MudTh>
+             <MudTh>Default Value</MudTh>
+             <MudTh>Csv Headers</MudTh>
+         </HeaderContent>
+         <RowTemplate Context="expectedHeader">
+             @{
+                 var originalHeader = _mappedDict.FirstOrDefault(x => x.Value == expectedHeader).Key;
+                 var expectedHeaderAlreadyMapped = ExpectedHeaderMatched(expectedHeader);
+                 CsvRow firstNotEmptyRow = null;
+                 string currentHeaderName = null;
+                 if (expectedHeaderAlreadyMapped)
+                 {
+                     currentHeaderName = _originalHeaderCurrentHeaderDict[originalHeader];
+                     firstNotEmptyRow = Csv.CsvContent?.FirstOrDefault(x => x.TryGetValue(currentHeaderName, out var value));
+                 }
+            }
+             <MudTd Class="extra-dense" >
+                @{
+                    MatchState matchState = MatchState.Missing;
+                    if (expectedHeaderAlreadyMapped)
+                    {
+                        matchState = MatchState.Mapped;
+                    }
+                    else if (expectedHeader.DefaultValue.HasValue)
+                    {
+                        matchState = MatchState.ValueProvided;
+                    }
+                    else if (expectedHeader.Required)
+                    {
+                        matchState = MatchState.RequiredAndMissing;
+                    }
+                    @DisplayMatchState(matchState)
+                 }
+             </MudTd>
+             <MudTd Class="extra-dense" >
+                 <div class="align-items-center" style="display: flex; flex-direction: row;">
+                     @if (!string.IsNullOrWhiteSpace(expectedHeader.AlternativeDisplayName))
+                     {
+                         @expectedHeader.AlternativeDisplayName
+                     }
+                     else
+                     {
+                         @expectedHeader.CSharpPropertyName.SplitOnCapitalLetters()
+                     }
+                 </div>
+             </MudTd>
+             <MudTd Class="extra-dense" >
+                 @if (firstNotEmptyRow != null)
+                 {
+                     @firstNotEmptyRow?[currentHeaderName!]?.ToString()
+                 }
+                 else if (expectedHeader.DefaultValue.HasValue)
+                 {
+                     @expectedHeader.DefaultValue.Value
+                 }
+             </MudTd>
+             <MudTd Class="extra-dense" >
+                 @if (expectedHeader.DefaultValue.Allow)
+                 {
+                     if (expectedHeaderAlreadyMapped)
+                     {
+                         <MudTextField T="string" Disabled="true" Text="ALREADY MAPPED" ></MudTextField>
+                     }
+                     else
+                     {
+                         <MudTextField T="string" Disabled="Frozen" Class="text-field-margin-fix" Variant="Variant.Filled" Placeholder="Enter default value..." ValueChanged="str => HeaderDefaultValueChanged(expectedHeader, str)"></MudTextField>
+                     }
+                 }
+             </MudTd>
+             <MudTd Class="extra-dense">
+                <MudAutocomplete T="string" Disabled="Frozen" Class="text-field-margin-fix" Value="originalHeader" ValueChanged="x => ReplaceColumn(x, expectedHeader)" Variant="Variant.Filled"
+                                 Placeholder="Select a csv header"
+                                 SelectValueOnTab="true"
+                                 ToStringFunc="x => x.Pascalize()"
+                                 SearchFunc="x => SearchFileHeaders(expectedHeader, x)"
+                                 Clearable OnClearButtonClick="() => ResetColumn(originalHeader)">
+                    <ItemTemplate>
+                        @context.Pascalize()
+                    </ItemTemplate>
+                </MudAutocomplete>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+
+}
+@code {
+    private bool ExpectedHeaderMatched(ExpectedHeader header)
+    {
+        return _mappedDict.Any(x => x.Value == header);
+    }
+
+    private bool OriginalHeaderMatched(string originalHeader)
+    {
+        return _mappedDict.TryGetValue(originalHeader, out var value) && value != null;
+    }
+
+    private Task<IEnumerable<string>> SearchFileHeaders(ExpectedHeader expectedHeader, string str)
+    {
+        if (ExpectedHeaderMatched(expectedHeader))
+        {
+            return Task.FromResult(Enumerable.Empty<string>());
+        }
+
+        if (string.IsNullOrWhiteSpace(str))
+        {
+            // If not input order most similar to expected header
+            return Task.FromResult(OriginalHeaders.Where(x => !OriginalHeaderMatched(x))
+                .OrderByDescending(x => Fuzz.PartialRatio(expectedHeader.CSharpPropertyName, x)).AsEnumerable());
+        }
+        return Task.FromResult(OriginalHeaders.Where(x => !OriginalHeaderMatched(x) && x.Contains(str, StringComparison.InvariantCultureIgnoreCase)));
+    }
+
+    private void HeaderDefaultValueChanged(ExpectedHeader header, string str)
+    {
+        header.DefaultValue.Value = str;
+        AllHeadersValid = ValidateRequiredHeaders();
+    }
+
+    internal static RenderFragment _DisplayMatchState(MatchState matchState)
+    {
+        switch (matchState)
+        {
+            case MatchState.Mapped or MatchState.ValueProvided:
+                return @<text>
+                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success"></MudIcon>
+                            @if (matchState == MatchState.Mapped)
+                            {
+                                <span style="color: var(--mud-palette-success); margin-left: 4px; font-size: x-small; align-self: end;">*Mapped</span>
+                            }
+                            else
+                            {
+                                <span style="color: var(--mud-palette-success); margin-left: 4px; font-size: x-small; align-self: end;">*Value provided</span>
+                            }
+                        </text>;
+            case MatchState.RequiredAndMissing:
+                return @<text>
+                            <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error"></MudIcon>
+                            <span style="color: red; margin-left: 4px; font-size: x-small; align-self: end;">*Required</span>
+                        </text>;
+            case MatchState.Missing:
+                return @<MudIcon Icon="@Icons.Material.Filled.RemoveCircle" Color="Color.Default"></MudIcon>;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(matchState), matchState, null);
+        }
+    }
+}

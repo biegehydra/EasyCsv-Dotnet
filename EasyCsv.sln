@@ -17,9 +17,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyCsv", "src\EasyCsv\Easy
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyCsv.Files", "src\EasyCsv.FileExtensions\EasyCsv.Files.csproj", "{BA2AB2DF-3457-4D6E-A950-676A82A228A3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyCsv.Components", "src\EasyCsv.Components\EasyCsv.Components.csproj", "{E6B5A9F1-FA58-485F-A1C0-42CF760BA1BC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyCsv.Components", "src\EasyCsv.Components\EasyCsv.Components.csproj", "{E6B5A9F1-FA58-485F-A1C0-42CF760BA1BC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExampleBlazorApp", "src\ExampleBlazorApp\ExampleBlazorApp.csproj", "{72E732F4-D2C1-4F6B-BA83-29FDC937D74F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExampleBlazorApp", "src\ExampleBlazorApp\ExampleBlazorApp.csproj", "{72E732F4-D2C1-4F6B-BA83-29FDC937D74F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

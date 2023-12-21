@@ -9,7 +9,7 @@
 {
     <div class="mb-4 d-flex gap-5" style="flex-direction: row; align-items: baseline;">
         <MudText Class="mb-4" Typo="Typo.h4">Csv File Input</MudText>
-        <MudButton Style="height: fit-content;" Variant="Variant.Filled" Color="Color.Info" >Use Test Csv</MudButton>
+        <MudButton Style="height: fit-content;" Variant="Variant.Filled" Color="Color.Info" OnClick="GetTestCsv"  >Use Test Csv</MudButton>
     </div>
 
     <CsvFileInput CsvValid="_easyCsv != null" OnCsvUpload="x => _easyCsv = x.Csv" > </CsvFileInput>
@@ -51,10 +51,25 @@ else
             <MudTd>@context.SignedUp?.ToShortDateString()</MudTd>
             <MudTd>@context.DateOfBirth?.ToShortDateString()</MudTd>
         </RowTemplate>
+        <PagerContent>
+            <MudTablePager></MudTablePager>
+        </PagerContent>
     </MudTable>
 }
 
+<br/>
+
+<MudText Class="mb-4" Typo="Typo.h4">Code</MudText>
+
+
+<div style="border: 1px solid var(--mud-palette-lines-default); background-color: var(--mud-palette-background-grey); border-radius: 8px;">
+    <IndexCode></IndexCode>
+</div>
+
+
 @code {
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+
     private CsvTableHeaderMatcher<Person>? _tableHeaderMatcher;
     private IEasyCsv? _easyCsv;
     private bool _frozen;
@@ -75,6 +90,11 @@ else
     protected override void OnInitialized()
     {
         _expectedHeaders.Add(new ExpectedHeader(nameof(Person.DateOfBirth), "Custom Date Time Input", [nameof(Person.DateOfBirth)], x => x.DefaultValueRenderFragment = CustomDateTimeDefaultValueFragment()));
+    }
+
+    private async Task GetTestCsv()
+    {
+        _easyCsv = await EasyCsvFactory.FromUrlAsync(NavigationManager.BaseUri + "person_data.csv", 5);
     }
 
     private async Task GetRecords()

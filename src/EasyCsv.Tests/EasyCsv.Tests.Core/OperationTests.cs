@@ -96,7 +96,7 @@ namespace EasyCsv.Tests.Core
             // Arrange
             var fileContent = "header1,header2\nvalue1,value2";
             var easyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
-            var defaultValues = new Dictionary<string, string> {{"header3", "defaultValue"}};
+            var defaultValues = new Dictionary<string, object> {{"header3", "defaultValue"}};
 
             // Act
             easyCsv.AddColumns(defaultValues);

@@ -78,13 +78,13 @@ namespace EasyCsv.Core
             return this;
         }
 
-        public IEasyMutations AddColumn(string header, string value, bool upsert = true)
+        public IEasyMutations AddColumn(string header, object? value, bool upsert = true)
         {
             _csv.AddColumn(header, value, upsert);
             return this;
         }
 
-        public IEasyMutations AddColumns(IDictionary<string, string> defaultValues, bool upsert = true)
+        public IEasyMutations AddColumns(IDictionary<string, object?> defaultValues, bool upsert = true)
         {
             _csv.AddColumns(defaultValues, upsert);
             return this;

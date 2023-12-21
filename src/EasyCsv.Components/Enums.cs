@@ -28,3 +28,19 @@ public enum MatchState
     [Description("The expected header is NOT required and is not mapped and does not have a value provided.")]
     Missing
 }
+
+public enum DefaultValueType
+{
+    [Description("Users will not be able to provide a default value.")]
+    None,
+    [Description("The input will be MudTextField.")]
+    Text,
+    [Description("The input will be MudDatePicker.")]
+    DateTime,
+    [Description("The input will be a MudNumericalField.")]
+    Numerical,
+    [Description("The input will be a MudCheckBox.")]
+    CheckBox,
+    [Description("The input will be a MudCheckBox with tri state enabled.")]
+    TriStateCheckBox
+}

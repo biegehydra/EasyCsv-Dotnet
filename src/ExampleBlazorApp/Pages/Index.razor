@@ -7,20 +7,22 @@
 
 @if (_easyCsv == null)
 {
-    <MudText Typo="Typo.h4">Csv File Input</MudText>
-
-    <br/>
+    <div class="mb-4 d-flex gap-5" style="flex-direction: row; align-items: baseline;">
+        <MudText Class="mb-4" Typo="Typo.h4">Csv File Input</MudText>
+        <MudButton Style="height: fit-content;" Variant="Variant.Filled" Color="Color.Info" OnClick="GetTestCsv"  >Use Test Csv</MudButton>
+    </div>
 
     <CsvFileInput CsvValid="_easyCsv != null" OnCsvUpload="x => _easyCsv = x.Csv" > </CsvFileInput>
 }
 else
 {
-    <MudText Typo="Typo.h4">Csv Table Header Matcher</MudText>
-
-    <br/>
+    <div class="mb-4 d-flex gap-5" style="flex-direction: row; align-items: baseline;">
+        <MudText Class="mb-4" Typo="Typo.h4">Csv Table Header Matcher</MudText>
+        <MudButton Style="height: fit-content;" Variant="Variant.Filled" Color="Color.Error" OnClick="() => { _easyCsv = null; _frozen = false; _records = null; }">Reset</MudButton>
+    </div>
 
     <CsvTableHeaderMatcher @ref="_tableHeaderMatcher" T="Person" Csv="_easyCsv" Frozen="_frozen" AllHeadersValidChanged="StateHasChanged" ExpectedHeaders="_expectedHeaders" AutoMatch="AutoMatching.Lenient"   ></CsvTableHeaderMatcher>
-    <div style="display: flex; flex-direction: row; align-items: center; gap: 12px;" >
+    <div class="mt-4 d-flex gap-5" style="flex-direction: row; align-items: center;" >
         <MudCheckBox @bind-Checked="_frozen" Color="Color.Primary">Frozen</MudCheckBox>
         <MudButton Disabled="!_tableHeaderMatcher?.ValidateRequiredHeaders() ?? true" Color="Color.Primary" Variant="Variant.Filled" OnClick="GetRecords" >Get Records</MudButton>
     </div>
@@ -28,25 +30,46 @@ else
 
 @if (_records != null)
 {
-    <MudTable Items="_records" Outlined Bordered Dense Hover Striped>
+    <MudTable Class="mt-7" Items="_records" Outlined Bordered Dense Hover Striped>
         <HeaderContent>
             <MudTh >First Name</MudTh>
             <MudTh >Last Name</MudTh>
             <MudTh >Email</MudTh>
-            <MudTh >Zip</MudTh>
             <MudTh >Age</MudTh>
+            <MudTh >City</MudTh>
+            <MudTh >County</MudTh>
+            <MudTh >Signed Up</MudTh>
+            <MudTh >Date Of Birth</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd>@context.FirstName</MudTd>
             <MudTd>@context.LastName</MudTd>
             <MudTd>@context.Email</MudTd>
-            <MudTd>@context.Zip</MudTd>
             <MudTd>@context.Age</MudTd>
+            <MudTd>@context.City</MudTd>
+            <MudTd>@context.Country</MudTd>
+            <MudTd>@context.SignedUp?.ToShortDateString()</MudTd>
+            <MudTd>@context.DateOfBirth?.ToShortDateString()</MudTd>
         </RowTemplate>
+        <PagerContent>
+            <MudTablePager></MudTablePager>
+        </PagerContent>
     </MudTable>
 }
 
+<br/>
+
+<MudText Class="mb-4" Typo="Typo.h4">Code</MudText>
+
+
+<div style="border: 1px solid var(--mud-palette-lines-default); background-color: var(--mud-palette-background-grey); border-radius: 8px;">
+    <IndexCode></IndexCode>
+</div>
+
+
 @code {
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+
     private CsvTableHeaderMatcher<Person>? _tableHeaderMatcher;
     private IEasyCsv? _easyCsv;
     private bool _frozen;
@@ -55,19 +78,28 @@ else
 
     private readonly List<ExpectedHeader> _expectedHeaders = new ()
     {
-        new ExpectedHeader(nameof(Person.FirstName), required: true),
-        new ExpectedHeader(nameof(Person.LastName), required: true),
-        new ExpectedHeader(nameof(Person.Email), required: true),
-        new ExpectedHeader(new List<string>() { nameof(Person.Zip), "Postal Code" }, allowDefaultValue: true, alternativeDisplayName: "Postal Code"),
-        new ExpectedHeader(nameof(Person.Age)),
+        new ExpectedHeader(nameof(Person.FirstName), ExpectedHeaderConfig.Required),
+        new ExpectedHeader(nameof(Person.LastName), ExpectedHeaderConfig.Required),
+        new ExpectedHeader(nameof(Person.Email), ExpectedHeaderConfig.Required),
+        new ExpectedHeader(nameof(Person.Age), new ExpectedHeaderConfig(DefaultValueType.Numerical, required: true)),
+        new ExpectedHeader(nameof(Person.City)),
+        new ExpectedHeader(nameof(Person.Country), new ExpectedHeaderConfig(DefaultValueType.Text, required: true, "USA")),
+        new ExpectedHeader(nameof(Person.SignedUp), new ExpectedHeaderConfig(DefaultValueType.DateTime)),
     };
+
+    protected override void OnInitialized()
+    {
+        _expectedHeaders.Add(new ExpectedHeader(nameof(Person.DateOfBirth), "Custom Date Time Input", [nameof(Person.DateOfBirth)], x => x.DefaultValueRenderFragment = CustomDateTimeDefaultValueFragment()));
+    }
+
+    private async Task GetTestCsv()
+    {
+        _easyCsv = await EasyCsvFactory.FromUrlAsync(NavigationManager.BaseUri + "person_data.csv", 5);
+    }
 
     private async Task GetRecords()
     {
-        if (_tableHeaderMatcher == null)
-        {
-            return;
-        }
+        if (_tableHeaderMatcher == null) return;
         _records = await _tableHeaderMatcher.GetRecords();
     }
 
@@ -76,7 +108,18 @@ else
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
         public string? Email { get; set; }
-        public string? Zip { get; set; }
+        public string? City { get; set; }
+        public string? Country { get; set; }
+        public DateTime? SignedUp { get; set; }
+        public DateTime? DateOfBirth { get; set; }
         public int Age { get; set; }
+    }
+
+    private RenderFragment<DefaultValueRenderFragmentsArgs> CustomDateTimeDefaultValueFragment()
+    {
+        return args =>
+        {
+            return @<MudDatePicker Disabled="args.Frozen" Variant="Variant.Outlined" DateChanged="x => args.DefaultValueChanged(x)"></MudDatePicker>;
+        };
     }
 }

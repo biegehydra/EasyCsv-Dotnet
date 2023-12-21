@@ -49,7 +49,7 @@ namespace EasyCsv.Core
 
         public ICollection<object?> Values => _innerDictionary.Values;
 
-        public void Add(string key, object value)
+        public void Add(string key, object? value)
         {
             _innerDictionary.Add(key, value);
         }

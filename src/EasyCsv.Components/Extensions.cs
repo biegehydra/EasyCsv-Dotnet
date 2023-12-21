@@ -27,9 +27,9 @@ internal static class Extensions
         return sb.ToString();
     }
 
-    internal static string? Pascalize(this string? input)
+    internal static string Pascalize(this string? input)
     {
-        if (input == null) return null;
+        if (input == null) return "";
         if (input.Length == 0) return null;
         if (char.IsUpper(input[0])) return input;
         return $"{char.ToUpper(input[0])}{input[1..]}";

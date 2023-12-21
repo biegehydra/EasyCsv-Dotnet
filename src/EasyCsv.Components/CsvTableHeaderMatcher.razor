@@ -1,4 +1,5 @@
-﻿@typeparam T
+﻿@using System.Diagnostics
+@typeparam T
 
 <style>
     .mud-input-control-input-container:has(.mud-input-outlined) {
@@ -44,48 +45,48 @@
                      firstNotEmptyRow = Csv.CsvContent?.FirstOrDefault(x => x.TryGetValue(currentHeaderName, out var value));
                  }
             }
-             <MudTd Class="extra-dense" >
+             <MudTd DataLabel="Matched:" Class="extra-dense" >
                 @{
                     MatchState matchState = MatchState.Missing;
                     if (expectedHeaderAlreadyMapped)
                     {
                         matchState = MatchState.Mapped;
                     }
-                    else if (expectedHeader.DefaultValue.HasValue)
+                    else if (expectedHeader.HasValue)
                     {
                         matchState = MatchState.ValueProvided;
                     }
-                    else if (expectedHeader.Required)
+                    else if (expectedHeader.Config.IsRequired)
                     {
                         matchState = MatchState.RequiredAndMissing;
                     }
                     @DisplayMatchState(matchState)
                  }
              </MudTd>
-             <MudTd Class="extra-dense" >
+             <MudTd DataLabel="Expected Header:" Class="extra-dense" >
                  <div class="align-items-center" style="display: flex; flex-direction: row;">
-                     @if (!string.IsNullOrWhiteSpace(expectedHeader.AlternativeDisplayName))
-                     {
-                         @expectedHeader.AlternativeDisplayName
-                     }
-                     else
+                     @if (expectedHeader.DisplayName == expectedHeader.CSharpPropertyName)
                      {
                          @expectedHeader.CSharpPropertyName.SplitOnCapitalLetters()
                      }
+                     else
+                     {
+                         @expectedHeader.DisplayName
+                     }
                  </div>
              </MudTd>
-             <MudTd Class="extra-dense" >
+             <MudTd DataLabel="Preview Information:" Class="extra-dense" >
                  @if (firstNotEmptyRow != null)
                  {
                      @firstNotEmptyRow?[currentHeaderName!]?.ToString()
                  }
-                 else if (expectedHeader.DefaultValue.HasValue)
+                 else if (expectedHeader.HasValue)
                  {
-                     @expectedHeader.DefaultValue.Value
+                     @expectedHeader.Value
                  }
              </MudTd>
-             <MudTd Class="extra-dense" >
-                 @if (expectedHeader.DefaultValue.Allow)
+             <MudTd DataLabel="Default Value" Class="extra-dense" >
+                @if (expectedHeader.Config.DefaultValueType != DefaultValueType.None || expectedHeader.Config.DefaultValueRenderFragment != null)
                  {
                      if (expectedHeaderAlreadyMapped)
                      {
@@ -93,11 +94,39 @@
                      }
                      else
                      {
-                         <MudTextField T="string" Disabled="Frozen" Class="text-field-margin-fix" Variant="Variant.Filled" Placeholder="Enter default value..." ValueChanged="str => HeaderDefaultValueChanged(expectedHeader, str)"></MudTextField>
+                         if (expectedHeader.Config.DefaultValueRenderFragment != null)
+                         {
+                            @expectedHeader.Config.DefaultValueRenderFragment(new(Frozen, x => HeaderDefaultValueChanged(expectedHeader, x)))
+                         }
+                         else 
+                         {
+                             switch (expectedHeader.Config.DefaultValueType)
+                             {
+                                 case DefaultValueType.None:
+                                     throw new ArgumentOutOfRangeException();
+                                 case DefaultValueType.Text:
+                                     <MudTextField T="string" Disabled="Frozen" Class="text-field-margin-fix" Variant="Variant.Filled" Placeholder="Enter default value..." ValueChanged="str => HeaderDefaultValueChanged(expectedHeader, str)"></MudTextField>
+                                     break;
+                                 case DefaultValueType.DateTime:
+                                     <MudDatePicker Disabled="Frozen" Class="text-field-margin-fix" Variant="Variant.Filled" Placeholder="Enter default value..." DateChanged="date => HeaderDefaultValueChanged(expectedHeader, date)"></MudDatePicker>
+                                     break;
+                                 case DefaultValueType.Numerical:
+                                     <MudNumericField T="int" Disabled="Frozen" Class="text-field-margin-fix" Variant="Variant.Filled" Placeholder="Enter default value..." ValueChanged="num => HeaderDefaultValueChanged(expectedHeader, num)"></MudNumericField>
+                                     break;
+                                 case DefaultValueType.CheckBox:
+                                     <MudCheckBox T="bool" Disabled="Frozen" Class="text-field-margin-fix" ValueChanged="val => HeaderDefaultValueChanged(expectedHeader, val)"></MudCheckBox>
+                                     break;
+                                 case DefaultValueType.TriStateCheckBox:
+                                     <MudCheckBox T="bool?" TriState="true" Disabled="Frozen" Class="text-field-margin-fix" ValueChanged="val => HeaderDefaultValueChanged(expectedHeader, val)"></MudCheckBox>
+                                     break;
+                                 default:
+                                    throw new ArgumentOutOfRangeException();
+                             }
+                         }
                      }
                  }
              </MudTd>
-             <MudTd Class="extra-dense">
+             <MudTd DataLabel="Csv Headers:" Class="extra-dense">
                 <MudAutocomplete T="string" Disabled="Frozen" Class="text-field-margin-fix" Value="originalHeader" ValueChanged="x => ReplaceColumn(x, expectedHeader)" Variant="Variant.Filled"
                                  Placeholder="Select a csv header"
                                  SelectValueOnTab="true"
@@ -140,32 +169,36 @@
         return Task.FromResult(OriginalHeaders.Where(x => !OriginalHeaderMatched(x) && x.Contains(str, StringComparison.InvariantCultureIgnoreCase)));
     }
 
-    private void HeaderDefaultValueChanged(ExpectedHeader header, string str)
+    private void HeaderDefaultValueChanged(ExpectedHeader header, object? value)
     {
-        header.DefaultValue.Value = str;
+        header.Value = value;
         AllHeadersValid = ValidateRequiredHeaders();
     }
 
-    internal static RenderFragment _DisplayMatchState(MatchState matchState)
+    private static RenderFragment _DisplayMatchState(MatchState matchState)
     {
         switch (matchState)
         {
             case MatchState.Mapped or MatchState.ValueProvided:
                 return @<text>
-                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success"></MudIcon>
-                            @if (matchState == MatchState.Mapped)
-                            {
-                                <span style="color: var(--mud-palette-success); margin-left: 4px; font-size: x-small; align-self: end;">*Mapped</span>
-                            }
-                            else
-                            {
-                                <span style="color: var(--mud-palette-success); margin-left: 4px; font-size: x-small; align-self: end;">*Value provided</span>
-                            }
+                            <div class="gap-2" style="display: flex; flex-direction: row;" >
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success"></MudIcon>
+                                @if (matchState == MatchState.Mapped)
+                                {
+                                    <span style="color: var(--mud-palette-success); margin-left: 4px; font-size: x-small; align-self: end;">*Mapped</span>
+                                }
+                                else
+                                {
+                                    <span style="color: var(--mud-palette-success); margin-left: 4px; font-size: x-small; align-self: end;">*Value provided</span>
+                                }
+                            </div>
                         </text>;
             case MatchState.RequiredAndMissing:
                 return @<text>
-                            <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error"></MudIcon>
-                            <span style="color: red; margin-left: 4px; font-size: x-small; align-self: end;">*Required</span>
+                            <div class="gap-2" style="display: flex; flex-direction: row;">
+                                <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error"></MudIcon>
+                                <span style="color: red; margin-left: 4px; font-size: x-small; align-self: end;">*Required</span>
+                            </div>
                         </text>;
             case MatchState.Missing:
                 return @<MudIcon Icon="@Icons.Material.Filled.RemoveCircle" Color="Color.Default"></MudIcon>;

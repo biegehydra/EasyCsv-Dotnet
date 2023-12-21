@@ -33,7 +33,7 @@ namespace EasyCsv.Core
         /// <param name="header">The header field of the column you are giving a default value to.</param>
         /// <param name="value">The value you want every record in a column to have.</param>
         /// <returns>An <code>IEasyCsv</code> to be used for fluent method chaining.</returns>
-        T AddColumn(string header, string value, bool upsert = true);
+        T AddColumn(string header, object? value, bool upsert = true);
 
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace EasyCsv.Core
         /// <param name="defaultValues">Header Field, Default Value. Dictionary of the header fields of the columns you want to give a default value to.</param>
         /// /// <param name="upsert">Determines whether or not an exception is thrown if the column already exists.</param>
         /// <returns>An <code>IEasyCsv</code> to be used for fluent method chaining.</returns>
-        T AddColumns(IDictionary<string, string> defaultValues, bool upsert = true);
+        T AddColumns(IDictionary<string, object?> defaultValues, bool upsert = true);
 
 
         /// <summary>

@@ -43,7 +43,7 @@ namespace EasyCsv.Core
             return this;
         }
 
-        public IEasyCsv AddColumn(string header, string value, bool upsert = true)
+        public IEasyCsv AddColumn(string header, object? value, bool upsert = true)
         {
             if (CsvContent == null) return this;
 
@@ -64,27 +64,26 @@ namespace EasyCsv.Core
             return this;
         }
 
-        public IEasyCsv AddColumns(IDictionary<string, string> defaultValues, bool upsert = true)
+        public IEasyCsv AddColumns(IDictionary<string, object?> defaultValues, bool upsert = true)
         {
             if (CsvContent == null) return this;
 
             foreach (var record in CsvContent)
             {
-                foreach (KeyValuePair<string, string> pair in defaultValues)
+                foreach (KeyValuePair<string, object?> pair in defaultValues)
                 {
                     string key = pair.Key;
-                    string value = pair.Value;
                     var normalizedDefaultHeader = Normalize(key);
                     if (upsert)
                     {
-                        record[normalizedDefaultHeader] = value;
+                        record[normalizedDefaultHeader] = pair.Value;
                         continue;
                     }
                     if (record.ContainsKey(normalizedDefaultHeader))
                     {
                         throw new ArgumentException($"Value for key '{key}' already exists.");
                     }
-                    record.Add(normalizedDefaultHeader, value);
+                    record.Add(normalizedDefaultHeader, pair.Value);
                 }
             }
             return this;
@@ -102,9 +101,9 @@ namespace EasyCsv.Core
 
             foreach (var row in CsvContent)
             {
-                if (row.ContainsKey(headerField) && valueMapping.ContainsKey(row[headerField]))
+                if (row.TryGetValue(headerField, out var oldValue) && oldValue != null && valueMapping.TryGetValue(oldValue, out var newValue))
                 {
-                    row[headerField] = valueMapping[row[headerField]];
+                    row[headerField] = newValue;
                 }
             }
             return this;

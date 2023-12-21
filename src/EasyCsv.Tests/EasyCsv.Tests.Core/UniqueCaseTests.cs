@@ -96,7 +96,7 @@ public class UniqueCaseTests
                 {typeof(int), new TypeConverterOptions {NumberStyles = NumberStyles.AllowCurrencySymbol}}
             }
         };
-        var records = await service.GetRecordsAsync<Person>(csvContextProfile: csvContextProfile);
+        var records = await service!.GetRecordsAsync<Person>(csvContextProfile: csvContextProfile);
         Assert.Equal(new DateTime(2000, 1, 1), records[0].DateOfBirth);
     }
 

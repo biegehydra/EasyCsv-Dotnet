@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Globalization;
 using System.Reflection;
 using CsvHelper.Configuration;
@@ -11,75 +10,7 @@ using MudBlazor;
 
 namespace EasyCsv.Components;
 
-[DebuggerDisplay("{DebuggerDisplay,nq}")]
-public class ExpectedHeader
-{
-    private string DebuggerDisplay => $"CSharpPropName: {CSharpPropertyName}, DisplayName: {AlternativeDisplayName}, Required: {Required}";
-    /// <summary>
-    /// If required, a default value must be provided or a header must be matched to this expected header for the form to be considered valid.
-    /// </summary>
-    public bool Required { get; set; }
-    internal DefaultValue DefaultValue { get; set; }
-    /// <summary>
-    /// AutoMatching will be done on all the values in this list
-    /// </summary>
-    public List<string> ValuesToMatch { get; set; }
-    /// <summary>
-    /// This should be the name of the property/field that you want the column to map to when reading
-    /// the csv into objects.
-    /// </summary>
-    public string CSharpPropertyName { get; set; }
-    /// <summary>
-    /// By default, the CSharpPropertyName will be capitalized and then split on capital letters to display in the table.
-    /// If you provide a value here, this will be displayed instead.
-    /// </summary>
-    public string? AlternativeDisplayName { get; set; }
-
-    /// <summary>
-    /// By convention, the first item in <paramref name="valuesToMatch"/> will also be the CSharpPropertyName.
-    /// </summary>
-    /// <param name="valuesToMatch">AutoMatching will be done on all the values in this list</param>
-    /// <param name="required">If required, a default value must be provided or a header must be matched to this expected header for the form to be considered valid.</param>
-    /// <param name="allowDefaultValue">Determines whether users can provide a default values for this expected header.</param>
-    /// <param name="alternativeDisplayName">
-    /// By default, the CSharpPropertyName will be capitalized and then split on capital letters to display in the matcher.
-    /// If you provide a value here, it will be displayed instead.
-    /// </param>
-    public ExpectedHeader(List<string> valuesToMatch, bool required = false, bool allowDefaultValue = false, string? alternativeDisplayName = null)
-    {
-        CSharpPropertyName = valuesToMatch.First();
-        ValuesToMatch = valuesToMatch;
-        Required = required;
-        DefaultValue = new DefaultValue(allowDefaultValue);
-        AlternativeDisplayName = alternativeDisplayName;
-    }
-
-    /// <summary>
-    /// By convention, <paramref name="csharpPropertyName"/> will also be the only item in <see cref="ValuesToMatch"/>.
-    /// </summary>
-    /// <param name="csharpPropertyName">
-    /// This should be the name of the property/field that you want the column to map to when reading
-    /// the csv into objects.
-    /// </param>
-    /// <param name="required">If required, a default value must be provided or a header must be matched to this expected header for the form to be considered valid.</param>
-    /// <param name="allowDefaultValue">Determines whether users can provide a default values for this expected header.</param>
-    /// <param name="alternativeDisplayName">
-    /// By default, the CSharpPropertyName will be capitalized and then split on capital letters to display in the matcher.
-    /// If you provide a value here, it will be displayed instead.
-    /// </param>
-    public ExpectedHeader(string csharpPropertyName, bool required = false, bool allowDefaultValue = false, string? alternativeDisplayName = null) : this([csharpPropertyName], required, allowDefaultValue, alternativeDisplayName) { }
-}
-internal class DefaultValue
-{
-    internal bool Allow { get; set; }
-    internal string? Value { get; set; }
-    internal bool HasValue => !string.IsNullOrWhiteSpace(Value);
-
-    internal DefaultValue(bool allow)
-    {
-        Allow = allow;
-    }
-}
+#pragma warning disable BL0007
 public partial class CsvTableHeaderMatcher<T>
 {
     [Inject] private ISnackbar? Snackbar { get; set; }
@@ -142,7 +73,7 @@ public partial class CsvTableHeaderMatcher<T>
             HeaderValidated = null,
             MissingFieldFound = null,
             ShouldUseConstructorParameters = x => true,
-            GetConstructor = x => x.ClassType.GetConstructors().FirstOrDefault(c => c.GetParameters().Length == 0)
+            GetConstructor = x => x.ClassType.GetConstructors().FirstOrDefault(c => c.GetParameters().Length == 0) ?? x.ClassType.GetConstructors().FirstOrDefault()
         }
     };
 
@@ -152,6 +83,7 @@ public partial class CsvTableHeaderMatcher<T>
     /// The current state of the matcher. Returns true when all <see cref="ExpectedHeaders"/> that are required either have a default value or a header matched to them.
     /// </summary>
     [Parameter]
+
     public bool AllHeadersValid
     {
         get => _allHeadersValid;
@@ -225,7 +157,7 @@ public partial class CsvTableHeaderMatcher<T>
         }
         await MatchFileHeadersWithExpectedHeaders();
         _expectedHeaders = _expectedHeaders
-            .OrderByDescending(x => x.Required)
+            .OrderByDescending(x => x.Config.IsRequired)
             .ThenByDescending(x => _mappedDict.ContainsValue(x)).ToList();
         StateHasChanged();
     }
@@ -234,7 +166,7 @@ public partial class CsvTableHeaderMatcher<T>
     {
         ExpectedHeaders?.ForEach(x =>
         {
-            x.DefaultValue.Value = null;
+            x.Value = null;
         });
         _mappedDict = new();
         _originalHeaderCurrentHeaderDict = new();
@@ -262,7 +194,7 @@ public partial class CsvTableHeaderMatcher<T>
         await Csv.MutateAsync(x => x.ReplaceColumn(currentHeaderName, expectedHeader.CSharpPropertyName));
         _originalHeaderCurrentHeaderDict[originalHeaderName] = expectedHeader.CSharpPropertyName;
         _mappedDict[originalHeaderName] = expectedHeader;
-        expectedHeader.DefaultValue.Value = null;
+        expectedHeader.Value = null;
         AllHeadersValid = ValidateRequiredHeaders();
     }
 
@@ -371,18 +303,18 @@ public partial class CsvTableHeaderMatcher<T>
         {
             return Task.CompletedTask;
         }
-        var defaultValueKvps = ExpectedHeaders.Where(x => x.DefaultValue is {Allow: true, HasValue: true})
-            .ToDictionary(x => x.CSharpPropertyName, x => x.DefaultValue.Value);
+        var defaultValueKvps = ExpectedHeaders.Where(x => x is {Config.DefaultValueType: not DefaultValueType.None, HasValue: true} or { Config.DefaultValueRenderFragment: not null, HasValue: true })
+            .ToDictionary(x => x.CSharpPropertyName, x => x.Value);
         return Csv.MutateAsync(x => x.AddColumns(defaultValueKvps));
     }
 
     public bool ValidateRequiredHeaders()
     {
         if (ExpectedHeaders == null) return true;
-        foreach (ExpectedHeader requiredHeader in ExpectedHeaders.Where(i => i.Required))
+        foreach (ExpectedHeader requiredHeader in ExpectedHeaders.Where(i => i.Config.IsRequired))
         {
             bool isMapped = _mappedDict.Values.Contains(requiredHeader);
-            if (requiredHeader.DefaultValue is {Allow: true, HasValue: true}) continue;
+            if (requiredHeader is { Config.DefaultValueType: not DefaultValueType.None, HasValue: true } or { Config.DefaultValueRenderFragment: not null, HasValue: true }) continue;
             if (isMapped) continue;
             return false;
         }

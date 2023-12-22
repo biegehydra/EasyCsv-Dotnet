@@ -34,7 +34,7 @@
 <div @onmouseover="@(() => _mouseOver = true)"
      @onmouseleave="@(() => _mouseOver = false)">
     <MudPaper Style="@_style"
-              Class=@_class)>
+              Class="@_class" >
         @if (_loading)
         {
             <MudProgressLinear Indeterminate="true" Size="Size.Large" />
@@ -119,7 +119,7 @@
         await InvokeAsync(StateHasChanged);
         try
         {
-            _dragEnterClass = null;
+            _mouseOver = false;
             var files = args.GetMultipleFiles();
             if (files.Count == 0)
             {

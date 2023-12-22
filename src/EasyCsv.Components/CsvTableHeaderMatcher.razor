@@ -37,12 +37,12 @@
              @{
                  var originalHeader = _mappedDict.FirstOrDefault(x => x.Value == expectedHeader).Key;
                  var expectedHeaderAlreadyMapped = ExpectedHeaderMatched(expectedHeader);
-                 CsvRow firstNotEmptyRow = null;
-                 string currentHeaderName = null;
+                 CsvRow? firstNotEmptyRow = null;
+                 string? currentHeaderName = null;
                  if (expectedHeaderAlreadyMapped)
                  {
                      currentHeaderName = _originalHeaderCurrentHeaderDict[originalHeader];
-                     firstNotEmptyRow = Csv.CsvContent?.FirstOrDefault(x => x.TryGetValue(currentHeaderName, out var value));
+                     firstNotEmptyRow = Csv?.CsvContent?.FirstOrDefault(x => x.TryGetValue(currentHeaderName, out var value) && value != null);
                  }
             }
              <MudTd DataLabel="Matched:" Class="extra-dense" >
@@ -78,7 +78,7 @@
              <MudTd DataLabel="Preview Information:" Class="extra-dense" >
                  @if (firstNotEmptyRow != null)
                  {
-                     @firstNotEmptyRow?[currentHeaderName!]?.ToString()
+                     @firstNotEmptyRow[currentHeaderName!]?.ToString()
                  }
                  else if (expectedHeader.HasValue)
                  {

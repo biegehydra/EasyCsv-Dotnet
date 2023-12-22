@@ -168,19 +168,19 @@ public class ExpectedHeaderConfig
     /// <summary>
     /// A default value will NOT be allowed. A csv header can be mapped but is not required for the matcher to be considered valid. 
     /// </summary>
-    public static ExpectedHeaderConfig Default = new ExpectedHeaderConfig();
+    public static readonly ExpectedHeaderConfig Default = new ExpectedHeaderConfig();
     /// <summary>
     ///  A default value will NOT be allowed. A csv header must be mapped or the matcher will be considered invalid.
     /// </summary>
-    public static ExpectedHeaderConfig Required = new ExpectedHeaderConfig(required: true);
+    public static readonly ExpectedHeaderConfig Required = new ExpectedHeaderConfig(required: true);
     /// <summary>
     /// A default value with a text input will be allowed. A csv header can also be mapped but neither are required for the matcher to be considered valid. 
     /// </summary>
-    public static ExpectedHeaderConfig TextDefaultValue = new ExpectedHeaderConfig(defaultValueType: DefaultValueType.Text);
+    public static readonly ExpectedHeaderConfig TextDefaultValue = new ExpectedHeaderConfig(defaultValueType: DefaultValueType.Text);
     /// <summary>
     /// A default value with a text input will be allowed. A csv header can also be mapped, one of either are required for the matcher to be considered valid. 
     /// </summary>
-    public static ExpectedHeaderConfig RequiredTextDefaultValue = new ExpectedHeaderConfig(required: true, defaultValueType: DefaultValueType.None);
+    public static readonly ExpectedHeaderConfig RequiredTextDefaultValue = new ExpectedHeaderConfig(required: true, defaultValueType: DefaultValueType.None);
 }
 
 public class ExpectedHeaderConfigurator

@@ -180,8 +180,8 @@ public partial class CsvTableHeaderMatcher<T>
         {
             if (DoMatching(header, matchedHeaders, out var matchedHeader))
             {
-                matchedHeaders.Add(matchedHeader);
-                await ReplaceColumn(header, matchedHeader);
+                matchedHeaders.Add(matchedHeader!);
+                await ReplaceColumn(header, matchedHeader!);
             }
         }
         AllHeadersValid = ValidateRequiredHeaders();

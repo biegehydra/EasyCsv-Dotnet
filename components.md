@@ -33,7 +33,7 @@ The options for the EH essentially lets you control how users will be able to pr
 
 **Display Name (string)**: This defines what to display for this EH in the "Expected Header" column.
 
-**ValuesToMatch (List<string>)**: When a Csv is imported, the matcher will attempt to figure out which of the csv headers match to your EHs. It does this by performing matching on each of the values in this list. For example, if you have an EH for a `Zip` property. You might want `ValuesToMatch` to look like `new List<string>() { "Zip", "Zip Code", "Postal Code" }". How the matching is done is explained in the AutoMatching section.
+**ValuesToMatch (List<string>)**: When a Csv is imported, the matcher will attempt to figure out which of the csv headers match to your EHs. It does this by performing matching on each of the values in this list. For example, if you have an EH for a `Zip` property. You might want `ValuesToMatch` to look like `new List<string>() { "Zip", "Zip Code", "Postal Code" }`. How the matching is done is explained in the AutoMatching section.
 
 
 ### Expected Header Config
@@ -44,7 +44,7 @@ Ex:
 ```
 ExpectedHeader throughConfig = new ExpectedHeader(nameof(Person.DateOfBirth), new ExpectedHeaderConfig(DefaultValueType.DateTime, required: true));
 // or
-ExpectedHeader throughConfig = new ExpectedHeader(nameof(Person.DateOfBirth), x => { x.Required = true; x.DefaultValueType = DefaultValueType.DateTime; } );
+ExpectedHeader throughConfigurator = new ExpectedHeader(nameof(Person.DateOfBirth), x => { x.Required = true; x.DefaultValueType = DefaultValueType.DateTime; } );
 ```
 
 **Required (bool)**: All EHs that are marked as required must either have a default value provided or csv header mapped to be marked as valid. If any EH is invalid, it will show up as red in the table and the whole table will have a red border (configurable).

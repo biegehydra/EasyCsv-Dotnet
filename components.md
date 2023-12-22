@@ -1,6 +1,10 @@
-## EasyCsv.Components
+# EasyCsv.Components
 
 EasyCsv.Components provides you with 2 components. They are available to test at this [example website](https://easycsv-components-exampleapp.s3.amazonaws.com/index.html).
+
+## Installation
+
+`NuGet\Install-Package EasyCsv.Components`
 
 ## CsvFileInput
 

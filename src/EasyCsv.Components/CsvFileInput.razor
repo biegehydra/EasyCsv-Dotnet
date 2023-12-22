@@ -4,6 +4,7 @@
 @using System.Globalization
 @using System.Text.RegularExpressions
 @using CsvHelper
+@using MudBlazor.Utilities
 <style>
     .drag-drop-zone {
         display: flex;
@@ -30,13 +31,10 @@
     }
 </style>
 
-@{
-    var successStyle = CsvValid ? "border: 2px solid var(--mud-palette-success); min-height: 150px;" : "min-height: 150px;";
-}
-<div @onmouseover="@(() => _dragEnterClass = "drag-enter")"
-     @onmouseleave="@(() => _dragEnterClass = null)">
-    <MudPaper Style="@successStyle"
-              Class=@("drag-drop-zone " + _dragEnterClass)>
+<div @onmouseover="@(() => _mouseOver = true)"
+     @onmouseleave="@(() => _mouseOver = false)">
+    <MudPaper Style="@_style"
+              Class="@_class" >
         @if (_loading)
         {
             <MudProgressLinear Indeterminate="true" Size="Size.Large" />
@@ -55,8 +53,24 @@
 
 @code {
     [Inject] private ISnackbar? SnackBar { get; set; }
-    private string? _dragEnterClass;
     private bool _loading;
+    private bool _mouseOver = false;
+
+    [Parameter]
+    public string? Style { get; set; }
+
+    private string _style => new StyleBuilder()
+        .AddStyle(Style)
+        .AddStyle("min-height", "150px")
+        .AddStyle("border: 2px", "solid var(--mud-palette-success)", CsvValid)
+        .Build();
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    private string _class => new CssBuilder("drag-drop-zone")
+        .AddClass("drag-enter", () => _mouseOver)
+        .Build();
 
     /// <summary>
     /// Controls whether the input box will be highlighted with a green border or not.
@@ -105,7 +119,7 @@
         await InvokeAsync(StateHasChanged);
         try
         {
-            _dragEnterClass = null;
+            _mouseOver = false;
             var files = args.GetMultipleFiles();
             if (files.Count == 0)
             {

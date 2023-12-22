@@ -118,7 +118,7 @@ public class ExpectedHeader
 public class ExpectedHeaderConfig
 {
     internal ExpectedHeaderConfig(bool required, DefaultValueType allowDefaultValue,
-        RenderFragment<DefaultValueRenderFragmentsArgs>? defaultValueRenderFragment, object? initialDefaultValue)
+        RenderFragment<DefaultValueRenderFragmentsArg>? defaultValueRenderFragment, object? initialDefaultValue)
     {
         IsRequired = required;
         DefaultValueType = allowDefaultValue;
@@ -126,10 +126,30 @@ public class ExpectedHeaderConfig
         InitialDefaultValue = initialDefaultValue;
     }
 
+    /// <param name="defaultValueType">
+    /// Options are None, Text, DateTime, CheckBox, and TriStateCheckBox. These will control what MudBlazor input component is used in the default value column.
+    /// This value is ignored if a value is provided for DefaultValueRenderFragment</param>
+    /// <param name="required">
+    /// All EHs that are marked as required must either have a default value provided or csv header mapped to be marked as valid. If any EH is invalid,
+    /// it will show up as red in the table and the whole table will have a red border (configurable).
+    /// </param>
+    /// <param name="initialDefaultValue">
+    /// The initial default value of this expected header. Will show up in whatever input type is used in the "Default Value" column.
+    /// </param>
     public ExpectedHeaderConfig(DefaultValueType defaultValueType = DefaultValueType.None, bool required = false, object? initialDefaultValue = null) :
         this(required, defaultValueType, null, initialDefaultValue) { }
 
-    public ExpectedHeaderConfig(RenderFragment<DefaultValueRenderFragmentsArgs>? defaultValueRenderFragment, bool required = false, object? initialDefaultValue = null) :
+    /// <param name="defaultValueRenderFragment">
+    /// A custom element that will be used in the "Default Value" column. This will override the DefaultValueType.
+    /// </param>
+    /// <param name="required">
+    /// All EHs that are marked as required must either have a default value provided or csv header mapped to be marked as valid. If any EH is invalid,
+    /// it will show up as red in the table and the whole table will have a red border (configurable).
+    /// </param>
+    /// <param name="initialDefaultValue">
+    /// The initial default value of this expected header. Will show up in whatever input type is used in the "Default Value" column.
+    /// </param>
+    public ExpectedHeaderConfig(RenderFragment<DefaultValueRenderFragmentsArg>? defaultValueRenderFragment, bool required = false, object? initialDefaultValue = null) :
         this(required, DefaultValueType.None, defaultValueRenderFragment, initialDefaultValue)
     {
         
@@ -144,7 +164,7 @@ public class ExpectedHeaderConfig
     /// </summary>
     public DefaultValueType DefaultValueType { get; private init; }
     public object? InitialDefaultValue { get; set; }
-    public RenderFragment<DefaultValueRenderFragmentsArgs>? DefaultValueRenderFragment { get; private init; }
+    public RenderFragment<DefaultValueRenderFragmentsArg>? DefaultValueRenderFragment { get; private init; }
     /// <summary>
     /// A default value will NOT be allowed. A csv header can be mapped but is not required for the matcher to be considered valid. 
     /// </summary>
@@ -165,14 +185,26 @@ public class ExpectedHeaderConfig
 
 public class ExpectedHeaderConfigurator
 {
+    /// <summary>
+    /// If required, a default value must be provided or a header must be matched to the expected header with this config for the matcher to be considered valid.
+    /// </summary>
     public bool IsRequired { get; set; }
+    /// <summary>
+    /// Determines whether or
+    /// </summary>
     public DefaultValueType DefaultValueType { get; set; }
-    public RenderFragment<DefaultValueRenderFragmentsArgs>? DefaultValueRenderFragment { get; set; }
+    public RenderFragment<DefaultValueRenderFragmentsArg>? DefaultValueRenderFragment { get; set; }
     public object? InitialDefaultValue { get; set; }
 }
 
-public class DefaultValueRenderFragmentsArgs(bool frozen, Action<object?> defaultValueChanged)
+public class DefaultValueRenderFragmentsArg(bool frozen, Action<object?> defaultValueChanged)
 {
+    /// <summary>
+    /// When true. This input should not be editable.
+    /// </summary>
     public bool Frozen { get; init; } = frozen;
+    /// <summary>
+    /// Invoke this action when the default value changes.
+    /// </summary>
     public Action<object?> DefaultValueChanged { get; init; } = defaultValueChanged;
 };

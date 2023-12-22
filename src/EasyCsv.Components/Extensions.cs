@@ -30,7 +30,7 @@ internal static class Extensions
     internal static string Pascalize(this string? input)
     {
         if (input == null) return "";
-        if (input.Length == 0) return null;
+        if (input.Length == 0) return "";
         if (char.IsUpper(input[0])) return input;
         return $"{char.ToUpper(input[0])}{input[1..]}";
     }

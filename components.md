@@ -24,7 +24,7 @@ This component takes the `IEasyCsv` that you got from the `CsvFileInput` (or els
 
 All of this works through the `ExpectedHeaders` parameter which takes a `List<ExpectedHeader`. There should be one `ExpectedHeader` for each C# property on the `T` parameter that you want a value for. Alternatively, you can enable `AutoGenerateExpectedHeaders` and a default `ExpectedHeader` will be generated for each public instance variable with a setter.
 
-#### Expected Header Options
+### Expected Header Options
 EH - Expected Header
 
 The options for the EH essentially lets you control how users will be able to provide a value for your C# property and how it will be displayed.
@@ -34,6 +34,9 @@ The options for the EH essentially lets you control how users will be able to pr
 **Display Name (string)**: This defines what to display for this EH in the "Expected Header" column.
 
 **ValuesToMatch (List<string>)**: When a Csv is imported, the matcher will attempt to figure out which of the csv headers match to your EHs. It does this by performing matching on each of the values in this list. For example, if you have an EH for a `Zip` property. You might want `ValuesToMatch` to look like `new List<string>() { "Zip", "Zip Code", "Postal Code" }". How the matching is done is explained in the AutoMatching section.
+
+
+### Expected Header Config
 
 The rest of the options are either provided through the `ExpectedHeaderConfig` or through an `Action<ExpectedHeaderConfigurator>`.
 
@@ -50,6 +53,8 @@ ExpectedHeader throughConfig = new ExpectedHeader(nameof(Person.DateOfBirth), x 
 
 **Default Value Type (DefaultValueType)**: Options are `None`, `Text`, `DateTime`, `CheckBox`, and `TriStateCheckBox`. These will control what MudBlazor input component is used in the default value column. This value is ignored if a value is provided for `DefaultValueRenderFragment`
 **DefaultValueRenderFragment (RenderFragment\<DefaultValueRenderFragmentsArgs\>)**: If you would like a custom input element in "Default Value" column, you can define that here. An example of how to do this can be seen [here](https://github.com/biegehydra/EasyCsv-Dotnet/blob/76fac05fbb2476839aab7f8fa7b805211e4e9e94/src/ExampleBlazorApp/Pages/Index.razor#L118).
+
+There are a few static `ExpectedHeaderConfig`s on `ExpectedHeaderConfig` that you can use such as `Default`, `Required`, `TextDefaultValue` and `RequiredTextDefaultValue` since these are commonly used.
 
 ### Additional CsvTableHeaderMatcher<T> Options
 

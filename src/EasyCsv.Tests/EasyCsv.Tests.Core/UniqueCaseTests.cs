@@ -15,7 +15,7 @@ public class UniqueCaseTests
     {
         var dir = Directory.GetCurrentDirectory();
         var path = Path.Combine(dir, "Csvs/SingleColumn.csv");
-        var easyCsv = await EasyCsvFactory.FromFileAsync(path, int.MaxValue);
+        IEasyCsv easyCsv = await EasyCsvFactory.FromFileAsync(path, int.MaxValue);
         var records = await easyCsv!.GetRecordsAsync<SingleColumnExample>();
 
         Assert.NotNull(records);

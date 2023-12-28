@@ -28,7 +28,7 @@ namespace EasyCsv.Core
             return CsvContent?.Any(r => RowsEqual(r, row)) ?? false;
         }
 
-        public void Mutate(Action<CSVMutationScope> mutations, bool saveChanges = true)
+        public void Mutate(Action<IEasyMutations> mutations, bool saveChanges = true)
         {
             var scope = new CSVMutationScope(this);
             mutations(scope);
@@ -38,7 +38,7 @@ namespace EasyCsv.Core
             }
         }
 
-        public async Task MutateAsync(Func<CSVMutationScope, Task> mutations, bool saveChanges = true)
+        public async Task MutateAsync(Func<IEasyMutations, Task> mutations, bool saveChanges = true)
         {
             var scope = new CSVMutationScope(this);
             await mutations(scope);
@@ -48,7 +48,7 @@ namespace EasyCsv.Core
             }
         }
 
-        public async Task MutateAsync(Action<CSVMutationScope> mutations, bool saveChanges = true)
+        public async Task MutateAsync(Action<IEasyMutations> mutations, bool saveChanges = true)
         {
             var scope = new CSVMutationScope(this);
             mutations(scope);

@@ -13,7 +13,7 @@ namespace EasyCsv.Tests.Core
         public void StringConstructor_CreatesValidInstance()
         {
             // Act
-            var easyCsv = EasyCsvFactory.FromString(SingleRecordCsv, DefaultConfig);
+            IEasyCsv easyCsv = EasyCsvFactory.FromString(SingleRecordCsv, DefaultConfig);
 
             // Assert
             AssertValidEasyCsv(easyCsv);
@@ -23,7 +23,7 @@ namespace EasyCsv.Tests.Core
         public void AsyncStringConstructor_CreatesValidInstance()
         {
             // Act
-            var easyCsv = EasyCsvFactory.FromString(SingleRecordCsv, DefaultConfig);
+            IEasyCsv easyCsv = EasyCsvFactory.FromString(SingleRecordCsv, DefaultConfig);
 
             // Assert
             AssertValidEasyCsv(easyCsv);
@@ -33,7 +33,7 @@ namespace EasyCsv.Tests.Core
         public void BytesConstructor_CreatesValidInstance()
         {
             // Act
-            var easyCsv = EasyCsvFactory.FromString(SingleRecordCsv, DefaultConfig);
+            IEasyCsv easyCsv = EasyCsvFactory.FromString(SingleRecordCsv, DefaultConfig);
 
             // Assert
             AssertValidEasyCsv(easyCsv);
@@ -43,7 +43,7 @@ namespace EasyCsv.Tests.Core
         public void AsyncBytesConstructor_CreatesValidInstance()
         {
             // Act
-            var easyCsv = EasyCsvFactory.FromString(SingleRecordCsv, DefaultConfig);
+            IEasyCsv easyCsv = EasyCsvFactory.FromString(SingleRecordCsv, DefaultConfig);
 
             // Assert
             AssertValidEasyCsv(easyCsv);
@@ -53,7 +53,7 @@ namespace EasyCsv.Tests.Core
         public void StreamConstructor_CreatesValidInstance()
         {
             // Act
-            var easyCsv = EasyCsvFactory.FromString(SingleRecordCsv, DefaultConfig);
+            IEasyCsv easyCsv = EasyCsvFactory.FromString(SingleRecordCsv, DefaultConfig);
 
             // Assert
             AssertValidEasyCsv(easyCsv);
@@ -63,7 +63,7 @@ namespace EasyCsv.Tests.Core
         public void AsyncStreamConstructor_CreatesValidInstance()
         {
             // Act
-            var easyCsv = EasyCsvFactory.FromString(SingleRecordCsv, DefaultConfig);
+            IEasyCsv easyCsv = EasyCsvFactory.FromString(SingleRecordCsv, DefaultConfig);
 
             // Assert
             AssertValidEasyCsv(easyCsv);
@@ -97,7 +97,7 @@ namespace EasyCsv.Tests.Core
             };
 
             // Act
-            var easyCsv = EasyCsvFactory.FromObjects(objects, config);
+            IEasyCsv easyCsv = EasyCsvFactory.FromObjects(objects, config);
 
             // Assert
             Assert.Contains("Id,Name", easyCsv!.ContentStr);
@@ -117,7 +117,7 @@ namespace EasyCsv.Tests.Core
             };
 
             // Act
-            var easyCsv = await EasyCsvFactory.FromObjectsAsync(objects, config);
+            IEasyCsv easyCsv = await EasyCsvFactory.FromObjectsAsync(objects, config);
 
             // Assert
             Assert.Contains("Id,Name", easyCsv!.ContentStr);

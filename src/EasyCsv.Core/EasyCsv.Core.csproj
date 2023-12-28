@@ -68,10 +68,6 @@
 		<PackageReference Include="CsvHelper" Version="30.0.1" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
 	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="docs\" />
-	</ItemGroup>
 	<ItemGroup>
 	  <None Include="Icon.png" Pack="true" PackagePath="\" />
 	  <None Include="README.md" Pack="true" PackagePath="\" />

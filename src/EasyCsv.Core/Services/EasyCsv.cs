@@ -28,42 +28,30 @@ namespace EasyCsv.Core
             return CsvContent?.Any(r => RowsEqual(r, row)) ?? false;
         }
 
-        public void Mutate(Action<CSVMutationScope> mutations, bool saveChanges = true, bool safe = false)
+        public void Mutate(Action<CSVMutationScope> mutations, bool saveChanges = true)
         {
-            var scope = new CSVMutationScope(safe ? Clone() : this);
+            var scope = new CSVMutationScope(this);
             mutations(scope);
-            if (safe)
-            {
-                CsvContent = scope.CsvContent;
-            }
             if (saveChanges)
             {
                 CalculateContentBytesAndStr();
             }
         }
 
-        public async Task MutateAsync(Func<CSVMutationScope, Task> mutations, bool saveChanges = true, bool safe = false)
+        public async Task MutateAsync(Func<CSVMutationScope, Task> mutations, bool saveChanges = true)
         {
-            var scope = new CSVMutationScope(safe ? Clone() : this);
+            var scope = new CSVMutationScope(this);
             await mutations(scope);
-            if (safe)
-            {
-                CsvContent = scope.CsvContent;
-            }
             if (saveChanges)
             {
                 await CalculateContentBytesAndStrAsync();
             }
         }
 
-        public async Task MutateAsync(Action<CSVMutationScope> mutations, bool saveChanges = true, bool safe = false)
+        public async Task MutateAsync(Action<CSVMutationScope> mutations, bool saveChanges = true)
         {
-            var scope = new CSVMutationScope(safe ? Clone() : this);
+            var scope = new CSVMutationScope(this);
             mutations(scope);
-            if (safe)
-            {
-                CsvContent = scope.CsvContent;
-            }
             if (saveChanges)
             {
                 await CalculateContentBytesAndStrAsync();

@@ -18,8 +18,8 @@ namespace EasyCsv.Core
         internal IEasyCsv MapValuesInColumn(string headerField, IDictionary<object, object> valueMapping);
         internal IEasyCsv SortCsv(string headerField, bool ascending = true);
         internal IEasyCsv SortCsv<TKey>(Func<CsvRow, TKey> keySelector, bool ascending = true);
-        internal IEasyCsv RemoveColumn(string headerField);
-        internal IEasyCsv RemoveColumns(List<string> headerFields);
+        internal IEasyCsv RemoveColumn(string headerField, bool throwIfNotExists = true);
+        internal IEasyCsv RemoveColumns(List<string> headerFields, bool throwIfNotExists = true);
         IEasyCsv RemoveUnusedHeaders();
         internal Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(bool caseInsensitive = true, CsvContextProfile? csvContextProfile = null);
         internal Task<IEasyCsv> RemoveUnusedHeadersAsync<T>(PrepareHeaderForMatch prepareHeaderForMatch, CsvContextProfile? csvContextProfile = null);

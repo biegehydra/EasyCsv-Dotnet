@@ -3,7 +3,7 @@ using System;
 
 namespace EasyCsv.Core
 {
-    public interface IEasyCsv : IEasyCsvBase<IEasyCsv>, IInternalCrud, IInternalOperations, IGetRecords
+    public interface IEasyCsv : IEasyCsvBase<IEasyCsv>, IInternalCrud, IInternalOperations
     {
         /// <summary>
         /// Performs synchronous mutations on the CSV content using the provided delegate.
@@ -24,7 +24,7 @@ namespace EasyCsv.Core
         /// ]]>
         /// </code>
         /// </example>
-        void Mutate(Action<CSVMutationScope> mutations, bool saveChanges = true);
+        void Mutate(Action<IEasyMutations> mutations, bool saveChanges = true);
 
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace EasyCsv.Core
         /// ]]>
         /// </code>
         /// </example>
-        Task MutateAsync(Func<CSVMutationScope, Task> mutations, bool saveChanges = true);
+        Task MutateAsync(Func<IEasyMutations, Task> mutations, bool saveChanges = true);
 
 
 
@@ -76,6 +76,22 @@ namespace EasyCsv.Core
         /// </code>
         /// </example>
         /// <remarks>Useful when you are only doing synchronous mutations but want the benefits of calculating the content string and bytes asynchronously</remarks>
-        Task MutateAsync(Action<CSVMutationScope> mutations, bool saveChanges = true);
+        Task MutateAsync(Action<IEasyMutations> mutations, bool saveChanges = true);
+
+        /// <summary>
+        /// Gets row at index.
+        /// </summary>
+        /// <param name="index">Index of the row you want.</param>
+        /// <returns>A <code>IDictionary string, object</code> representing properties and values of row. </returns>
+        CsvRow? GetRecord(int index);
+
+
+        /// <summary>
+        /// Gets row at index as object of type T.
+        /// </summary>
+        /// <param name="index">Index of the row you want.</param>
+        /// <typeparam name="T">The type of object the row will be read into</typeparam>
+        /// <returns>A <code>IDictionary string, object</code> representing properties and values of row. </returns>
+        T? GetRecord<T>(int index) where T : class;
     }
 }

@@ -3,7 +3,6 @@ using System;
 using CsvHelper.Configuration;
 using CsvHelper;
 using System.Threading.Tasks;
-using CsvHelper.TypeConversion;
 using EasyCsv.Core.Configuration;
 
 namespace EasyCsv.Core
@@ -89,16 +88,19 @@ namespace EasyCsv.Core
         /// Removes a column from the CSV content.
         /// </summary>
         /// <param name="headerField">The header field of the column you want to remove.</param>
+        /// <param name="throwIfNotExists">Determines whether the function will throw and exception or do nothing if the specified header field doesn't exist.</param>
+        /// <exception cref="ExceptionType">Description of the conditions under which the exception is thrown.</exception>
         /// <returns>An <code>IEasyCsv</code> to be used for fluent method chaining.</returns>
-        T RemoveColumn(string headerField);
+        T RemoveColumn(string headerField, bool throwIfNotExists = true);
 
 
         /// <summary>
         /// Removes columns from the CSV content.
         /// </summary>
         /// <param name="headerFields">The header fields of the columns you want to remove.</param>
+        /// <param name="throwIfNotExists">Determines whether the function will throw and exception or do nothing if the specified header field doesn't exist</param>
         /// <returns>An <code>IEasyCsv</code> to be used for fluent method chaining.</returns>
-        T RemoveColumns(List<string> headerFields);
+        T RemoveColumns(List<string> headerFields, bool throwIfNotExists = true);
 
         /// <summary>
         /// Removes all the columns where the value of the column is null or whitespace in all rows.

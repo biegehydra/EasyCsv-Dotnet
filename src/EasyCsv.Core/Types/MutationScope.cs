@@ -7,7 +7,7 @@ using EasyCsv.Core.Configuration;
 
 namespace EasyCsv.Core
 {
-    public class CSVMutationScope : IEasyMutations
+    internal class CSVMutationScope : IEasyMutations
     {
         private readonly IEasyCsv _csv;
 
@@ -114,15 +114,15 @@ namespace EasyCsv.Core
             return this;
         }
 
-        public IEasyMutations RemoveColumn(string headerField)
+        public IEasyMutations RemoveColumn(string headerField, bool throwIfNotExists = true)
         {
-            _csv.RemoveColumn(headerField);
+            _csv.RemoveColumn(headerField, throwIfNotExists);
             return this;
         }
 
-        public IEasyMutations RemoveColumns(List<string> headerFields)
+        public IEasyMutations RemoveColumns(List<string> headerFields, bool throwIfNotExists = true)
         {
-            _csv.RemoveColumns(headerFields);
+            _csv.RemoveColumns(headerFields, throwIfNotExists);
             return this;
         }
 
@@ -174,13 +174,7 @@ namespace EasyCsv.Core
             return this;
         }
 
-        public IEasyMutations AddRecord(List<string> rowValues, int index = -1)
-        {
-            _csv.AddRecord(rowValues, index);
-            return this;
-        }
-
-        public IEasyMutations InsertRecord(List<string> rowValues, int index = -1)
+        public IEasyMutations InsertRecord(List<object?> rowValues, int index = -1)
         {
             _csv.InsertRecord(rowValues, index);
             return this;

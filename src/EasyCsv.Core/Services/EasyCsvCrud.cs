@@ -8,26 +8,7 @@ namespace EasyCsv.Core
 {
     internal partial class EasyCsv
     {
-        public IEasyCsv AddRecord(List<string> rowValues, int index = -1)
-        {
-            var headers = GetHeaders();
-            if (CsvContent == null) return this;
-            if (headers?.Count == null || headers.Count == 0 || headers.Count != rowValues.Count) return this;
-            if (index == -1 || index >= CsvContent.Count)
-            {
-                var newRow = RowFromHeadersAndValues(headers, rowValues);
-                CsvContent.Add(new CsvRow(newRow));
-            }
-            else
-            {
-                var newRow = RowFromHeadersAndValues(headers, rowValues);
-                CsvContent.Insert(index, new CsvRow(newRow));
-            }
-
-            return this;
-        }
-
-        public IEasyCsv InsertRecord(List<string> rowValues, int index = -1)
+        public IEasyCsv InsertRecord(List<object?> rowValues, int index = -1)
         {
             var headers = GetHeaders();
             if (CsvContent == null) return this;
@@ -46,7 +27,7 @@ namespace EasyCsv.Core
             return this;
         }
 
-        private static CsvRow RowFromHeadersAndValues(IEnumerable<string> headers, List<string> values)
+        private static CsvRow RowFromHeadersAndValues(IEnumerable<string> headers, List<object?> values)
         {
             var row = new CsvRow(headers, values);
             return row;

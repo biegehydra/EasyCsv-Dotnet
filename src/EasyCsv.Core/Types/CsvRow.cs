@@ -26,7 +26,7 @@ namespace EasyCsv.Core
             _innerDictionary = new Dictionary<string, object?>(row);
         }
 
-        public CsvRow(IEnumerable<string> headers, List<string> values)
+        public CsvRow(IEnumerable<string> headers, List<object?> values)
         {
             _innerDictionary = new Dictionary<string, object?>();
             var i = 0;

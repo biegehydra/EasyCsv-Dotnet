@@ -21,7 +21,7 @@ namespace EasyCsv.Core
             var newRecords = new List<CsvRow>(CsvContent.Count);
             foreach (var row in CsvContent)
             {
-                var newRow = new CsvRow(newHeaderFields, row.Values.Select(x => (string) x).ToList());
+                var newRow = new CsvRow(newHeaderFields, row.Values.ToList());
                 newRecords.Add(newRow);
             }
             CsvContent = newRecords;
@@ -130,11 +130,18 @@ namespace EasyCsv.Core
         }
 
 
-        public IEasyCsv RemoveColumn(string headerField)
+        public IEasyCsv RemoveColumn(string headerField, bool throwIfNotExists = true)
         {
             if (CsvContent == null) return this;
             if (!GetHeaders()?.Contains(headerField) ?? true)
-                throw new ArgumentException($"No column existed with headerField: {headerField}.");
+            {
+                if (throwIfNotExists)
+                {
+                    throw new ArgumentException($"No column existed with headerField: {headerField}.");
+                }
+                return this;
+
+            }
             foreach (var record in CsvContent)
             {
                 record.Remove(headerField);
@@ -143,16 +150,26 @@ namespace EasyCsv.Core
             return this;
         }
 
-        public IEasyCsv RemoveColumns(List<string> headerFields)
+        public IEasyCsv RemoveColumns(List<string> headerFields, bool throwIfNotExists = true)
         {
             if (CsvContent == null) return this;
             if (headerFields.Any(x => !GetHeaders()?.Contains(x) ?? true))
-                throw new ArgumentException($"At least one of the columns requested for removal did not exist..");
-            foreach (var record in CsvContent)
             {
-                foreach (var field in headerFields)
+                if (throwIfNotExists)
                 {
-                    record.Remove(field);
+                    throw new ArgumentException($"At least one of the columns requested for removal did not exist..");
+                }
+                headerFields = headerFields.Where(x => GetHeaders()?.Contains(x) == true).ToList();
+            }
+
+            if (headerFields.Count != 0)
+            {
+                foreach (var record in CsvContent)
+                {
+                    foreach (var field in headerFields)
+                    {
+                        record.Remove(field);
+                    }
                 }
             }
             return this;
@@ -202,7 +219,7 @@ namespace EasyCsv.Core
         public IEasyCsv Combine(IEasyCsv? otherCsv)
         {
             if (CsvContent == null) return this;
-            if (otherCsv == null || otherCsv.CsvContent == null) return this;
+            if (otherCsv?.CsvContent == null) return this;
 
             var firstHeaders = GetHeaders();
             var secondHeaders = otherCsv.GetHeaders();
@@ -216,12 +233,8 @@ namespace EasyCsv.Core
 
         public IEasyCsv Combine(List<IEasyCsv?>? otherCsvs)
         {
-            if (otherCsvs == null)
-            {
-
-            }
             if (CsvContent == null) return this;
-            if (otherCsvs == null || otherCsvs.Count <= 0) return this;
+            if (otherCsvs is not {Count: > 0}) return this;
             foreach (var otherCsv in otherCsvs)
             {
                 Combine(otherCsv);

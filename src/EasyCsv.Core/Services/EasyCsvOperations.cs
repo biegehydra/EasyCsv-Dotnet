@@ -183,7 +183,7 @@ namespace EasyCsv.Core
             if (keys == null) return this;
             foreach (var key in keys)
             {
-                if (CsvContent.All(x => string.IsNullOrWhiteSpace(x[key] as string)))
+                if (CsvContent.All(x => (x[key] is string str && string.IsNullOrWhiteSpace(str)) || x[key] == null))
                 {
                     RemoveColumn(key);
                 }

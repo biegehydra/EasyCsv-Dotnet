@@ -83,7 +83,7 @@ easyCsv.Mutate(mutation => mutation.MapValuesInColumn("header1", valueMapping));
 // after "header1,header2\nNewValue,OldValue";
 ```
 ## Sort data by column:
-The easiest way is to sort by a column to give them in alphabetical order based on that column, but you can also provide a Func<IDictionary<string, object>, TKey>. to sort like this `csvService.SortCsv(row => row["FieldName"].ToString().Length, ascending: false);`. This would sort rows by the lengths of fields in column "FieldName"
+You can provide a Func<IDictionary<string, object>, TKey>. to sort like this `easyCsv.SortCsv(row => row["FieldName"].ToString().Length, ascending: false);`. This would sort rows by the lengths of fields in column "header1"
 ```csharp
 easyCsv.Mutate(mutation => mutation.SortCsv("header1", ascending: true));
 ```

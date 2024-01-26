@@ -7,7 +7,7 @@ using EasyCsv.Core.Configuration;
 
 namespace EasyCsv.Core
 {
-    internal class CSVMutationScope : IEasyMutations
+    public class CSVMutationScope : IEasyMutations
     {
         private readonly IEasyCsv _csv;
 

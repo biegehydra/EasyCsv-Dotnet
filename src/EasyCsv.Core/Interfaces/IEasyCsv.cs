@@ -24,7 +24,7 @@ namespace EasyCsv.Core
         /// ]]>
         /// </code>
         /// </example>
-        void Mutate(Action<IEasyMutations> mutations, bool saveChanges = true);
+        void Mutate(Action<CSVMutationScope> mutations, bool saveChanges = true);
 
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace EasyCsv.Core
         /// ]]>
         /// </code>
         /// </example>
-        Task MutateAsync(Func<IEasyMutations, Task> mutations, bool saveChanges = true);
+        Task MutateAsync(Func<CSVMutationScope, Task> mutations, bool saveChanges = true);
 
 
 
@@ -76,7 +76,7 @@ namespace EasyCsv.Core
         /// </code>
         /// </example>
         /// <remarks>Useful when you are only doing synchronous mutations but want the benefits of calculating the content string and bytes asynchronously</remarks>
-        Task MutateAsync(Action<IEasyMutations> mutations, bool saveChanges = true);
+        Task MutateAsync(Action<CSVMutationScope> mutations, bool saveChanges = true);
 
         /// <summary>
         /// Gets row at index.

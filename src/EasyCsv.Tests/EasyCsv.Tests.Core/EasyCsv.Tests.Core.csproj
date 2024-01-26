@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>netcoreapp3.1;net7.0</TargetFrameworks>
@@ -26,6 +26,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <None Update="Csvs\EmptyHeaders.csv">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	  <None Update="Csvs\SingleColumn.csv">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>

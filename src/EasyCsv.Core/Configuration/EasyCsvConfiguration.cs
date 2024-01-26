@@ -14,6 +14,13 @@ namespace EasyCsv.Core.Configuration
         /// </summary>
         public bool NormalizeFields { get; set; } = DefaultEasyConfiguration.NormalizeHeaders;
 
+        /// <summary>
+        /// If true, PrepareHeadersWithMatch will be overriden and
+        /// will set empty headers to "EmptyHeaders{FieldIndex}".
+        /// Without this setting, multiple empty headers will throw an exception
+        /// </summary>
+        public bool GiveEmptyHeadersNames { get; set; }
+
 
         /// <summary>
         /// Function to be used to normalize fields when generating <code>ContentStr</code> and <code>ContentBytes</code>. Only called when <see cref="NormalizeHeaders"/> is true

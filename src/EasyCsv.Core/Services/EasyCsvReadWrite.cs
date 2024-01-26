@@ -15,27 +15,38 @@ namespace EasyCsv.Core
     {
         private void CreateCsvContent(Stream stream)
         {
+            PrepareHeaderForMatch? temp = null;
+            if (Config.GiveEmptyHeadersNames)
+            {
+                temp = Config.CsvHelperConfig.PrepareHeaderForMatch;
+                Config.CsvHelperConfig.PrepareHeaderForMatch = x => string.IsNullOrWhiteSpace(x.Header) ? $"EmptyHeader{x.FieldIndex}" : x.Header;
+            }
             using var reader = new StreamReader(stream, Encoding.Default);
             using var csv = new CsvReader(reader, Config.CsvHelperConfig);
-            CsvContent = csv.GetRecords<dynamic>().Select(x => new CsvRow((IDictionary<string, object>)x)).ToList();
-        }
-
-        internal async Task CreateCsvContentInBackGround(Stream stream)
-        {
-            await Task.Run(() =>
+            CsvContent = csv.GetRecords<dynamic>().Select(x => new CsvRow((IDictionary<string, object?>)x)).ToList();
+            if (Config.GiveEmptyHeadersNames)
             {
-                using var reader = new StreamReader(stream, Encoding.Default);
-                using var csv = new CsvReader(reader, Config.CsvHelperConfig);
-                CsvContent = csv.GetRecords<dynamic>().Select(x => new CsvRow((IDictionary<string, object>)x)).ToList();
-            });
+                Config.CsvHelperConfig.PrepareHeaderForMatch = temp;
+            }
+
         }
 
-        internal void CreateCsvContent()
+        private void CreateCsvContent()
         {
+            PrepareHeaderForMatch? temp = null;
+            if (Config.GiveEmptyHeadersNames)
+            {
+                temp = Config.CsvHelperConfig.PrepareHeaderForMatch;
+                Config.CsvHelperConfig.PrepareHeaderForMatch = x => string.IsNullOrWhiteSpace(x.Header) ? $"EmptyHeader{x.FieldIndex}" : x.Header;
+            }
             if (ContentBytes == null) return;
             using var reader = new StreamReader(new MemoryStream(ContentBytes), Encoding.Default);
             using var csv = new CsvReader(reader, Config.CsvHelperConfig);
-            CsvContent = csv.GetRecords<dynamic>().Select(x => new CsvRow((IDictionary<string, object>) x)).ToList();
+            CsvContent = csv.GetRecords<dynamic>().Select(x => new CsvRow((IDictionary<string, object?>) x)).ToList();
+            if (Config.GiveEmptyHeadersNames)
+            {
+                Config.CsvHelperConfig.PrepareHeaderForMatch = temp;
+            }
         }
 
         internal async Task CreateCsvContentInBackGround()
@@ -43,9 +54,19 @@ namespace EasyCsv.Core
             if (ContentBytes == null) return;
             await Task.Run(() =>
             {
+                PrepareHeaderForMatch? temp = null;
+                if (Config.GiveEmptyHeadersNames)
+                {
+                    temp = Config.CsvHelperConfig.PrepareHeaderForMatch;
+                    Config.CsvHelperConfig.PrepareHeaderForMatch = x => string.IsNullOrWhiteSpace(x.Header) ? $"EmptyHeader{x.FieldIndex}" : x.Header;
+                }
                 using var reader = new StreamReader(new MemoryStream(ContentBytes), Encoding.Default);
                 using var csv = new CsvReader(reader, Config.CsvHelperConfig);
-                CsvContent = csv.GetRecords<dynamic>().Select(x => new CsvRow((IDictionary<string, object>) x)).ToList();
+                CsvContent = csv.GetRecords<dynamic>().Select(x => new CsvRow((IDictionary<string, object?>) x)).ToList();
+                if (Config.GiveEmptyHeadersNames)
+                {
+                    Config.CsvHelperConfig.PrepareHeaderForMatch = temp;
+                }
             });
         }
 
@@ -91,7 +112,7 @@ namespace EasyCsv.Core
             return new EasyCsv(csvContent, config);
         }
 
-        internal async Task CalculateContentBytesAndStrAsync()
+        private async Task CalculateContentBytesAndStrAsync()
         {
 #if NETSTANDARD2_1_OR_GREATER
             await using var writer = new StringWriter();
@@ -107,7 +128,7 @@ namespace EasyCsv.Core
             ContentStr = str;
         }
 
-        internal void CalculateContentBytesAndStr()
+        private void CalculateContentBytesAndStr()
         {
             using var writer = new StringWriter();
             using var csv = new CsvWriter(writer, Config.CsvHelperConfig);

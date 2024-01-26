@@ -22,6 +22,27 @@ public class UniqueCaseTests
         Assert.NotEmpty(records);
     }
 
+    [Fact]
+    public async Task EmptyHeadersDoesNotThrowException()
+    {
+        var dir = Directory.GetCurrentDirectory();
+        var path = Path.Combine(dir, "Csvs/EmptyHeaders.csv");
+        IEasyCsv easyCsv = await EasyCsvFactory.FromFileAsync(path, int.MaxValue, new EasyCsvConfiguration()
+        {
+            CsvHelperConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HeaderValidated = null,
+                MissingFieldFound = null,
+            },
+            GiveEmptyHeadersNames = true
+        });
+        var records = await easyCsv!.GetRecordsAsync<SingleColumnExample>();
+
+        Assert.NotNull(records);
+        Assert.NotEmpty(records);
+        Assert.True(!string.IsNullOrWhiteSpace(records[0].FullSiteAddress));
+    }
+
 
     public class Person
     {

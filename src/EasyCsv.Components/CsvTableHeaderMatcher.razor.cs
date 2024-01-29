@@ -11,10 +11,10 @@ using MudBlazor;
 namespace EasyCsv.Components;
 
 #pragma warning disable BL0007
-public partial class CsvTableHeaderMatcher<T>
+public partial class CsvTableHeaderMatcher
 {
     [Inject] private ISnackbar? Snackbar { get; set; }
-    [Inject] private ILogger<CsvTableHeaderMatcher<T>>? Logger { get; set; }
+    [Inject] private ILogger<CsvTableHeaderMatcher>? Logger { get; set; }
 
     private List<ExpectedHeader>? _expectedHeaders;
     /// <summary>
@@ -37,6 +37,7 @@ public partial class CsvTableHeaderMatcher<T>
             // if it's the same expected headers.
             if (value != null && (value.Count != _expectedHeaders.Count || _expectedHeaders.Any(x => value.All(y => y.Equals(x) == false))))
             {
+                Reset();
                 _expectedHeaders = value.Select(x => x.DeepClone()).ToList();
             }
         }
@@ -57,12 +58,6 @@ public partial class CsvTableHeaderMatcher<T>
     [Parameter] public AutoMatching AutoMatch { get; set; } = AutoMatching.Strict;
 
     /// <summary>
-    /// If true, the expected headers will be automatically generated in OnInitialized from
-    /// the public instance properties on <typeparamref name="T"/>.
-    /// </summary>
-    [Parameter] public bool AutoGenerateExpectedHeaders { get; set; }
-
-    /// <summary>
     /// The EasyCsvConfiguration to use when <see cref="GetRecords"/> is called
     /// </summary>
     [Parameter]
@@ -76,6 +71,13 @@ public partial class CsvTableHeaderMatcher<T>
             GetConstructor = x => x.ClassType.GetConstructors().FirstOrDefault(c => c.GetParameters().Length == 0) ?? x.ClassType.GetConstructors().FirstOrDefault()
         }
     };
+
+    /// <summary>
+    /// If not null, expected headers will be automatically generated in OnInitialized from
+    /// the public instance properties on this type
+    /// </summary>
+    [Parameter] 
+    public Type? AutoGenerateExpectedHeadersType { get; set; } = null;
 
     private bool _allHeadersValid;
 
@@ -120,19 +122,22 @@ public partial class CsvTableHeaderMatcher<T>
 
     protected override void OnInitialized()
     {
-        Reset();
-        if (AutoGenerateExpectedHeaders)
-        {
-            CreateExpectedHeaders();
+        CreateExpectedHeaders(AutoGenerateExpectedHeadersType);
     }
 
-    private void CreateExpectedHeaders()
+    /// <summary>
+    /// ExpectedHeaders will set to public instance properties on this type
+    /// </summary>
+    /// <param name="type"></param>
+    public void CreateExpectedHeaders(Type? type)
     {
-        if (typeof(T) == typeof(object)) return;
+        if (type == null || type == typeof(object)) return;
+
+        Reset();
 
         ExpectedHeaders = new List<ExpectedHeader>();
 
-        foreach (PropertyInfo property in typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase | BindingFlags.DeclaredOnly))
+        foreach (PropertyInfo property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase | BindingFlags.DeclaredOnly))
         {
             if (!property.CanWrite) continue;
 
@@ -207,7 +212,7 @@ public partial class CsvTableHeaderMatcher<T>
         AllHeadersValid = ValidateRequiredHeaders();
     }
 
-    private bool DoMatching(string header, List<ExpectedHeader> ignore, out ExpectedHeader matchedExpectedHeader)
+    private bool DoMatching(string header, List<ExpectedHeader> ignore, out ExpectedHeader? matchedExpectedHeader)
     {
         matchedExpectedHeader = null;
         var matching = AutoMatching.Exact;
@@ -264,10 +269,11 @@ public partial class CsvTableHeaderMatcher<T>
 
 
     /// <summary>
-    /// Attempt to convert records 
+    /// Attempt to convert csv to records 
     /// </summary>
+    /// <typeparam name="T">The class that csv records will be read into</typeparam>
     /// <returns>A list containing the </returns>
-    public async Task<List<T>?> GetRecords()
+    public async Task<List<T>?> GetRecords<T>()
     {
         if (!ValidateRequiredHeaders() || Csv == null)
         {

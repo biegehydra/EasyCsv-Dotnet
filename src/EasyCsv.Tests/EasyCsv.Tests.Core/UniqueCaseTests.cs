@@ -5,6 +5,7 @@ using EasyCsv.Core;
 using System.Globalization;
 using CsvHelper.Configuration.Attributes;
 using EasyCsv.Core.Configuration;
+using System.Text;
 
 namespace EasyCsv.Tests.Core;
 public class UniqueCaseTests
@@ -28,6 +29,29 @@ public class UniqueCaseTests
         var dir = Directory.GetCurrentDirectory();
         var path = Path.Combine(dir, "Csvs/EmptyHeaders.csv");
         IEasyCsv easyCsv = await EasyCsvFactory.FromFileAsync(path, int.MaxValue, new EasyCsvConfiguration()
+        {
+            CsvHelperConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HeaderValidated = null,
+                MissingFieldFound = null,
+            },
+            GiveEmptyHeadersNames = true
+        });
+        var records = await easyCsv!.GetRecordsAsync<SingleColumnExample>();
+
+        Assert.NotNull(records);
+        Assert.NotEmpty(records);
+        Assert.True(!string.IsNullOrWhiteSpace(records[0].FullSiteAddress));
+    }
+
+    [Fact]
+    public async Task EmptyHeadersDoesNotThrowExceptionBytes()
+    {
+        var dir = Directory.GetCurrentDirectory();
+        var path = Path.Combine(dir, "Csvs/EmptyHeaders.csv");
+        var text = await File.ReadAllTextAsync(path);
+        var bytes = Encoding.UTF8.GetBytes(text);
+        IEasyCsv easyCsv = await EasyCsvFactory.FromBytesAsync(bytes, new EasyCsvConfiguration()
         {
             CsvHelperConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
             {

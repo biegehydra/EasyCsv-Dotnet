@@ -35,9 +35,9 @@ public partial class CsvTableHeaderMatcher<T>
             // Only want backing to change when the expected headers actually change. Without this,
             // we lose the ordering applies to the expected headers when the parameters get set even
             // if it's the same expected headers.
-            if (value != null && (value.Count != _expectedHeaders.Count || _expectedHeaders.Any(x => value.All(y => y.CSharpPropertyName != x.CSharpPropertyName))))
+            if (value != null && (value.Count != _expectedHeaders.Count || _expectedHeaders.Any(x => value.All(y => y.Equals(x) == false))))
             {
-                _expectedHeaders = value;
+                _expectedHeaders = value.Select(x => x.DeepClone()).ToList();
             }
         }
     }
@@ -124,7 +124,6 @@ public partial class CsvTableHeaderMatcher<T>
         if (AutoGenerateExpectedHeaders)
         {
             CreateExpectedHeaders();
-        }
     }
 
     private void CreateExpectedHeaders()
@@ -208,16 +207,23 @@ public partial class CsvTableHeaderMatcher<T>
         AllHeadersValid = ValidateRequiredHeaders();
     }
 
-    private bool DoMatching(string header, List<ExpectedHeader> ignore, out ExpectedHeader? matchedExpectedHeader)
+    private bool DoMatching(string header, List<ExpectedHeader> ignore, out ExpectedHeader matchedExpectedHeader)
     {
         matchedExpectedHeader = null;
-        return AutoMatch switch
+        var matching = AutoMatching.Exact;
+        do
         {
-            AutoMatching.Exact => TryExactMatch(header, ignore, out matchedExpectedHeader),
-            AutoMatching.Strict => TryFuzzyMatch(header, ignore, out matchedExpectedHeader),
-            AutoMatching.Lenient => TryFuzzyMatch(header,ignore, out matchedExpectedHeader),
-            _ => throw new NotImplementedException("AutMatching case not implemented")
-        };
+            var result = matching switch
+            {
+                AutoMatching.Exact => TryExactMatch(header, ignore, out matchedExpectedHeader),
+                AutoMatching.Strict => TryFuzzyMatch(header, ignore, matching, out matchedExpectedHeader),
+                AutoMatching.Lenient => TryFuzzyMatch(header, ignore, matching, out matchedExpectedHeader),
+                _ => throw new NotImplementedException("AutMatching case not implemented")
+            };
+            if (result) return true;
+            matching += 1;
+        } while (matching <= AutoMatch);
+        return false;
     }
     private bool TryExactMatch(string header, List<ExpectedHeader> ignore, out ExpectedHeader? matchedExpectedHeader)
     {
@@ -234,16 +240,18 @@ public partial class CsvTableHeaderMatcher<T>
         matchedExpectedHeader = null;
         return false;
     }
-    private bool TryFuzzyMatch(string header, List<ExpectedHeader> ignore, out ExpectedHeader? matchedExpectedHeader)
+    private bool TryFuzzyMatch(string header, List<ExpectedHeader> ignore, AutoMatching matching, out ExpectedHeader? matchedExpectedHeader)
     {
-        var filteredHeaders = ExpectedHeaders?.Except(ignore);
-        foreach (var expectedHeader in filteredHeaders ?? Enumerable.Empty<ExpectedHeader>())
+        matchedExpectedHeader = null;
+        var filteredHeaders = ExpectedHeaders?.Except(ignore).Where(x => x.Config.AutoMatching == null || x.Config.AutoMatching >= matching);
+        if (filteredHeaders == null) return false;
+        foreach (var expectedHeader in filteredHeaders)
         {
             foreach (var possibleExpectedHeader in expectedHeader.ValuesToMatch)
             {
                 var ratio = Fuzz.Ratio(possibleExpectedHeader.ToLower(), header.ToLower());
                 var partialRatio = Fuzz.PartialRatio(possibleExpectedHeader.ToLower(), header.ToLower());
-                if (ratio > 90 || (ratio > 60 && partialRatio > 90 && AutoMatch == AutoMatching.Lenient))
+                if (ratio > 90 || (matching == AutoMatching.Lenient && ratio > 60 && partialRatio > 90))
                 {
                     matchedExpectedHeader = expectedHeader;
                     return true;
@@ -251,11 +259,10 @@ public partial class CsvTableHeaderMatcher<T>
             }
         }
 
-        matchedExpectedHeader = null;
         return false;
     }
 
-    
+
     /// <summary>
     /// Attempt to convert records 
     /// </summary>

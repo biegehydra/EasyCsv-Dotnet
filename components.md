@@ -83,7 +83,7 @@ For example,
 
 @code {
 	private List<ExpectedHeaders> _classOneExpectedHeaders;
-	private List<ExpectedHeaders> _classTwoExpectedHeaders_
+	private List<ExpectedHeaders> _classTwoExpectedHeaders;
 	private List<ExpectedHeaders> _expectedHeaders;
 	private Type CurrentType { get; set; }
 	private void SetType(Type type){

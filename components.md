@@ -97,10 +97,7 @@ For example,
 		}
 	}
 	private List<T> CustomGetRecords<T>(){
-		if (typeof(T) == ClassOne){
-			return _tableHeaderMatcher.GetRecords<T>();
-		}
-		else if (typeof(T) == ClassTwo){
+		if (typeof(T) == typeof(ClassOne) || typeof(T) == typeof(ClassTwo)) {
 			return _tableHeaderMatcher.GetRecords<T>();
 		}
 		throw new Expection("Type not supported");

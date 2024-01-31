@@ -21,7 +21,7 @@ else
         <MudButton Style="height: fit-content;" Variant="Variant.Filled" Color="Color.Error" OnClick="() => { _easyCsv = null; _frozen = false; _records = null; }">Reset</MudButton>
     </div>
 
-    <CsvTableHeaderMatcher @ref="_tableHeaderMatcher" T="Person" Csv="_easyCsv" Frozen="_frozen" AllHeadersValidChanged="StateHasChanged" ExpectedHeaders="_expectedHeaders" AutoMatch="AutoMatching.Lenient"   ></CsvTableHeaderMatcher>
+    <CsvTableHeaderMatcher @ref="_tableHeaderMatcher" Csv="_easyCsv" Frozen="_frozen" AllHeadersValidChanged="StateHasChanged" ExpectedHeaders="_expectedHeaders" AutoMatch="AutoMatching.Lenient"   ></CsvTableHeaderMatcher>
     <div class="mt-4 d-flex gap-5" style="flex-direction: row; align-items: center;" >
         <MudCheckBox @bind-Checked="_frozen" Color="Color.Primary">Frozen</MudCheckBox>
         <MudButton Disabled="!_tableHeaderMatcher?.ValidateRequiredHeaders() ?? true" Color="Color.Primary" Variant="Variant.Filled" OnClick="GetRecords" >Get Records</MudButton>
@@ -70,7 +70,7 @@ else
 @code {
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
 
-    private CsvTableHeaderMatcher<Person>? _tableHeaderMatcher;
+    private CsvTableHeaderMatcher? _tableHeaderMatcher;
     private IEasyCsv? _easyCsv;
     private bool _frozen;
 
@@ -85,6 +85,7 @@ else
         new ExpectedHeader(nameof(Person.City)),
         new ExpectedHeader(nameof(Person.Country), new ExpectedHeaderConfig(DefaultValueType.Text, required: true, "USA")),
         new ExpectedHeader(nameof(Person.SignedUp), new ExpectedHeaderConfig(DefaultValueType.DateTime)),
+        new ExpectedHeader(nameof(Person.Num)),
     };
 
     protected override void OnInitialized()
@@ -100,7 +101,7 @@ else
     private async Task GetRecords()
     {
         if (_tableHeaderMatcher == null) return;
-        _records = await _tableHeaderMatcher.GetRecords();
+        _records = await _tableHeaderMatcher.GetRecords<Person>();
     }
 
     private class Person
@@ -113,9 +114,10 @@ else
         public DateTime? SignedUp { get; set; }
         public DateTime? DateOfBirth { get; set; }
         public int Age { get; set; }
+        public int? Num { get; set; }
     }
 
-    private RenderFragment<DefaultValueRenderFragmentsArgs> CustomDateTimeDefaultValueFragment()
+    private RenderFragment<DefaultValueRenderFragmentArgs> CustomDateTimeDefaultValueFragment()
     {
         return args =>
         {

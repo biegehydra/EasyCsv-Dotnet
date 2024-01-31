@@ -1,6 +1,9 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.Reflection;
+using CsvHelper;
 using CsvHelper.Configuration;
+using CsvHelper.TypeConversion;
 using EasyCsv.Core;
 using EasyCsv.Core.Configuration;
 using FuzzySharp;
@@ -11,6 +14,151 @@ using MudBlazor;
 namespace EasyCsv.Components;
 
 #pragma warning disable BL0007
+public class SafeShortConverter : DefaultTypeConverter
+{
+    public override object ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+    {
+        if (short.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
+        {
+            return result;
+        }
+        return 0; // Or any default value you consider appropriate
+    }
+}
+
+public class SafeIntConverter : DefaultTypeConverter
+{
+    public override object ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+    {
+        if (int.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
+        {
+            return result;
+        }
+        return 0; // Or any default value you consider appropriate
+    }
+}
+
+public class SafeLongConverter : DefaultTypeConverter
+{
+    public override object ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+    {
+        if (long.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
+        {
+            return result;
+        }
+        return 0; // Or any default value you consider appropriate
+    }
+}
+
+public class SafeDoubleConverter : DefaultTypeConverter
+{
+    public override object ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+    {
+        if (double.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
+        {
+            return result;
+        }
+        return 0; // Or any default value you consider appropriate
+    }
+}
+
+public class SafeFloatConverter : DefaultTypeConverter
+{
+    public override object ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+    {
+        if (float.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
+        {
+            return result;
+        }
+        return 0; // Or any default value you consider appropriate
+    }
+}
+
+public class SafeDecimalConverter : DefaultTypeConverter
+{
+    public override object ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+    {
+        if (decimal.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
+        {
+            return result;
+        }
+        return 0; // Or any default value you consider appropriate
+    }
+}
+
+public class SafeNullableShortConverter : DefaultTypeConverter
+{
+    public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+    {
+        if (short.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
+        {
+            return result;
+        }
+        return null; // Or any default value you consider appropriate
+    }
+}
+
+public class SafeNullableIntConverter : DefaultTypeConverter
+{
+    public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+    {
+        if (int.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out int result))
+        {
+            return result;
+        }
+        return null; // Or any default value you consider appropriate
+    }
+}
+
+public class SafeNullableLongConverter : DefaultTypeConverter
+{
+    public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+    {
+        if (long.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
+        {
+            return result;
+        }
+        return null; // Or any default value you consider appropriate
+    }
+}
+
+public class SafeNullableFloatConverter : DefaultTypeConverter
+{
+    public override object ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+    {
+        if (float.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
+        {
+            return result;
+        }
+        return 0; // Or any default value you consider appropriate
+    }
+}
+
+public class SafeNullableDoubleConverter : DefaultTypeConverter
+{
+    public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+    {
+        if (double.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
+        {
+            return result;
+        }
+        return null; // Or any default value you consider appropriate
+    }
+}
+
+public class SafeNullableDecimalConverter : DefaultTypeConverter
+{
+    public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+    {
+        if (decimal.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
+        {
+            return result;
+        }
+        return null; // Or any default value you consider appropriate
+    }
+}
+
+
 public partial class CsvTableHeaderMatcher
 {
     [Inject] private ISnackbar? Snackbar { get; set; }
@@ -53,6 +201,11 @@ public partial class CsvTableHeaderMatcher
     [Parameter] public List<ClassMap>? ClassMaps { get; set; }
 
     /// <summary>
+    /// CsvHelper class maps to control how properties and fields in a class get converted from the csv.
+    /// </summary>
+    [Parameter] public List<ClassMap>? TypeConverters { get; set; }
+
+    /// <summary>
     /// Controls how csv headers are automatically mapped to expected headers.
     /// </summary>
     [Parameter] public AutoMatching AutoMatch { get; set; } = AutoMatching.Strict;
@@ -63,14 +216,26 @@ public partial class CsvTableHeaderMatcher
     [Parameter]
     public EasyCsvConfiguration EasyCsvConfig { get; set; } = new ()
     {
-        CsvHelperConfig = new(CultureInfo.InvariantCulture)
+        CsvHelperConfig = new(CultureInfo.CurrentCulture)
         {
             HeaderValidated = null,
             MissingFieldFound = null,
             ShouldUseConstructorParameters = x => true,
             GetConstructor = x => x.ClassType.GetConstructors().FirstOrDefault(c => c.GetParameters().Length == 0) ?? x.ClassType.GetConstructors().FirstOrDefault()
-        }
+        },
+        GiveEmptyHeadersNames = true
     };
+
+    /// <summary>
+    /// If set to true, custom type converters will be used for
+    /// ints, shorts, longs, doubles, decimals, floats, and their
+    /// nullable counterparts. These custom converters will attempt
+    /// to parse the string with any number style and current culture.
+    /// If parsing fails, 0/null with be read instead of an exception
+    /// throwing.
+    /// </summary>
+    [Parameter]
+    public bool UseSafeNumericalConverters { get; set; } = true;
 
     /// <summary>
     /// If not null, expected headers will be automatically generated in OnInitialized from
@@ -289,6 +454,24 @@ public partial class CsvTableHeaderMatcher
                 if (ClassMaps != null)
                 {
                     csvContextProfile.ClassMaps = ClassMaps;
+                }
+
+                if (UseSafeNumericalConverters)
+                {
+                    csvContextProfile.TypeConverters = new Dictionary<Type, ITypeConverter>() {
+                        {typeof(short), new SafeShortConverter()},
+                        {typeof(int), new SafeIntConverter()},
+                        {typeof(long), new SafeLongConverter()},
+                        {typeof(float), new SafeFloatConverter()},
+                        {typeof(double), new SafeDoubleConverter()},
+                        {typeof(decimal), new SafeDecimalConverter()},
+                        {typeof(short?), new SafeNullableShortConverter()},
+                        {typeof(int?), new SafeNullableIntConverter()},
+                        {typeof(long?), new SafeNullableLongConverter()},
+                        {typeof(float?), new SafeNullableFloatConverter()},
+                        {typeof(double?), new SafeNullableDoubleConverter()},
+                        {typeof(decimal?), new SafeNullableDecimalConverter()},
+                    };
                 }
 
                 try

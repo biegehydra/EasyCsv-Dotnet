@@ -130,7 +130,7 @@ public class ExpectedHeader
 public class ExpectedHeaderConfig
 {
     internal ExpectedHeaderConfig(bool required, DefaultValueType defaultValueType,
-        RenderFragment<DefaultValueRenderFragmentsArg>? defaultValueRenderFragment, object? initialDefaultValue, AutoMatching? autoMatching)
+        RenderFragment<DefaultValueRenderFragmentArgs>? defaultValueRenderFragment, object? initialDefaultValue, AutoMatching? autoMatching)
     {
         IsRequired = required;
         DefaultValueType = defaultValueType;
@@ -168,7 +168,7 @@ public class ExpectedHeaderConfig
     /// <param name="autoMatching">
     /// Set the auto matching level for this specific property
     /// </param>
-    public ExpectedHeaderConfig(RenderFragment<DefaultValueRenderFragmentsArg>? defaultValueRenderFragment, bool required = false, object? initialDefaultValue = null, AutoMatching? autoMatching = null) :
+    public ExpectedHeaderConfig(RenderFragment<DefaultValueRenderFragmentArgs>? defaultValueRenderFragment, bool required = false, object? initialDefaultValue = null, AutoMatching? autoMatching = null) :
         this(required, DefaultValueType.None, defaultValueRenderFragment, initialDefaultValue, autoMatching)
     {
         
@@ -194,7 +194,7 @@ public class ExpectedHeaderConfig
     /// <summary>
     /// Allows you to provide a custom default value component
     /// </summary>
-    public RenderFragment<DefaultValueRenderFragmentsArg>? DefaultValueRenderFragment { get; private init; }
+    public RenderFragment<DefaultValueRenderFragmentArgs>? DefaultValueRenderFragment { get; private init; }
     /// <summary>
     /// A default value will NOT be allowed. A csv header can be mapped but is not required for the matcher to be considered valid. 
     /// </summary>
@@ -243,14 +243,14 @@ public class ExpectedHeaderConfigurator
     /// <summary>
     /// Allows you to provide a custom default value component
     /// </summary>
-    public RenderFragment<DefaultValueRenderFragmentsArg>? DefaultValueRenderFragment { get; set; }
+    public RenderFragment<DefaultValueRenderFragmentArgs>? DefaultValueRenderFragment { get; set; }
     /// <summary>
     /// The initial default value
     /// </summary>
     public object? InitialDefaultValue { get; set; }
 }
 
-public class DefaultValueRenderFragmentsArg(bool frozen, Action<object?> defaultValueChanged)
+public class DefaultValueRenderFragmentArgs(bool frozen, Action<object?> defaultValueChanged)
 {
     /// <summary>
     /// When true. This input should not be editable.

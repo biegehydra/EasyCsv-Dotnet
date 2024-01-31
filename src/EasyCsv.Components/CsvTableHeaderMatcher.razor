@@ -29,7 +29,10 @@
              <MudTh>Matched</MudTh>
              <MudTh>Expected Header</MudTh>
              <MudTh>Preview Information</MudTh>
-             <MudTh>Default Value</MudTh>
+             @if (!HideDefaultValueColumn)
+             {
+                 <MudTh>Default Value</MudTh>
+             }
              <MudTh>Csv Headers</MudTh>
          </HeaderContent>
          <RowTemplate Context="expectedHeader">
@@ -84,7 +87,9 @@
                      @expectedHeader.Value
                  }
              </MudTd>
-             <MudTd DataLabel="Default Value" Class="extra-dense" >
+             @if (!HideDefaultValueColumn)
+             {
+                 <MudTd DataLabel="Default Value:" Class="extra-dense" >
                 @if (expectedHeader.Config.DefaultValueType != DefaultValueType.None || expectedHeader.Config.DefaultValueRenderFragment != null)
                  {
                      if (expectedHeaderAlreadyMapped)
@@ -125,6 +130,7 @@
                      }
                  }
              </MudTd>
+             }
              <MudTd DataLabel="Csv Headers:" Class="extra-dense">
                 <MudAutocomplete T="string" Disabled="Frozen" Class="text-field-margin-fix" Value="originalHeader" ValueChanged="x => ReplaceColumn(x, expectedHeader)" Variant="Variant.Filled"
                                  Placeholder="Select a csv header"

@@ -227,7 +227,7 @@ public partial class CsvTableHeaderMatcher
     };
 
     /// <summary>
-    /// If set to true, custom type converters will be used for
+    /// By default, true. If true, custom type converters will be used for
     /// ints, shorts, longs, doubles, decimals, floats, and their
     /// nullable counterparts. These custom converters will attempt
     /// to parse the string with any number style and current culture.
@@ -236,6 +236,12 @@ public partial class CsvTableHeaderMatcher
     /// </summary>
     [Parameter]
     public bool UseSafeNumericalConverters { get; set; } = true;
+
+    /// <summary>
+    /// By default, false. If true, the default value column will be hidden.
+    /// </summary>
+    [Parameter]
+    public bool HideDefaultValueColumn { get; set; }
 
     /// <summary>
     /// If not null, expected headers will be automatically generated in OnInitialized from

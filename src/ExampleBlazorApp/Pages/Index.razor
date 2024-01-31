@@ -21,9 +21,10 @@ else
         <MudButton Style="height: fit-content;" Variant="Variant.Filled" Color="Color.Error" OnClick="() => { _easyCsv = null; _frozen = false; _records = null; }">Reset</MudButton>
     </div>
 
-    <CsvTableHeaderMatcher @ref="_tableHeaderMatcher" Csv="_easyCsv" Frozen="_frozen" AllHeadersValidChanged="StateHasChanged" ExpectedHeaders="_expectedHeaders" AutoMatch="AutoMatching.Lenient"   ></CsvTableHeaderMatcher>
+    <CsvTableHeaderMatcher @ref="_tableHeaderMatcher" Csv="_easyCsv" Frozen="_frozen" HideDefaultValueColumn="_hideDefaultValueColumn" AllHeadersValidChanged="StateHasChanged" ExpectedHeaders="_expectedHeaders" AutoMatch="AutoMatching.Lenient"   ></CsvTableHeaderMatcher>
     <div class="mt-4 d-flex gap-5" style="flex-direction: row; align-items: center;" >
         <MudCheckBox @bind-Checked="_frozen" Color="Color.Primary">Frozen</MudCheckBox>
+        <MudCheckBox @bind-Checked="_hideDefaultValueColumn" Color="Color.Primary">Hide Default Value Column</MudCheckBox>
         <MudButton Disabled="!_tableHeaderMatcher?.ValidateRequiredHeaders() ?? true" Color="Color.Primary" Variant="Variant.Filled" OnClick="GetRecords" >Get Records</MudButton>
     </div>
 }
@@ -73,6 +74,7 @@ else
     private CsvTableHeaderMatcher? _tableHeaderMatcher;
     private IEasyCsv? _easyCsv;
     private bool _frozen;
+    private bool _hideDefaultValueColumn;
 
     private List<Person>? _records;
 

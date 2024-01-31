@@ -60,6 +60,8 @@ There are a few static `ExpectedHeaderConfig`s on `ExpectedHeaderConfig` that yo
 
 ### Additional CsvTableHeaderMatcher Options
 
+**HideDefaultValueColumn**: When true, the default value column is hidden.
+
 **Frozen**: When true, no changes can be made to the matcher. Default value input fields will be disabled and csv header mappings can't be changed.
 
 **AutoMatch**: Controls how `ValuesToMatch` on `ExpectedHeader`s will be compared to csv headers during matching. If the `ValuesToMatch` contains a single value "FirstName", this is how what it would match to with the different options

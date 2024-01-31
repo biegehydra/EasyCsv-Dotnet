@@ -102,14 +102,15 @@
     [Parameter]
     public EasyCsvConfiguration EasyCsvConfig { get; set; } = new()
     {
-        CsvHelperConfig = new(CultureInfo.InvariantCulture)
+        CsvHelperConfig = new(CultureInfo.CurrentCulture)
         {
             HeaderValidated = null,
             MissingFieldFound = null,
-            PrepareHeaderForMatch = new PrepareHeaderForMatch(x => Regex.Replace(x.Header, @"\W", "").ToLower(CultureInfo.InvariantCulture)),
+            PrepareHeaderForMatch = new PrepareHeaderForMatch(x => Regex.Replace(x.Header, @"\W", "").ToLower(CultureInfo.CurrentCulture)),
             ShouldUseConstructorParameters = x => true,
             GetConstructor = x => x.ClassType.GetConstructors().FirstOrDefault(c => c.GetParameters().Length == 0)
-        }
+        },
+        GiveEmptyHeadersNames = true
     };
 
 

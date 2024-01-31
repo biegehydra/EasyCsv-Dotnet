@@ -12,9 +12,9 @@ The first is just a simple Csv input component that will automatically convert t
 
 ![Screenshot_78](https://github.com/biegehydra/EasyCsv-Dotnet/assets/84036995/818dcdbc-9ea0-4893-b070-b2933a42b795)
 
-## CsvTableHeaderMatcher<T>
+## CsvTableHeaderMatcher
 
-This component takes the `IEasyCsv` that you got from the `CsvFileInput` (or elsewhere) and allows users to map the csv headers to the properties on the type parameter `T`. It optionally also lets provide a default value.
+This component takes the `IEasyCsv` that you got from the `CsvFileInput` (or elsewhere) and allows users to map the csv headers to expected headers or provide default values.
 
 ![Screenshot_80](https://github.com/biegehydra/EasyCsv-Dotnet/assets/84036995/106a64d5-9937-4193-bc04-75350577c14a)
 
@@ -22,14 +22,14 @@ This component takes the `IEasyCsv` that you got from the `CsvFileInput` (or els
 ### Expected Headers
 
 
-All of this works through the `ExpectedHeaders` parameter which takes a `List<ExpectedHeader`. There should be one `ExpectedHeader` for each C# property on the `T` parameter that you want a value for. Alternatively, you can enable `AutoGenerateExpectedHeaders` and a default `ExpectedHeader` will be generated for each public instance variable with a setter.
+All of this works through the `ExpectedHeaders` parameter which takes a `List<ExpectedHeader>`. There should be one `ExpectedHeader` for each C# property on your class that you want data for. Alternatively, you can can provide a value for `AutoGenerateExpectedHeadersType` and a default `ExpectedHeader` will be generated for each public instance variable with a setter.
 
 ### Expected Header Options
 EH - Expected Header
 
 The options for the EH essentially lets you control how users will be able to provide a value for your C# property and how it will be displayed.
 
-**CsharpPropertyName (string)**: This is defines which property on the `T` parameter that data for this EH will go to. For robust code, assign it with `nameof`
+**CSharpPropertyName (string)**: This is defines which property on the class you will be getting records for that data for this EH will go to. For robust code, assign it with `nameof`
 
 **Display Name (string)**: This defines what to display for this EH in the "Expected Header" column.
 
@@ -54,9 +54,11 @@ ExpectedHeader throughConfigurator = new ExpectedHeader(nameof(Person.DateOfBirt
 **Default Value Type (DefaultValueType)**: Options are `None`, `Text`, `DateTime`, `CheckBox`, and `TriStateCheckBox`. These will control what MudBlazor input component is used in the default value column. This value is ignored if a value is provided for `DefaultValueRenderFragment`
 **DefaultValueRenderFragment (RenderFragment\<DefaultValueRenderFragmentsArgs\>)**: If you would like a custom input element in "Default Value" column, you can define that here. An example of how to do this can be seen [here](https://github.com/biegehydra/EasyCsv-Dotnet/blob/76fac05fbb2476839aab7f8fa7b805211e4e9e94/src/ExampleBlazorApp/Pages/Index.razor#L118).
 
+**AutoMatching** Lets you select an automatching level for a specific property in case you need more granular control.
+
 There are a few static `ExpectedHeaderConfig`s on `ExpectedHeaderConfig` that you can use such as `Default`, `Required`, `TextDefaultValue` and `RequiredTextDefaultValue` since these are commonly used.
 
-### Additional CsvTableHeaderMatcher<T> Options
+### Additional CsvTableHeaderMatcher Options
 
 **Frozen**: When true, no changes can be made to the matcher. Default value input fields will be disabled and csv header mappings can't be changed.
 
@@ -66,3 +68,41 @@ There are a few static `ExpectedHeaderConfig`s on `ExpectedHeaderConfig` that yo
 - Lenient: "First"
 
 **DisplayMatchState (RenderFragment\<MatchState\>)**: Lets you control what gets rendered in the "Matched" column.
+
+### Dynamic Headers
+
+If for whatever reason you need the `CsvTableHeaderMatcher` to work for multiple types, you are able to.
+To do this, all you need to do is provide a new value for `ExpectedHeaders`. This **HAS** to be a new list,
+don't just add items to your existing expected headers list. This will trigger the component to be reset
+and use the new expected headers. You will have to keep track of what type you want to read from when you call
+`GetRecords<T>`. 
+For example,
+
+```
+<CsvTableHeaderMatcher @ref="_tableHeaderMatcher" Csv="_easyCsv" AllHeadersValidChanged="StateHasChanged" ExpectedHeaders="_expectedHeaders" AutoMatch="AutoMatching.Lenient"></CsvTableHeaderMatcher>
+
+@code {
+	private List<ExpectedHeaders> _classOneExpectedHeaders;
+	private List<ExpectedHeaders> _classTwoExpectedHeaders;
+	private List<ExpectedHeaders> _expectedHeaders;
+	private Type CurrentType { get; set; }
+	private void SetType(Type type){
+		if (type == typeof(ClassOne)){
+			_expectedHeaders = _classOneExpectedHeaders;
+			CurrentType = type;
+		}
+		else if (type == typeof(ClassTwo)){
+			_expectedHeaders = _classTwoExpectedHeaders;
+			CurrentType = type;
+		}
+	}
+	private List<T> CustomGetRecords<T>(){
+		if (typeof(T) == typeof(ClassOne) || typeof(T) == typeof(ClassTwo)) {
+			return _tableHeaderMatcher.GetRecords<T>();
+		}
+		throw new Expection("Type not supported");
+	}
+}
+
+```
+

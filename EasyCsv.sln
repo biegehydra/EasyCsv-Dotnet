@@ -21,6 +21,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyCsv.Components", "src\E
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExampleBlazorApp", "src\ExampleBlazorApp\ExampleBlazorApp.csproj", "{72E732F4-D2C1-4F6B-BA83-29FDC937D74F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{8346F2D9-2649-4C32-A204-A23B4998AFFD}"
+	ProjectSection(SolutionItems) = preProject
+		components.md = components.md
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

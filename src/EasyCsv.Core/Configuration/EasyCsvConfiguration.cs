@@ -66,6 +66,6 @@ namespace EasyCsv.Core.Configuration
         /// <summary>
         /// CsvHelper configuration that will be used through EasyCsv to read and write csv data when not explicitly given.
         /// </summary>
-        public static readonly CsvConfiguration CsvConfiguration = new CsvConfiguration(CultureInfo.InvariantCulture);
+        public static readonly CsvConfiguration CsvConfiguration = new CsvConfiguration(CultureInfo.CurrentCulture, typeof(object));
     }
 }

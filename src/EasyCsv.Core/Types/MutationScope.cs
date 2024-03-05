@@ -84,6 +84,24 @@ namespace EasyCsv.Core
             return this;
         }
 
+        public IEasyMutations MoveColumn(int oldIndex, int newIndex)
+        {
+            _csv.MoveColumn(oldIndex, newIndex);
+            return this;
+        }
+
+        public IEasyMutations MoveColumn(string columnName, int newIndex)
+        {
+            _csv.MoveColumn(columnName, newIndex);
+            return this;
+        }
+
+        public IEasyMutations InsertColumn(int index, string columnName, object? defaultValue)
+        {
+            _csv.InsertColumn(index, columnName, defaultValue);
+            return this;
+        }
+
         public IEasyMutations AddColumns(IDictionary<string, object?> defaultValues, bool upsert = true)
         {
             _csv.AddColumns(defaultValues, upsert);
@@ -147,6 +165,18 @@ namespace EasyCsv.Core
         public async Task<IEasyMutations> RemoveUnusedHeadersAsync<T>(CsvConfiguration csvConfig, CsvContextProfile? csvContextProfile = null)
         {
             await _csv.RemoveUnusedHeadersAsync<T>(csvConfig, csvContextProfile);
+            return this;
+        }
+
+        public IEasyMutations SwapColumns(int columnOneIndex, int columnTwoIndex)
+        {
+            _csv.SwapColumns(columnOneIndex, columnTwoIndex);
+            return this;
+        }
+
+        public IEasyMutations SwapColumns(string columnOneName, string columnTwoName, IEqualityComparer<string>? comparer = null)
+        {
+            _csv.SwapColumns(columnOneName, columnTwoName, comparer);
             return this;
         }
 

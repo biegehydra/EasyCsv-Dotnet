@@ -34,6 +34,10 @@ namespace EasyCsv.Core
         /// <returns>An <code>IEasyCsv</code> to be used for fluent method chaining.</returns>
         T AddColumn(string header, object? value, bool upsert = true);
 
+        T MoveColumn(int oldIndex, int newIndex);
+        T MoveColumn(string columnName, int newIndex);
+
+        T InsertColumn(int index, string columnName, object? defaultValue);
 
         /// <summary>
         /// Adds or replaces all the values for multiples columns in the CSV.
@@ -136,5 +140,9 @@ namespace EasyCsv.Core
         /// <remarks>WARNING: Writes and reads all records. Can be an expensive call</remarks>
         /// </summary>
         Task<T> RemoveUnusedHeadersAsync<TClass>(CsvConfiguration csvConfig, CsvContextProfile? csvContextProfile = null);
+
+        T SwapColumns(int columnOneIndex, int columnTwoIndex);
+
+        T SwapColumns(string columnOneName, string columnTwoName, IEqualityComparer<string>? comparer = null);
     }
 }

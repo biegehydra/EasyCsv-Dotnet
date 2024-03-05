@@ -77,11 +77,10 @@ namespace EasyCsv.Core
             {
                 return this;
             }
-
+            var newRowData = new Dictionary<string, object?>();
             bool forward = newIndex > oldIndex;
             foreach (var row in CsvContent)
             {
-                var newRowData = new Dictionary<string, object?>();
                 for (int i = 0; i < row.Count; i++)
                 {
                     if (i == oldIndex) continue;
@@ -103,6 +102,7 @@ namespace EasyCsv.Core
                 {
                     row.Add(kvp.Key, kvp.Value);
                 }
+                newRowData.Clear();
             }
             return this;
         }
@@ -133,9 +133,9 @@ namespace EasyCsv.Core
             {
                 return AddColumn(columnName, defaultValue);
             }
+            var newRowData = new Dictionary<string, object?>();
             foreach (var row in CsvContent)
             {
-                var newRowData = new Dictionary<string, object?>();
                 for (int i = 0; i < row.Count; i++)
                 {
                     if (i == index)
@@ -149,6 +149,7 @@ namespace EasyCsv.Core
                 {
                     row.Add(kvp.Key, kvp.Value);
                 }
+                newRowData.Clear();
             }
             return this;
         }
@@ -285,7 +286,6 @@ namespace EasyCsv.Core
             return this;
         }
 
-
         public IEasyCsv RemoveUnusedHeaders()
         {
             if (CsvContent == null) return this;
@@ -334,9 +334,9 @@ namespace EasyCsv.Core
                 throw new ArgumentException($"Index outside bounds. columnTwoIndex: {columnTwoIndex}, Headers Count: {headersCount}", nameof(columnTwoIndex));
             var columnOneName = headers[columnOneIndex];
             var columnTwoName = headers[columnTwoIndex];
+            var reorderedRowData = new Dictionary<string, object?>();
             foreach (var row in CsvContent)
             {
-                var reorderedRowData = new Dictionary<string, object?>();
                 for (int i = 0; i < row.Count; i++)
                 {
                     if (i == columnOneIndex)
@@ -357,6 +357,7 @@ namespace EasyCsv.Core
                 {
                     row.Add(kvp.Key, kvp.Value);
                 }
+                reorderedRowData.Clear();
             }
             return this;
         }

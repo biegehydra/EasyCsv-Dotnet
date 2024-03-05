@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Dynamic;
+using System.Linq;
 
 namespace EasyCsv.Core
 {
@@ -113,6 +115,18 @@ namespace EasyCsv.Core
         public override IEnumerable<string> GetDynamicMemberNames()
         {
             return Keys;
+        }
+
+
+        internal string KeyAt(int index)
+        {
+            return _innerDictionary.Keys.ElementAt(index);
+        }
+
+
+        internal object? ValueAt(int index)
+        {
+            return _innerDictionary.Values.ElementAt(index);
         }
 
         public Dictionary<string, object?> ToDictionary()

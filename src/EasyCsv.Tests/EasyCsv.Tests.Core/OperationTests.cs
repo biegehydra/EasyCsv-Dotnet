@@ -177,6 +177,110 @@ namespace EasyCsv.Tests.Core
         }
 
         [Fact]
+        public void SwapColumnsThrowsBoundsException()
+        {
+            var fileContent = "header1,header2,header3\nvalue1,value2,value3";
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+
+            Assert.Throws<ArgumentException>(() => easyCsv.Mutate(x => x.SwapColumns(1, 3)));
+        }
+
+        [Fact]
+        public void SwapColumnsIndex()
+        {
+            var fileContent = "header1,header2,header3\nvalue1,value2,value3";
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+
+            easyCsv.Mutate(x => x.SwapColumns(0, 2));
+            var after = $"header3,header2,header1{Environment.NewLine}value3,value2,value1{Environment.NewLine}";
+            Assert.Equal(after, easyCsv.ContentStr);
+        }
+
+        [Fact]
+        public void SwapColumnsName()
+        {
+            var fileContent = "header1,header2,header3\nvalue1,value2,value3";
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+
+            easyCsv.Mutate(x => x.SwapColumns("header1", "header3"));
+            var after = $"header3,header2,header1{Environment.NewLine}value3,value2,value1{Environment.NewLine}";
+            Assert.Equal(after, easyCsv.ContentStr);
+        }
+
+        [Fact]
+        public void SwapColumnsNameComparer()
+        {
+            var fileContent = "header1,header2,header3\nvalue1,value2,value3";
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+
+            easyCsv.Mutate(x => x.SwapColumns("HEADER1", "HEADER3", StringComparer.CurrentCultureIgnoreCase));
+            var after = $"header3,header2,header1{Environment.NewLine}value3,value2,value1{Environment.NewLine}";
+            Assert.Equal(after, easyCsv.ContentStr);
+        }
+
+        [Fact]
+        public void SwapColumnsNameNoComparer()
+        {
+            var fileContent = "header1,header2,header3\nvalue1,value2,value3";
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+
+            Assert.Throws<ArgumentException>(() => easyCsv.Mutate(x => x.SwapColumns("HEADER1", "HEADER3")));
+        }
+
+
+        [Fact]
+        public void InsertColumn()
+        {
+            var fileContent = "header1,header2,header3\nvalue1,value2,value3";
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+
+            easyCsv.Mutate(x => x.InsertColumn(1, "header4", "value4"));
+
+            var after = $"header1,header4,header2,header3{Environment.NewLine}value1,value4,value2,value3{Environment.NewLine}";
+            Assert.Equal(after, easyCsv.ContentStr);
+        }
+
+        [Fact]
+        public void MoveColumnIndex()
+        {
+            var fileContent = "header1,header2,header3\nvalue1,value2,value3";
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+
+            easyCsv.Mutate(x => x.MoveColumn(0, 2));
+
+            var after = $"header2,header3,header1{Environment.NewLine}value2,value3,value1{Environment.NewLine}";
+            Assert.Equal(after, easyCsv.ContentStr);
+
+            fileContent = "header1,header2,header3\nvalue1,value2,value3";
+            easyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+
+            easyCsv.Mutate(x => x.MoveColumn(2, 0));
+
+            after = $"header3,header1,header2{Environment.NewLine}value3,value1,value2{Environment.NewLine}";
+            Assert.Equal(after, easyCsv.ContentStr);
+        }
+
+        [Fact]
+        public void MoveColumnName()
+        {
+            var fileContent = "header1,header2,header3\nvalue1,value2,value3";
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+
+            easyCsv.Mutate(x => x.MoveColumn("header1", 2));
+
+            var after = $"header2,header3,header1{Environment.NewLine}value2,value3,value1{Environment.NewLine}";
+            Assert.Equal(after, easyCsv.ContentStr);
+
+            fileContent = "header1,header2,header3\nvalue1,value2,value3";
+            easyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+
+            easyCsv.Mutate(x => x.MoveColumn("header3", 0));
+
+            after = $"header3,header1,header2{Environment.NewLine}value3,value1,value2{Environment.NewLine}";
+            Assert.Equal(after, easyCsv.ContentStr);
+        }
+
+        [Fact]
         public async Task ToList_GeneratesListSuccessfully()
         {
             var fileContent = "header1,header2,header3\nvalue1,value2,value3";

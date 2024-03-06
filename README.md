@@ -41,9 +41,13 @@ var easyCsv2 = await EasyCsvFactory.FromStringAsync();
 
 EasyCsv provides an assortment of methods for manipulating CSV data. All calls that manipulate the CSV are done through `easyCsv.Manipulate(Action<CSVMuationScope> scope)` or `easyCsv.ManipulateAsync(Action<CSVMuationScope> scope)`. The scope will ensure that the `ContentStr` and `ContentBytes` are up to date after you do manipulations. 
 
-## Add column with default value
+## Add/Insert column with default value
 ```csharp
-easyCsv.Mutate(mutation => mutation.AddColumn("column name", "value given to all rows in column/header field", upsert: true));
+easyCsv.Mutate(mutation =>
+{
+    mutation.AddColumn("column name", "value given to all rows in column/header field", upsert: true);
+    mutation.InsertColumn(index: 2, "different col name", "val");
+});
 ```
 ## Remove a column:
 ```csharp
@@ -55,6 +59,19 @@ Removes the column of the old header field and upserts all it's values to all th
 ```csharp
 easyCsv.Mutate(mutation => mutation.ReplaceColumn(string oldHeaderField, string newHeaderField));
 ```
+## Swap Columns
+Swaps the position of columns in a csv. The values follow the columns through swap.
+```csharp
+// Csv Original Headers: "col1,col2,col3,col4"
+easyCsv.Mutate(mutation =>
+{
+    mutation.SwapColumns("col1", "col4"); // By column name
+    // Headers are now: "col4,col2,col3,col1"
+    mutation.SwapColumns(1, 2); // By column index
+    // Headers are now: "col4,col3,col2,col1"
+});
+```
+
 ## Replace header row
 You can replace all the headers in the header row of this CSV. ***The number of headers in the new row must match the number of headers current CsvContent or no operation will be performed***
 ```csharp

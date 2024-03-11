@@ -78,9 +78,9 @@ Moves a column to a new index. The values follow the column through swap. All ot
 // Csv Original Headers: "col1,col2,col3,col4"
 easyCsv.Mutate(mutation =>
 {
-    mutation.MoveColumn("col4", 0); // By column name. Moves "col1" to index 0
+    mutation.MoveColumn("col4", 0); // Moves "col4" to index 0
     // Headers are now: "col4,col1,col2,col3"
-    mutation.MoveColumn(3, 0); // By index. Moves the column at index 3 (col3) to index 0
+    mutation.MoveColumn(3, 0); // Moves the column at index 3 (col3) to index 0
     // Headers are now: "col3,col4,col1,col2"
 });
 ```

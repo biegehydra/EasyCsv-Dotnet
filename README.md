@@ -179,7 +179,7 @@ await csv.MutateAsync(x =>
         }
     }
 });
-// Before "Id,Name,Company,Position"
+// After "Id,Name,Company,Position"
 ```
 
 For more methods and usage examples, please refer to the EasyCsv documentation and source code.

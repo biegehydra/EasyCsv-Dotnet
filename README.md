@@ -74,7 +74,7 @@ easyCsv.Mutate(mutation =>
 ```
 
 ## Move Column
-Moves a column to a new index. The values follow the column through swap. All other columns are shifted right accordingly.
+Moves a column to a new index. The values follow the column through swap. All other columns are shifted right or left accordingly.
 ```csharp
 // Csv Original Headers: "col1,col2,col3,col4"
 easyCsv.Mutate(mutation =>

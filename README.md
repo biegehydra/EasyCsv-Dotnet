@@ -155,26 +155,31 @@ easyCsv.Mutate(mutations => mutations.RemoveColumn("header2")
 ```
 
 ## Operate on individual rows
-This code shows how you can add a "Name" column to a csv and populate it with values based on the Id column in the csv.
+This code shows how you can add a "Name" column to a csv and populate it with values based on the Id column in the csv. 
 
-**Note**: When operating on individual rows, it is your job to ensure that column structure is maintained in each row. Without the else statement, there would be a chance that some rows are missing a column called "Name" leading to undefined behaviour. Something you can do is call `x.AddColumn("ColumnName")` before adding an optional value to all rows which will ensure that each row at least has the column.
+In the example, the Id column is the first column in the csv. This inserts a name column after the Id column.
+
+**Note**: When operating on individual rows, it is your job to ensure that column structure is maintained in each row. Without the else statement, there would be a chance that some rows are missing a column called "Name" leading to undefined behaviour. Something you can do is call `InsertColumn` or `AddColumn` before adding an optional value to all rows which will ensure that each row at least has the column.
 **Note-2**: Expect all values to be string. The only times that isn't true is if you add a column with a default value other than a string. 
 ```csharp
 Dictionary<long, string> idToNameDict = GetCustomerNames();
+// Before "Id,Company,Position"
 await csv.MutateAsync(x =>
 {
+    x.InsertColumn(0, "Name");
     foreach (var row in x.CsvContent)
     {
         if (row["Id"] is string str && long.TryParse(str, out var num) && idToNameDict.TryGetValue(num, out string name))
         {
-            row["LocationName"] = name;
+            row["Name"] = name;
         }
         else
         {
-            row["LocationName"] = "Unknown";
+            row["Name"] = "Unknown";
         }
     }
 });
+// Before "Id,Name,Company,Position"
 ```
 
 For more methods and usage examples, please refer to the EasyCsv documentation and source code.

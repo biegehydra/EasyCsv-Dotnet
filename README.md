@@ -67,6 +67,7 @@ easyCsv.Mutate(mutation =>
 {
     mutation.SwapColumns("col1", "col4"); // By column name
     // Headers are now: "col4,col2,col3,col1"
+
     mutation.SwapColumns(1, 2); // By column index
     // Headers are now: "col4,col3,col2,col1"
 });
@@ -80,6 +81,7 @@ easyCsv.Mutate(mutation =>
 {
     mutation.MoveColumn("col4", 0); // Moves "col4" to index 0
     // Headers are now: "col4,col1,col2,col3"
+
     mutation.MoveColumn(3, 0); // Moves the column at index 3 (col3) to index 0
     // Headers are now: "col3,col4,col1,col2"
 });

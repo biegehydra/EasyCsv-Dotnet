@@ -168,7 +168,7 @@ Dictionary<long, string> idToNameDict = GetCustomerNames();
 // Before "Id,Company,Position"
 await csv.MutateAsync(x =>
 {
-    x.InsertColumn(0, "Name");
+    x.InsertColumn(1, "Name");
     foreach (var row in x.CsvContent)
     {
         if (row["Id"] is string str && long.TryParse(str, out var num) && idToNameDict.TryGetValue(num, out string name))

@@ -15,7 +15,7 @@ namespace EasyCsv.Core
         internal IEasyCsv MoveColumn(int oldIndex, int newIndex);
         internal IEasyCsv MoveColumn(string columnName, int newIndex);
         internal IEasyCsv InsertColumn(int index, string columnName, object? defaultValue);
-        internal IEasyCsv AddColumn(string columnName, object? defaultValue, bool upsert = true);
+        internal IEasyCsv AddColumn(string columnName, object? defaultValue, bool? upsert = true);
         internal IEasyCsv AddColumns(IDictionary<string, object?> defaultValues, bool? upsert = true);
         internal IEasyCsv FilterRows(Func<CsvRow, bool> predicate);
         internal IEasyCsv MapValuesInColumn(string headerField, IDictionary<object, object> valueMapping);

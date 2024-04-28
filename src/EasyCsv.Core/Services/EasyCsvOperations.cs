@@ -153,19 +153,20 @@ namespace EasyCsv.Core
             return this;
         }
 
-        public IEasyCsv AddColumn(string columnName, object? defaultValue, bool upsert = true)
+        public IEasyCsv AddColumn(string columnName, object? defaultValue, bool? upsert = true)
         {
             if (CsvContent == null) return this;
 
             foreach (var record in CsvContent)
             {
-                if (upsert)
+                if (upsert == true)
                 {
                     record[columnName] = defaultValue;
                     continue;
                 }
                 if (record.ContainsKey(columnName))
                 {
+                    if (upsert == null) continue;
                     throw new ArgumentException($"Column with name '{columnName}' already exists.");
                 }
                 record.Add(columnName, defaultValue);
@@ -201,10 +202,7 @@ namespace EasyCsv.Core
                     if (record.ContainsKey(key))
                     {
                         if (upsert == null) continue;
-                        else
-                        {
-                            throw new ArgumentException($"Value for key '{key}' already exists.");
-                        }
+                        throw new ArgumentException($"Value for key '{key}' already exists.");
                     }
                     record.Add(key, pair.Value);
                 }

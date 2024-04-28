@@ -32,7 +32,7 @@ namespace EasyCsv.Core
         /// <param name="header">The header field of the column you are giving a default value to.</param>
         /// <param name="value">The value you want every record in a column to have.</param>
         /// <returns>An IEasyCsv to be used for fluent method chaining.</returns>
-        T AddColumn(string header, object? value, bool upsert = true);
+        T AddColumn(string header, object? value, bool? upsert = true);
 
         T MoveColumn(int oldIndex, int newIndex);
         T MoveColumn(string columnName, int newIndex);

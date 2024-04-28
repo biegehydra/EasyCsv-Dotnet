@@ -1,0 +1,17 @@
+﻿@using EasyCsv.Core
+@using EasyCsv.Components
+@using EasyCsv.Components.Strategies
+@page "/processing"
+
+<CsvProcessingStepper @ref="_csvProcessor" EasyCsv="_easyCsv">
+    <ProcessingOptions>
+        <StringSplitStrategyOptions CsvProcessor="_csvProcessor"></StringSplitStrategyOptions>
+        <DivideAndReplicateStrategyOptions CsvProcessor="_csvProcessor"></DivideAndReplicateStrategyOptions>
+        <CombineStrategyItem CsvProcessor="_csvProcessor" ></CombineStrategyItem>
+    </ProcessingOptions>
+</CsvProcessingStepper>
+@code {
+    [Parameter] public ISnackbar? Snackbar { get; set; }
+    private CsvProcessingStepper _csvProcessor = null!;
+    private readonly IEasyCsv? _easyCsv = EasyCsvFactory.FromString("header1,header2,header3,header4\nvalue1,value2,value3,value4.1-value4.2");
+}

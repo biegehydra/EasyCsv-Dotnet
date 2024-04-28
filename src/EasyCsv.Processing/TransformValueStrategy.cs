@@ -11,9 +11,9 @@ public class TransformValueStrategy : ICsvColumnProcessor
         _transformValue = transformValue;
     }
 
-    public Task<OperationResult> ProcessCell(ICell cell)
+    public Task<OperationResult> ProcessCell<TCell>(TCell cell) where TCell : ICell
     {
         cell.Value = _transformValue(cell.Value);
-        return Task.FromResult(new OperationResult(true, null));
+        return Task.FromResult(new OperationResult(true));
     }
 }

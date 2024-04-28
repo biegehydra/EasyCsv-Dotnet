@@ -8,8 +8,8 @@ namespace EasyCsv.Processing;
 public class DivideAndReplicate : ICsvProcessor
 {
     private readonly string _columnName;
-    private readonly Func<object?, object?[]> _divideFunc;
-    public DivideAndReplicate(string columnName, Func<object?, object?[]> divideFunc)
+    private readonly Func<object?, object?[]?> _divideFunc;
+    public DivideAndReplicate(string columnName, Func<object?, object?[]?> divideFunc)
     {
         if (string.IsNullOrWhiteSpace(columnName)) throw new ArgumentException("Column name cannot be null or whitespace.", nameof(columnName));
         _columnName = columnName;
@@ -29,7 +29,7 @@ public class DivideAndReplicate : ICsvProcessor
             foreach (var row in x.CsvContent)
             {
                 var divided = _divideFunc(row[_columnName]);
-                if (divided.Length > 1)
+                if (divided?.Length > 1)
                 {
                     rowsToDelete.Add(i);
                     foreach (var item in divided)

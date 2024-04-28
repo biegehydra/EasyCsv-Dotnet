@@ -14,7 +14,7 @@ public interface ICsvColumnProcessor
     /// have the specified <see cref="ColumnName"/>
     /// </summary>
     /// <param name="cell"></param>
-    public Task<OperationResult> ProcessCell(ICell cell);
+    public Task<OperationResult> ProcessCell<TCell>(TCell cell) where TCell : ICell;
 }
 public interface ICsvRowProcessor
 {

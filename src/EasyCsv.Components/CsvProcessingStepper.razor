@@ -1,0 +1,94 @@
+﻿@using EasyCsv.Processing
+@using EasyCsv.Components.Enums
+@if (Initialized && ProcessingOptions != null)
+{
+    <div style="display: flex; flex-direction: row;">
+        <MudButton OnClick="GoBackStep"  Variant="Variant.Filled" Color="Color.Secondary" >Go Back Step</MudButton>
+        <MudText Typo="Typo.h5">Current Step: @_cachedStates.Count</MudText>
+    </div>
+    <CsvProcessingTable @ref="_table" ProcessingOptions="ProcessingOptions" Stepper="this" EasyCsv="CurrentState">
+
+    </CsvProcessingTable>
+}
+
+@code {
+    private CsvProcessingTable _table = null!;
+
+    internal IEasyCsv CurrentState => _cachedStates[^1];
+    private bool Initialized => _cachedStates.Count > 0;
+    [Parameter] public IEasyCsv? EasyCsv { get; set; }
+    [Parameter] public ISnackbar? Snackbar { get; set; }
+
+    /// <summary>
+    /// If true, this component will make a clone of the provided
+    /// EasyCsv and operate on the clone
+    /// </summary>
+    [Parameter] public RenderFragment<string>? ProcessingOptions { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (EasyCsv != null && !Initialized)
+        {
+            _cachedStates.Add(EasyCsv.Clone());
+        }
+    }
+
+    private readonly List<IEasyCsv> _cachedStates = new();
+
+    public async Task<OperationResult> PerformColumnStrategy(ICsvColumnProcessor columnProcessor)
+    {
+        if (!Initialized) return new OperationResult(false, "Component not initialized yet.");
+        var clone = CurrentState.Clone();
+        foreach (var row in clone.CsvContent)
+        {
+            var operationResult = await columnProcessor.ProcessCell(new RowCell(row, columnProcessor.ColumnName));
+            if (operationResult.Success == false)
+            {
+                return operationResult;
+            }
+        }
+        await InvokeAsync(StateHasChanged);
+        _cachedStates.Add(clone);
+        return new OperationResult(true);
+    }
+
+
+    public async Task<OperationResult> PerformCsvStrategy(ICsvProcessor csvProcessor)
+    {
+        if (!Initialized) return new OperationResult(false, "Component not initialized yet.");
+        var clone = CurrentState.Clone();
+        var operationResult = await csvProcessor.ProcessCsv(clone);
+        if (operationResult.Success)
+        {
+            await InvokeAsync(StateHasChanged);
+            _cachedStates.Add(clone);
+        }
+        return operationResult;
+    }
+
+    private readonly struct RowCell : ICell
+    {
+        private CsvRow CsvRow { get; }
+        public string ColumnName { get; }
+        public RowCell(CsvRow csvRow, string columnName)
+        {
+            CsvRow = csvRow;
+            ColumnName = columnName;
+        }
+        public object? Value
+        {
+            get
+            {
+                CsvRow.TryGetValue(ColumnName, out object? value);
+                return value;
+            }
+            set => CsvRow[ColumnName] = value;
+        }
+    }
+
+    private void GoBackStep()
+    {
+        _cachedStates.RemoveAt(_cachedStates.Count - 1);
+    }
+
+}

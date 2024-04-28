@@ -45,6 +45,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\EasyCsv.Tests\EasyCsv.Tests.Parsing\EasyCsv.Tests.Processing.csproj" />
 		<ProjectReference Include="..\EasyCsv\EasyCsv.csproj" />
 	</ItemGroup>
 

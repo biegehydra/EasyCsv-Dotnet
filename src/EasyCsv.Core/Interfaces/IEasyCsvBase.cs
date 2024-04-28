@@ -1,9 +1,7 @@
-﻿using System;
-using CsvHelper.Configuration;
+﻿using CsvHelper.Configuration;
 using CsvHelper;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using CsvHelper.TypeConversion;
 using EasyCsv.Core.Configuration;
 
 namespace EasyCsv.Core
@@ -25,7 +23,7 @@ namespace EasyCsv.Core
         /// <summary>
         /// The content of the CSV file as a list of dictionaries representing kvps of the headers and values.
         /// </summary>
-        List<CsvRow>? CsvContent { get; }
+        List<CsvRow> CsvContent { get; }
 
 
         /// <summary>
@@ -38,7 +36,10 @@ namespace EasyCsv.Core
         /// <summary>
         /// Returns true if csv container header field with value provided
         /// </summary>
-        bool ContainsHeader(string headerField, bool caseInsensitive);
+        bool ContainsColumn(string column, bool caseInsensitive = false);
+
+
+        bool ContainsAllColumns(IEnumerable<string> columns, IEqualityComparer<string>? comparer = null);
 
 
         /// <summary>
@@ -53,7 +54,7 @@ namespace EasyCsv.Core
         /// Gets the headers of the CSV file.
         /// </summary>
         /// <returns>An IEnumerable of string containing the CSV headers.</returns>
-        List<string>? GetHeaders();
+        List<string>? GetColumns();
 
 
 
@@ -113,7 +114,7 @@ namespace EasyCsv.Core
 
         /// <summary>
         /// Create deep clone
-        /// <returns>Deep clone of current <code>IEasyCsv</code></returns>
+        /// <returns>Deep clone of current IEasyCsv</returns>
         /// </summary>
         T Clone();
 

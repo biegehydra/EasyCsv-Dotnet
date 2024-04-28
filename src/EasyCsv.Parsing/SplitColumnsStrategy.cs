@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using EasyCsv.Core;
+using EasyCsv.Core.Enums;
 
 namespace EasyCsv.Parsing;
 public class SplitColumnStrategy : ICsvProcessor
@@ -35,7 +36,7 @@ public class SplitColumnStrategy : ICsvProcessor
             int rowsSplit = 0;
             await csv.MutateAsync(x =>
             {
-                x.AddColumns(_newColumnNames.ToDictionary(y => y, value => (object?) null), upsert: null);
+                x.AddColumns(_newColumnNames.ToDictionary(y => y, value => (object?) null), existingColumnHandling: ExistingColumnHandling.Keep);
                 foreach (var row in x.CsvContent)
                 {
                     string[]? split = row[_columnToSplit]?.ToString().Split([_delimiter], _newColumnNames.Length, _stringSplitOptions);

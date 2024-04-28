@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using CsvHelper;
 using CsvHelper.Configuration;
 using EasyCsv.Core.Configuration;
+using EasyCsv.Core.Enums;
 
 namespace EasyCsv.Core
 {
@@ -84,9 +85,9 @@ namespace EasyCsv.Core
             return this;
         }
 
-        public IEasyMutations AddColumn(string header, object? value, bool? upsert = true)
+        public IEasyMutations AddColumn(string header, object? value, ExistingColumnHandling existingColumnHandling = ExistingColumnHandling.Override)
         {
-            _csv.AddColumn(header, value, upsert);
+            _csv.AddColumn(header, value, existingColumnHandling);
             return this;
         }
 
@@ -108,9 +109,9 @@ namespace EasyCsv.Core
             return this;
         }
 
-        public IEasyMutations AddColumns(IDictionary<string, object?> defaultValues, bool? upsert = true)
+        public IEasyMutations AddColumns(IDictionary<string, object?> defaultValues, ExistingColumnHandling existingColumnHandling = ExistingColumnHandling.Override)
         {
-            _csv.AddColumns(defaultValues, upsert);
+            _csv.AddColumns(defaultValues, existingColumnHandling);
             return this;
         }
 

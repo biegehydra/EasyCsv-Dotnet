@@ -41,9 +41,13 @@ var easyCsv2 = await EasyCsvFactory.FromStringAsync();
 
 EasyCsv provides an assortment of methods for manipulating CSV data. All calls that manipulate the CSV are done through `easyCsv.Manipulate(Action<CSVMuationScope> scope)` or `easyCsv.ManipulateAsync(Action<CSVMuationScope> scope)`. The scope will ensure that the `ContentStr` and `ContentBytes` are up to date after you do manipulations. 
 
-## Add column with default value
+## Add/Insert column with default value
 ```csharp
-easyCsv.Mutate(mutation => mutation.AddColumn("column name", "value given to all rows in column/header field", upsert: true));
+easyCsv.Mutate(mutation =>
+{
+    mutation.AddColumn("column name", "value given to all rows in column/header field", upsert: true);
+    mutation.InsertColumn(index: 2, "different col name", "val");
+});
 ```
 ## Remove a column:
 ```csharp
@@ -55,6 +59,34 @@ Removes the column of the old header field and upserts all it's values to all th
 ```csharp
 easyCsv.Mutate(mutation => mutation.ReplaceColumn(string oldHeaderField, string newHeaderField));
 ```
+## Swap Columns
+Swaps the position of columns in a csv. The values follow the columns through swap.
+```csharp
+// Csv Original Headers: "col1,col2,col3,col4"
+easyCsv.Mutate(mutation =>
+{
+    mutation.SwapColumns("col1", "col4"); // By column name
+    // Headers are now: "col4,col2,col3,col1"
+
+    mutation.SwapColumns(1, 2); // By column index
+    // Headers are now: "col4,col3,col2,col1"
+});
+```
+
+## Move Column
+Moves a column to a new index. The values follow the column through swap. All other columns are shifted right or left accordingly.
+```csharp
+// Csv Original Headers: "col1,col2,col3,col4"
+easyCsv.Mutate(mutation =>
+{
+    mutation.MoveColumn("col4", 0); // Moves "col4" to index 0
+    // Headers are now: "col4,col1,col2,col3"
+
+    mutation.MoveColumn(3, 0); // Moves the column at index 3 (col3) to index 0
+    // Headers are now: "col3,col4,col1,col2"
+});
+```
+
 ## Replace header row
 You can replace all the headers in the header row of this CSV. ***The number of headers in the new row must match the number of headers current CsvContent or no operation will be performed***
 ```csharp
@@ -123,6 +155,35 @@ easyCsv.Mutate(mutations => mutations.RemoveColumn("header2")
 //          value1, value3, value4
 //          value1, value3, value4
 ```
+
+## Operate on individual rows
+This code shows how you can add a "Name" column to a csv and populate it with values based on the Id column in the csv. 
+
+In the example, the Id column is the first column in the csv. This inserts a name column after the Id column.
+
+**Note**: When operating on individual rows, it is your job to ensure that column structure is maintained in each row. Without the else statement, there would be a chance that some rows are missing a column called "Name" leading to undefined behaviour. Something you can do is call `InsertColumn` or `AddColumn` before adding an optional value to all rows which will ensure that each row at least has the column.
+**Note-2**: Expect all values to be string. The only times that isn't true is if you add a column with a default value other than a string. 
+```csharp
+Dictionary<long, string> idToNameDict = GetCustomerNames();
+// Before "Id,Company,Position"
+await csv.MutateAsync(x =>
+{
+    x.InsertColumn(1, "Name");
+    foreach (var row in x.CsvContent)
+    {
+        if (row["Id"] is string str && long.TryParse(str, out var num) && idToNameDict.TryGetValue(num, out string name))
+        {
+            row["Name"] = name;
+        }
+        else
+        {
+            row["Name"] = "Unknown";
+        }
+    }
+});
+// After "Id,Name,Company,Position"
+```
+
 For more methods and usage examples, please refer to the EasyCsv documentation and source code.
 
 ## Contributing

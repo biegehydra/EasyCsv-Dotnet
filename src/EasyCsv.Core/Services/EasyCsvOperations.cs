@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System;
 using EasyCsv.Core.Configuration;
+using EasyCsv.Core.Enums;
 
 namespace EasyCsv.Core
 {
@@ -153,21 +154,33 @@ namespace EasyCsv.Core
             return this;
         }
 
-        public IEasyCsv AddColumn(string columnName, object? defaultValue, bool? upsert = true)
+        public IEasyCsv AddColumn(string columnName, object? defaultValue, ExistingColumnHandling  existingColumnHandling = ExistingColumnHandling.Override)
         {
             if (CsvContent == null) return this;
 
             foreach (var record in CsvContent)
             {
-                if (upsert == true)
+                if (existingColumnHandling == ExistingColumnHandling.Override)
                 {
                     record[columnName] = defaultValue;
                     continue;
                 }
                 if (record.ContainsKey(columnName))
                 {
-                    if (upsert == null) continue;
-                    throw new ArgumentException($"Column with name '{columnName}' already exists.");
+                    if (existingColumnHandling == ExistingColumnHandling.Keep) continue;
+                    if (existingColumnHandling == ExistingColumnHandling.ReplaceNullOrWhiteSpace)
+                    {
+                        if (string.IsNullOrWhiteSpace(record[columnName]?.ToString()))
+                        {
+
+                        }
+                        continue;
+                    }
+                    if (existingColumnHandling == ExistingColumnHandling.ThrowException)
+                    {
+                        throw new ArgumentException($"Column with name '{columnName}' already exists.");
+                    }
+                    else throw new ArgumentException("Unreachable");
                 }
                 record.Add(columnName, defaultValue);
             }
@@ -185,7 +198,7 @@ namespace EasyCsv.Core
         /// </param>
         /// <returns></returns>
         /// <exception cref="ArgumentException"></exception>
-        public IEasyCsv AddColumns(IDictionary<string, object?> defaultValues, bool? upsert = true)
+        public IEasyCsv AddColumns(IDictionary<string, object?> defaultValues, ExistingColumnHandling existingColumnHandling = ExistingColumnHandling.Override)
         {
             if (CsvContent == null) return this;
 
@@ -194,15 +207,27 @@ namespace EasyCsv.Core
                 foreach (KeyValuePair<string, object?> pair in defaultValues)
                 {
                     string key = pair.Key;
-                    if (upsert == true)
+                    if (existingColumnHandling == ExistingColumnHandling.Override)
                     {
                         record[key] = pair.Value;
                         continue;
                     }
                     if (record.ContainsKey(key))
                     {
-                        if (upsert == null) continue;
-                        throw new ArgumentException($"Value for key '{key}' already exists.");
+                        if (existingColumnHandling == ExistingColumnHandling.Keep) continue;
+                        if (existingColumnHandling == ExistingColumnHandling.ReplaceNullOrWhiteSpace)
+                        {
+                            if (string.IsNullOrWhiteSpace(record[key]?.ToString()))
+                            {
+
+                            }
+                            continue;
+                        }
+                        if (existingColumnHandling == ExistingColumnHandling.ThrowException)
+                        {
+                            throw new ArgumentException($"Column with name '{key}' already exists.");
+                        }
+                        else throw new ArgumentException("Unreachable");
                     }
                     record.Add(key, pair.Value);
                 }

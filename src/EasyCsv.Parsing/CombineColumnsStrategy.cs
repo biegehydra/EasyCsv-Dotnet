@@ -1,0 +1,67 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using EasyCsv.Core;
+
+namespace EasyCsv.Parsing;
+
+public abstract class CombineColumnsStrategy : ICsvProcessor
+{
+    public abstract string DisplayName { get; }
+    public abstract string Description { get; }
+    public abstract List<Dictionary<string, string>> ExampleInputRows { get; }
+    public abstract List<Dictionary<string, string>> ExampleOutputRows { get; }
+    private readonly Func<string?[], string?> _combineValuesFunc;
+    private readonly string[] _columnsToJoin;
+    private readonly bool _combineIfNotAllPresent;
+    private readonly bool _removeJoinedColumns;
+    private readonly string _newColumnName;
+
+    public CombineColumnsStrategy(string[] columnsToJoin, string newColumnName, bool combineIfNotAllPresent, bool removeJoinedColumns, Func<string?[], string?> combineValues)
+    {
+        if (columnsToJoin.Length == 0) throw new ArgumentException("Columns to join must be specified.", nameof(columnsToJoin));
+        if (columnsToJoin.Any(string.IsNullOrWhiteSpace)) throw new ArgumentException("One of columns to join was null or whitespace.", nameof(columnsToJoin));
+        if (string.IsNullOrWhiteSpace(newColumnName)) throw new ArgumentException("New column name must be specified", nameof(newColumnName));
+        if (combineValues == null!) throw new ArgumentException("Combine values func can't be null", nameof(combineValues));
+        _columnsToJoin = columnsToJoin;
+        _combineIfNotAllPresent = combineIfNotAllPresent;
+        _removeJoinedColumns = removeJoinedColumns;
+        _newColumnName = newColumnName;
+        _combineValuesFunc = combineValues;
+    }
+
+    public async Task<OperationResult> ProcessCsv(IEasyCsv csv)
+    {
+        var toCombine = _columnsToJoin.Where(x => csv.ContainsColumn(x)).ToArray();
+        if (toCombine.Length == _columnsToJoin.Length || (_combineIfNotAllPresent && toCombine.Length > 0))
+        {
+            await csv.MutateAsync(x =>
+            {
+                StringBuilder sb = new StringBuilder();
+                foreach (var row in x.CsvContent)
+                {
+                    string?[] values = new string[toCombine.Length];
+                    int i = 0;
+                    foreach (var column in toCombine)
+                    {
+                        values[i] = row[column]?.ToString();
+                        i++;
+                    }
+
+                    row[_newColumnName] = _combineValuesFunc(values);
+                    sb.Clear();
+                }
+
+                if (_removeJoinedColumns)
+                {
+                    var columnsToRemove = toCombine.Where(y => y != _newColumnName);
+                    x.RemoveColumns(columnsToRemove);
+                }
+            });
+            return new OperationResult(false, $"Joined: {string.Join(", ", toCombine)}");
+        }
+        return new OperationResult(false, $"Columns to join were not present in csv. To join: {string.Join(", ", _columnsToJoin)}");
+    }
+}

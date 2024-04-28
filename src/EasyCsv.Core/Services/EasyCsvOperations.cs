@@ -6,16 +6,17 @@ using System.Threading.Tasks;
 using System;
 using EasyCsv.Core.Configuration;
 using EasyCsv.Core.Enums;
+using EasyCsv.Core.Extensions;
 
 namespace EasyCsv.Core
 {
     internal partial class EasyCsv
     {
-        public IEasyCsv ReplaceHeaderRow(List<string> newHeaderFields)
+        public IEasyCsv ReplaceHeaderRow(IReadOnlyList<string> newHeaderFields)
         {
             if (CsvContent == null) return this;
-            var oldHeaders = GetColumns()?.ToList();
-            if (newHeaderFields.Count != oldHeaders?.Count)
+            var oldHeaders = ColumnNames()?.ToArray();
+            if (newHeaderFields.Count != oldHeaders?.Length)
             {
                 throw new ArgumentException("Replacement header row field count does not match the current header row field count");
             }
@@ -49,13 +50,13 @@ namespace EasyCsv.Core
                 throw new ArgumentException("Index cannot be negative", nameof(oldIndex));
             if (newIndex < 0)
                 throw new ArgumentException("Index cannot be negative", nameof(newIndex));
-            var headers = GetColumns();
-            if (headers == null) return this;
-            if (oldIndex < headers.Count)
+            var columnNames = ColumnNames();
+            if (columnNames == null) return this;
+            if (oldIndex < columnNames.Length)
             {
-                return MoveColumn(headers[oldIndex], newIndex);
+                return MoveColumn(columnNames[oldIndex], newIndex);
             }
-            throw new ArgumentException($"Index outside bounds of csv. Headers Count: {headers.Count}, Index: {oldIndex}", nameof(oldIndex));
+            throw new ArgumentException($"Index outside bounds of csv. Headers Count: {columnNames.Length}, Index: {oldIndex}", nameof(oldIndex));
         }
 
         public IEasyCsv MoveColumn(string columnName, int newIndex)
@@ -65,7 +66,7 @@ namespace EasyCsv.Core
                 throw new ArgumentException("Index cannot be negative", nameof(newIndex));
             }
 
-            var headers = GetColumns();
+            var headers = ColumnNames();
             if (CsvContent == null || headers == null) return this;
 
             var oldIndex = headers.IndexOf(columnName);
@@ -113,11 +114,11 @@ namespace EasyCsv.Core
             {
                 throw new ArgumentException("Index cannot be negative", nameof(index));
             }
-            var headers = GetColumns();
+            var headers = ColumnNames();
             if (CsvContent == null || headers == null) return this;
-            if (index > headers.Count)
+            if (index > headers.Length)
             {
-                index = headers.Count;
+                index = headers.Length;
             }
 
             var indexOf = headers.IndexOf(columnName);
@@ -129,7 +130,7 @@ namespace EasyCsv.Core
             {
                 return this;
             }
-            if (index == headers.Count)
+            if (index == headers.Length)
             {
                 return AddColumn(columnName, defaultValue);
             }
@@ -279,7 +280,7 @@ namespace EasyCsv.Core
         public IEasyCsv RemoveColumn(string headerField, bool throwIfNotExists = true)
         {
             if (CsvContent == null) return this;
-            if (!GetColumns()?.Contains(headerField) ?? true)
+            if (!ColumnNames()?.Contains(headerField) ?? true)
             {
                 if (throwIfNotExists)
                 {
@@ -300,13 +301,13 @@ namespace EasyCsv.Core
         {
             if (CsvContent == null) return this;
             string[] headerFieldsArr = headerFields.ToArray();
-            if (headerFieldsArr.Any(x => !GetColumns()?.Contains(x) ?? true))
+            if (headerFieldsArr.Any(x => !ColumnNames()?.Contains(x) ?? true))
             {
                 if (throwIfNotExists)
                 {
                     throw new ArgumentException($"At least one of the columns requested for removal did not exist..");
                 }
-                headerFieldsArr = headerFieldsArr.Where(x => GetColumns()?.Contains(x) == true).ToArray();
+                headerFieldsArr = headerFieldsArr.Where(x => ColumnNames()?.Contains(x) == true).ToArray();
             }
 
             if (headerFieldsArr.Length != 0)
@@ -325,7 +326,7 @@ namespace EasyCsv.Core
         public IEasyCsv RemoveUnusedHeaders()
         {
             if (CsvContent == null) return this;
-            var keys = GetColumns();
+            var keys = ColumnNames();
             if (keys == null) return this;
             foreach (var key in keys)
             {
@@ -357,13 +358,13 @@ namespace EasyCsv.Core
 
         public IEasyCsv SwapColumns(int columnOneIndex, int columnTwoIndex)
         {
-            var headers = GetColumns();
-            if (CsvContent == null || headers is not {Count: >= 2} || columnOneIndex == columnTwoIndex) return this;
+            var headers = ColumnNames();
+            if (CsvContent == null || headers is not {Length: >= 2} || columnOneIndex == columnTwoIndex) return this;
             if (columnOneIndex < 0)
                 throw new ArgumentException("Index cannot be negative", nameof(columnOneIndex));
             if (columnTwoIndex < 0)
                 throw new ArgumentException("Index cannot be negative", nameof(columnOneIndex));
-            var headersCount = headers.Count;
+            var headersCount = headers.Length;
             if (columnOneIndex > headersCount-1)
                 throw new ArgumentException($"Index outside bounds. columnOneIndex: {columnOneIndex}, Headers Count: {headersCount}", nameof(columnOneIndex));
             if (columnTwoIndex > headersCount - 1)
@@ -400,8 +401,8 @@ namespace EasyCsv.Core
 
         public IEasyCsv SwapColumns(string columnOneName, string columnTwoName, IEqualityComparer<string>? comparer = null)
         {
-            var headers = GetColumns();
-            if (CsvContent == null || headers is not { Count: >= 2 } || columnOneName == columnTwoName) return this;
+            var headers = ColumnNames();
+            if (CsvContent == null || headers is not { Length: >= 2 } || columnOneName == columnTwoName) return this;
             if (string.IsNullOrWhiteSpace(columnOneName))
                 throw new ArgumentException("Column name cannot be null or whitespace", nameof(columnOneName));
             if (string.IsNullOrWhiteSpace(columnTwoName))
@@ -411,8 +412,8 @@ namespace EasyCsv.Core
             if (!headers.Contains(columnTwoName, comparer))
                 throw new ArgumentException($"Column {columnTwoName} does not exist", nameof(columnTwoName));
 
-            var columnOneIndex = comparer == null ? headers.IndexOf(columnOneName) : headers.FindIndex(x => comparer.Equals(x, columnOneName));
-            var columnTwoIndex = comparer == null ? headers.IndexOf(columnTwoName) : headers.FindIndex(x => comparer.Equals(x, columnTwoName));
+            var columnOneIndex = headers.IndexOf(columnOneName, comparer);
+            var columnTwoIndex = headers.IndexOf(columnTwoName, comparer);
             SwapColumns(columnOneIndex, columnTwoIndex);
             return this;
         }
@@ -429,8 +430,8 @@ namespace EasyCsv.Core
             if (CsvContent == null) return this;
             if (otherCsv?.CsvContent == null) return this;
 
-            var firstHeaders = GetColumns();
-            var secondHeaders = otherCsv.GetColumns();
+            var firstHeaders = ColumnNames();
+            var secondHeaders = otherCsv.ColumnNames();
 
             if (secondHeaders == null) return this;
             if (!firstHeaders?.SequenceEqual(secondHeaders) ?? true) return this;

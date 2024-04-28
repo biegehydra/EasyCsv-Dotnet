@@ -21,10 +21,10 @@ namespace EasyCsv.Core
         public string? ContentStr => _csv.ContentStr;
         public List<CsvRow> CsvContent => _csv.CsvContent;
 
-        public int GetRowCount()
+        public int RowCount()
         {
 
-            return _csv.GetRowCount();
+            return _csv.RowCount();
         }
 
         public bool ContainsColumn(string column, bool caseInsensitive)
@@ -43,9 +43,9 @@ namespace EasyCsv.Core
             return _csv.ContainsRow(row);
         }
 
-        public List<string>? GetColumns()
+        public string[]? ColumnNames()
         {
-            return _csv.GetColumns();
+            return _csv.ColumnNames();
         }
 
         public Task<List<T>> GetRecordsAsync<T>(bool strict = false, CsvContextProfile? csvContextProfile = null)
@@ -73,21 +73,21 @@ namespace EasyCsv.Core
             return new CSVMutationScope(_csv.Clone());
         }
 
-        public IEasyMutations ReplaceHeaderRow(List<string> newHeaderFields)
+        public IEasyMutations ReplaceHeaderRow(IReadOnlyList<string> newHeaderFields)
         {
             _csv.ReplaceHeaderRow(newHeaderFields);
             return this;
         }
 
-        public IEasyMutations ReplaceColumn(string oldHeaderField, string newHeaderField)
+        public IEasyMutations ReplaceColumn(string oldColumnName, string newColumnName)
         {
-            _csv.ReplaceColumn(oldHeaderField, newHeaderField);
+            _csv.ReplaceColumn(oldColumnName, newColumnName);
             return this;
         }
 
-        public IEasyMutations AddColumn(string header, object? value, ExistingColumnHandling existingColumnHandling = ExistingColumnHandling.Override)
+        public IEasyMutations AddColumn(string columnName, object? value, ExistingColumnHandling existingColumnHandling = ExistingColumnHandling.Override)
         {
-            _csv.AddColumn(header, value, existingColumnHandling);
+            _csv.AddColumn(columnName, value, existingColumnHandling);
             return this;
         }
 

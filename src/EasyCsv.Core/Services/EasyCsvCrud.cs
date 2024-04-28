@@ -10,9 +10,9 @@ namespace EasyCsv.Core
     {
         public IEasyCsv InsertRecord(List<object?> rowValues, int index = -1)
         {
-            var headers = GetColumns();
+            var headers = ColumnNames();
             if (CsvContent == null) return this;
-            if (headers?.Count == null || headers.Count == 0 || headers.Count != rowValues.Count) return this;
+            if (headers?.Length == null || headers.Length == 0 || headers.Length != rowValues.Count) return this;
             if (index == -1 || index >= CsvContent.Count)
             {
                 var newRow = RowFromHeadersAndValues(headers, rowValues);

@@ -36,7 +36,7 @@ public interface ICsvProcessor
 
 public interface ICsvMerger
 {
-    public void Merge(IEasyCsv csv1, IEasyCsv csv2);
+    public Task<IEasyCsv> Merge(IEasyCsv baseCsv, IEasyCsv additionalCsv);
 }
 
 public interface ICell

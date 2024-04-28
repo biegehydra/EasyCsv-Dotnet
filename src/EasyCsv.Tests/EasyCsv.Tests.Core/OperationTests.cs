@@ -24,11 +24,11 @@ namespace EasyCsv.Tests.Core
             IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(SingleRecordCsv, DefaultConfig);
 
             // Act
-            var headers = easyCsv.GetColumns();
+            var headers = easyCsv.ColumnNames();
 
             // Assert
             Assert.NotNull(headers);
-            Assert.Equal(2, headers.Count);
+            Assert.Equal(2, headers.Length);
             Assert.Contains("header1", headers);
             Assert.Contains("header2", headers);
         }
@@ -42,11 +42,11 @@ namespace EasyCsv.Tests.Core
 
             // Act
             easyCsv.ReplaceHeaderRow(newHeaders);
-            var updatedHeaders = easyCsv.GetColumns();
+            var updatedHeaders = easyCsv.ColumnNames();
 
             // Assert
             Assert.NotNull(updatedHeaders);
-            Assert.Equal(2, updatedHeaders.Count);
+            Assert.Equal(2, updatedHeaders.Length);
             Assert.Equal(newHeaders, updatedHeaders);
         }
 
@@ -61,8 +61,8 @@ namespace EasyCsv.Tests.Core
             easyCsv.ReplaceColumn("header1", "newHeader1");
 
             // Assert
-            var updatedHeaders = easyCsv.GetColumns();
-            Assert.Equal(2, updatedHeaders!.Count);
+            var updatedHeaders = easyCsv.ColumnNames();
+            Assert.Equal(2, updatedHeaders!.Length);
             Assert.Contains("newHeader1", updatedHeaders);
             Assert.Contains("header2", updatedHeaders);
             Assert.Equal("value1", easyCsv.CsvContent!.First()["newHeader1"]);
@@ -82,8 +82,8 @@ namespace EasyCsv.Tests.Core
             var newCsv = new EasyCsv.Core.EasyCsv(firstEasyCsv.ContentBytes!, DefaultConfig);
 
             // Assert
-            var updatedHeaders = newCsv.GetColumns();
-            Assert.Equal(2, updatedHeaders!.Count);
+            var updatedHeaders = newCsv.ColumnNames();
+            Assert.Equal(2, updatedHeaders!.Length);
             Assert.Contains("newHeader1", updatedHeaders);
             Assert.Contains("header2", updatedHeaders);
             Assert.Equal("value1", newCsv.CsvContent!.First()["newHeader1"]);
@@ -102,8 +102,8 @@ namespace EasyCsv.Tests.Core
             easyCsv.AddColumns(defaultValues);
 
             // Assert
-            var headers = easyCsv.GetColumns();
-            Assert.Equal(3, headers!.Count);
+            var headers = easyCsv.ColumnNames();
+            Assert.Equal(3, headers!.Length);
             Assert.Equal("defaultValue", easyCsv.CsvContent!.First()["header3"]);
         }
 
@@ -118,8 +118,8 @@ namespace EasyCsv.Tests.Core
             easyCsv.AddColumn("header3", "defaultValue");
 
             // Assert
-            var headers = easyCsv.GetColumns();
-            Assert.Equal(3, headers!.Count);
+            var headers = easyCsv.ColumnNames();
+            Assert.Equal(3, headers!.Length);
             Assert.Equal("defaultValue", easyCsv.CsvContent!.First()["header3"]);
 
         }
@@ -135,8 +135,8 @@ namespace EasyCsv.Tests.Core
             easyCsv.RemoveColumn("header2");
 
             // Assert
-            var headers = easyCsv.GetColumns();
-            Assert.Equal(2, headers!.Count);
+            var headers = easyCsv.ColumnNames();
+            Assert.Equal(2, headers!.Length);
             Assert.DoesNotContain("header2", headers);
             Assert.False(easyCsv.CsvContent!.First().ContainsKey("header2"));
         }
@@ -152,7 +152,7 @@ namespace EasyCsv.Tests.Core
             easyCsv.RemoveColumns(new List<string> { "header2", "header3" });
 
             // Assert
-            var headers = easyCsv.GetColumns();
+            var headers = easyCsv.ColumnNames();
             Assert.Single(headers!);
             Assert.DoesNotContain("header2", headers);
             Assert.DoesNotContain("header3", headers);
@@ -171,8 +171,8 @@ namespace EasyCsv.Tests.Core
             easyCsv.RemoveUnusedHeaders();
 
             // Assert
-            var headers = easyCsv.GetColumns();
-            Assert.Equal(2, headers!.Count);
+            var headers = easyCsv.ColumnNames();
+            Assert.Equal(2, headers!.Length);
             Assert.DoesNotContain("header3", headers);
         }
 

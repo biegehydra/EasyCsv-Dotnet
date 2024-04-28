@@ -58,7 +58,7 @@ public class JoinColumnsStrategy : ICsvProcessor
                     x.RemoveColumns(columnsToRemove);
                 }
             });
-            return new OperationResult(false, $"Joined: {string.Join(", ", toJoin)}");
+            return new OperationResult(true, $"Joined: {string.Join(", ", toJoin)}");
         }
         return new OperationResult(false, $"Columns to join were not present in csv. To join: {string.Join(", ", _columnsToJoin)}");
     }

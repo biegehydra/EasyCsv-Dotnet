@@ -1,0 +1,24 @@
+﻿@using EasyCsv.Processing
+<StrategyItem DisplayName="Divide And Replicate" Description="Splits column on value" StrategyPicked="DivideAndReplicate">
+    <Options>
+        <MudListItem>
+            <MudTextField Placeholder="Delimiter" Variant="Variant.Outlined" @bind-Value="_delimiter"></MudTextField>
+        </MudListItem>
+    </Options>
+</StrategyItem>
+
+@code
+{
+    [Parameter] public CsvProcessingStepper CsvProcessor { get; set; }
+    [Inject] private ISnackbar Snackbar { get; set; }
+    private string _delimiter;
+    private async Task DivideAndReplicate(string columnName)
+    {
+        var splitParsingStrategy = new DivideAndReplicate(columnName, y => y?.ToString()?.Split(_delimiter).Cast<object?>().ToArray());
+        var result = await CsvProcessor.PerformCsvStrategy(splitParsingStrategy);
+        if (result.Success != true)
+        {
+            Snackbar?.Add(result.Message);
+        }
+    }
+}

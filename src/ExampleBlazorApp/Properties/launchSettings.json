@@ -25,6 +25,17 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
+    },
+    "LiveReload": {
+      "commandName": "Executable",
+      "workingDirectory": "$(ProjectDir)",
+      "executablePath": "dotnet.exe",
+      "commandLineArgs": "watch --non-interactive  run",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "http://localhost:62044/;http://localhost:5052"
     }
   }
 }

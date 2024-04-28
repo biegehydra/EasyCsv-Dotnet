@@ -322,10 +322,10 @@ public partial class CsvTableHeaderMatcher
     {
         if (_expectedHeaders == null) return;
         if (Csv == null || (_cachedCsv != null && _cachedCsv == Csv)) return;
-        if (Csv?.GetColumns() == null) return;
+        if (Csv?.ColumnNames() == null) return;
         Reset();
         _cachedCsv = Csv;
-        foreach (var header in Csv.GetColumns()!)
+        foreach (var header in Csv.ColumnNames()!)
         {
             _originalHeaderCurrentHeaderDict[header] = header;
             _mappedDict[header] = null;
@@ -348,7 +348,7 @@ public partial class CsvTableHeaderMatcher
     }
     private async Task MatchFileHeadersWithExpectedHeaders()
     {
-        var headers = Csv!.GetColumns();
+        var headers = Csv!.ColumnNames();
         if (headers == null) return;
         List<ExpectedHeader> matchedHeaders = new ();
         foreach (var header in headers)

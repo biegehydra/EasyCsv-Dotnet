@@ -19,14 +19,14 @@ namespace EasyCsv.Core
 
         public List<CsvRow>? CsvContent { get; set; }
 
-        public int GetRowCount() => CsvContent?.Count ?? 0;
+        public int RowCount() => CsvContent?.Count ?? 0;
 
-        public bool ContainsColumn(string column, bool caseInsensitive = false) => GetColumns()?.Contains(column, caseInsensitive ? StringComparer.CurrentCultureIgnoreCase : StringComparer.Ordinal) ?? false;
+        public bool ContainsColumn(string column, bool caseInsensitive = false) => ColumnNames()?.Contains(column, caseInsensitive ? StringComparer.CurrentCultureIgnoreCase : StringComparer.Ordinal) ?? false;
 
         public bool ContainsAllColumns(IEnumerable<string> columns, IEqualityComparer<string>? comparer = null)
         {
             comparer ??= StringComparer.Ordinal; 
-            var headers = GetColumns();
+            var headers = ColumnNames();
             if (headers == null) return false;
             foreach (var column in columns)
             {
@@ -78,9 +78,9 @@ namespace EasyCsv.Core
             return row1.Count == row2.Count && row1.Keys.All(key => row2.ContainsKey(key) && Equals(row1[key], row2[key]));
         }
 
-        public List<string>? GetColumns()
+        public string[]? ColumnNames()
         {
-            return CsvContent?.FirstOrDefault()?.Keys.ToList();
+            return CsvContent?.FirstOrDefault()?.Keys.ToArray();
         }
 
         private static List<CsvRow> CloneContent(List<CsvRow>? content)

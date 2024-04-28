@@ -15,16 +15,16 @@ namespace EasyCsv.Core
         /// </summary>
         /// <example>You can turn header1,header2 into otherHeader1,otherHeader2</example>
         /// <returns>An IEasyCsv to be used for fluent method chaining.</returns>
-        T ReplaceHeaderRow(List<string> newHeaderFields);
+        T ReplaceHeaderRow(IReadOnlyList<string> newColumnNames);
 
 
         /// <summary>
         /// Removes the column of the old header field and upserts all it's values to all the rows of the new header field. CSV.
         /// </summary>
-        /// <param name="oldHeaderField">The column that will be removed.</param>
-        /// <param name="newHeaderField">The column that will contain all the values of the old column.</param>
+        /// <param name="oldColumnName">The column that will be removed.</param>
+        /// <param name="newColumnName">The column that will contain all the values of the old column.</param>
         /// <returns>An IEasyCsv to be used for fluent method chaining.</returns>
-        T ReplaceColumn(string oldHeaderField, string newHeaderField);
+        T ReplaceColumn(string oldColumnName, string newColumnName);
 
 
         /// <summary>

@@ -18,6 +18,11 @@ namespace EasyCsv.Core
             }
         }
 
+        internal CsvRow(Dictionary<string, object?> row, bool useAsInner)
+        {
+            _innerDictionary = row;
+        }
+
         public CsvRow(CsvRow csvRow)
         {
             _innerDictionary = new Dictionary<string, object?>(csvRow._innerDictionary);
@@ -132,6 +137,11 @@ namespace EasyCsv.Core
         public Dictionary<string, object?> ToDictionary()
         {
             return new Dictionary<string, object?>(_innerDictionary);
+        }
+
+        public CsvRow Clone()
+        {
+            return new CsvRow(_innerDictionary);
         }
     }
 }

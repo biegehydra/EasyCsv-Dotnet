@@ -11,7 +11,7 @@ namespace EasyCsv.Core
 {
     public interface IInternalOperations
     {
-        internal IEasyCsv ReplaceHeaderRow(List<string> newHeaderFields);
+        internal IEasyCsv ReplaceHeaderRow(IReadOnlyList<string> newHeaderFields);
         internal IEasyCsv ReplaceColumn(string oldHeaderField, string newHeaderField);
         internal IEasyCsv MoveColumn(int oldIndex, int newIndex);
         internal IEasyCsv MoveColumn(string columnName, int newIndex);

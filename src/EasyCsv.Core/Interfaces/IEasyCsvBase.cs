@@ -30,7 +30,7 @@ namespace EasyCsv.Core
         /// Gets the number of rows in the CSV file.
         /// <returns>Number of rows in csv</returns>
         /// </summary>
-        int GetRowCount();
+        int RowCount();
 
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace EasyCsv.Core
         /// Gets the headers of the CSV file.
         /// </summary>
         /// <returns>An IEnumerable of string containing the CSV headers.</returns>
-        List<string>? GetColumns();
+        string[]? ColumnNames();
 
 
 

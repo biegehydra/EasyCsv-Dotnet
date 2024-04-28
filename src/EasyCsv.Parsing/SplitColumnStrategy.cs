@@ -5,23 +5,21 @@ using EasyCsv.Core;
 using EasyCsv.Core.Enums;
 
 namespace EasyCsv.Parsing;
+
 public class SplitColumnStrategy : ICsvProcessor
 {
     private readonly string[] _newColumnNames;
     private readonly string _columnToSplit;
-    private readonly string _delimiter;
-    private readonly StringSplitOptions _stringSplitOptions;
     private readonly bool _removeSplitColumn;
+    private readonly Func<object?, object?[]?> _splitFunc;
 
-    public SplitColumnStrategy(string columnToSplit, string[] newColumnNames, string delimiter, bool removeSplitColumn, StringSplitOptions stringSplitOptions = StringSplitOptions.RemoveEmptyEntries)
+    public SplitColumnStrategy(string columnToSplit, string[] newColumnNames, bool removeSplitColumn, Func<object?, object?[]?> splitFunc)
     {
         if (newColumnNames.Length == 0) throw new ArgumentException("New column names must be specified.");
-        if (string.IsNullOrWhiteSpace(delimiter)) throw new ArgumentException("Delimiter name must be specified");
         _newColumnNames = newColumnNames;
-        _delimiter = delimiter;
-        _stringSplitOptions = stringSplitOptions;
         _columnToSplit = columnToSplit;
         _removeSplitColumn = removeSplitColumn;
+        _splitFunc = splitFunc ?? throw new ArgumentException("SplitFunc cannot be null");
     }
 
     public async Task<OperationResult> ProcessCsv(IEasyCsv csv)
@@ -31,10 +29,10 @@ public class SplitColumnStrategy : ICsvProcessor
             int rowsSplit = 0;
             await csv.MutateAsync(x =>
             {
-                x.AddColumns(_newColumnNames.ToDictionary(y => y, value => (object?) null), existingColumnHandling: ExistingColumnHandling.Keep);
+                x.AddColumns(_newColumnNames.ToDictionary(y => y, value => (object?)null), existingColumnHandling: ExistingColumnHandling.Keep);
                 foreach (var row in x.CsvContent)
                 {
-                    string[]? split = row[_columnToSplit]?.ToString().Split([_delimiter], _newColumnNames.Length, _stringSplitOptions);
+                    object?[]? split = _splitFunc(row[_columnToSplit]);
                     if (split?.Length > 0)
                     {
                         rowsSplit++;

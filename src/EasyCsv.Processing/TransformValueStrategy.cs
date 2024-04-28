@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-namespace EasyCsv.Parsing;
+namespace EasyCsv.Processing;
 public class TransformValueStrategy : ICsvColumnProcessor
 {
     public string ColumnName { get; }

@@ -8,7 +8,7 @@ using EasyCsv.Core.Configuration;
 [assembly: InternalsVisibleTo("EasyCsv.Files")]
 [assembly: InternalsVisibleTo("EasyCsv.Tests.Files")]
 [assembly: InternalsVisibleTo("EasyCsv.Tests.Core")]
-[assembly: InternalsVisibleTo("EasyCsv.Tests.Parsing")]
+[assembly: InternalsVisibleTo("EasyCsv.Tests.Processing")]
 namespace EasyCsv.Core
 {
     internal partial class EasyCsv : IEasyCsv

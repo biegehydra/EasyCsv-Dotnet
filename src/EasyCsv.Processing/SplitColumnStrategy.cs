@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using EasyCsv.Core;
 using EasyCsv.Core.Enums;
 
-namespace EasyCsv.Parsing;
+namespace EasyCsv.Processing;
 
 public class SplitColumnStrategy : ICsvProcessor
 {

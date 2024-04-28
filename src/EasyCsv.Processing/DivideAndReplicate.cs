@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using EasyCsv.Core;
 
-namespace EasyCsv.Parsing;
+namespace EasyCsv.Processing;
 public class DivideAndReplicate : ICsvProcessor
 {
     private readonly string _columnName;

@@ -6,7 +6,7 @@ using EasyCsv.Core;
 using EasyCsv.Core.Enums;
 using EasyCsv.Core.Extensions;
 
-namespace EasyCsv.Parsing;
+namespace EasyCsv.Processing;
 public class MergeCsvsStrategy : ICsvMerger
 {
     private readonly MergeConfig _mergeConfig;

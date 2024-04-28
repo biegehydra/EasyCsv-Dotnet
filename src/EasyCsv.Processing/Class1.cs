@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace EasyCsv.Parsing;
+namespace EasyCsv.Processing;
 
 public interface ICsvColumnProcessor
 {

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -9,6 +8,7 @@ using EasyCsv.Core.Configuration;
 [assembly: InternalsVisibleTo("EasyCsv.Files")]
 [assembly: InternalsVisibleTo("EasyCsv.Tests.Files")]
 [assembly: InternalsVisibleTo("EasyCsv.Tests.Core")]
+[assembly: InternalsVisibleTo("EasyCsv.Tests.Parsing")]
 namespace EasyCsv.Core
 {
     internal partial class EasyCsv : IEasyCsv
@@ -21,7 +21,22 @@ namespace EasyCsv.Core
 
         public int GetRowCount() => CsvContent?.Count ?? 0;
 
-        public bool ContainsHeader(string headerField, bool caseInsensitive = false) => GetHeaders()?.Contains(caseInsensitive ? headerField!.ToLower(CultureInfo.InvariantCulture) : headerField) ?? false;
+        public bool ContainsColumn(string column, bool caseInsensitive = false) => GetColumns()?.Contains(column, caseInsensitive ? StringComparer.CurrentCultureIgnoreCase : StringComparer.Ordinal) ?? false;
+
+        public bool ContainsAllColumns(IEnumerable<string> columns, IEqualityComparer<string>? comparer = null)
+        {
+            comparer ??= StringComparer.Ordinal; 
+            var headers = GetColumns();
+            if (headers == null) return false;
+            foreach (var column in columns)
+            {
+                if (!headers.Contains(column, comparer))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
 
         public bool ContainsRow(CsvRow row)
         {
@@ -63,7 +78,7 @@ namespace EasyCsv.Core
             return row1.Count == row2.Count && row1.Keys.All(key => row2.ContainsKey(key) && Equals(row1[key], row2[key]));
         }
 
-        public List<string>? GetHeaders()
+        public List<string>? GetColumns()
         {
             return CsvContent?.FirstOrDefault()?.Keys.ToList();
         }
@@ -76,12 +91,6 @@ namespace EasyCsv.Core
         public IEasyCsv Clone()
         {
             return new EasyCsv(CloneContent(CsvContent), Config);
-        }
-
-
-        private string Normalize(string header)
-        {
-            return Config.NormalizeFields ? Config.NormalizeFieldsFunc(header) : header;
         }
     }
 }

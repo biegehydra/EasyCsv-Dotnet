@@ -107,7 +107,7 @@ I also have some CRUD operations for directly working with rows. UpdateRow, Upse
 
 ## Convenience methods
 
-I include plenty of convenience methods on EasyCsv such as `Clone()`, `GetHeaders()`, `GetRowCount()`, `ContainsHeader()`, `Clear()`
+I include plenty of convenience methods on EasyCsv such as `Clone()`, `GetColumns()`, `GetRowCount()`, `ContainsHeader()`, `Clear()`
 
 ## Chain Method Calls Fluently
 

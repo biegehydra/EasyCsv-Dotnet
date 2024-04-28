@@ -18,7 +18,7 @@ namespace EasyCsv.Core
 
         public byte[]? ContentBytes => _csv.ContentBytes;
         public string? ContentStr => _csv.ContentStr;
-        public List<CsvRow>? CsvContent => _csv.CsvContent;
+        public List<CsvRow> CsvContent => _csv.CsvContent;
 
         public int GetRowCount()
         {
@@ -26,19 +26,25 @@ namespace EasyCsv.Core
             return _csv.GetRowCount();
         }
 
-        public bool ContainsHeader(string headerField, bool caseInsensitive)
+        public bool ContainsColumn(string column, bool caseInsensitive)
         {
-            return _csv.ContainsHeader(headerField, caseInsensitive);
+            return _csv.ContainsColumn(column, caseInsensitive);
         }
+
+        public bool ContainsAllColumns(IEnumerable<string> columns, IEqualityComparer<string>? comparer = null)
+        {
+            return _csv.ContainsAllColumns(columns, comparer);
+        }
+
 
         public bool ContainsRow(CsvRow row)
         {
             return _csv.ContainsRow(row);
         }
 
-        public List<string>? GetHeaders()
+        public List<string>? GetColumns()
         {
-            return _csv.GetHeaders();
+            return _csv.GetColumns();
         }
 
         public Task<List<T>> GetRecordsAsync<T>(bool strict = false, CsvContextProfile? csvContextProfile = null)
@@ -102,7 +108,7 @@ namespace EasyCsv.Core
             return this;
         }
 
-        public IEasyMutations AddColumns(IDictionary<string, object?> defaultValues, bool upsert = true)
+        public IEasyMutations AddColumns(IDictionary<string, object?> defaultValues, bool? upsert = true)
         {
             _csv.AddColumns(defaultValues, upsert);
             return this;
@@ -132,15 +138,15 @@ namespace EasyCsv.Core
             return this;
         }
 
-        public IEasyMutations RemoveColumn(string headerField, bool throwIfNotExists = true)
+        public IEasyMutations RemoveColumn(string column, bool throwIfNotExists = true)
         {
-            _csv.RemoveColumn(headerField, throwIfNotExists);
+            _csv.RemoveColumn(column, throwIfNotExists);
             return this;
         }
 
-        public IEasyMutations RemoveColumns(List<string> headerFields, bool throwIfNotExists = true)
+        public IEasyMutations RemoveColumns(IEnumerable<string> columns, bool throwIfNotExists = true)
         {
-            _csv.RemoveColumns(headerFields, throwIfNotExists);
+            _csv.RemoveColumns(columns, throwIfNotExists);
             return this;
         }
 

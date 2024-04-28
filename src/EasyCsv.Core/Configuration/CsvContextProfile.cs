@@ -7,8 +7,8 @@ namespace EasyCsv.Core.Configuration
 {
     public class CsvContextProfile
     {
-        public List<ClassMap> ClassMaps { get; set; }
-        public Dictionary<Type, ITypeConverter> TypeConverters { get; set; }
-        public Dictionary<Type, TypeConverterOptions> TypeConvertersOptionsDict { get; set; } 
+        public List<ClassMap>? ClassMaps { get; set; }
+        public Dictionary<Type, ITypeConverter>? TypeConverters { get; set; }
+        public Dictionary<Type, TypeConverterOptions>? TypeConvertersOptionsDict { get; set; } 
     }
 }

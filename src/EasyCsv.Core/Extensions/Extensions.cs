@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("EasyCsv.Parsing")]
+[assembly: InternalsVisibleTo("EasyCsv.Processing")]
 namespace EasyCsv.Core.Extensions;
 internal static class Extensions
 {

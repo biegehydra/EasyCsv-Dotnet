@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using EasyCsv.Core;
 
-namespace EasyCsv.Parsing;
+namespace EasyCsv.Processing;
 public class StringSplitColumnStrategy : ICsvProcessor
 {
     private readonly SplitColumnStrategy _splitColumnStrategy;

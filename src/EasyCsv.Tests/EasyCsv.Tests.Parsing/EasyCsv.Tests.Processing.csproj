@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>netcoreapp3.1;net7.0</TargetFrameworks>
 		<LangVersion>latest</LangVersion>
@@ -18,7 +18,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\EasyCsv.Parsing\EasyCsv.Parsing.csproj" />
+	  <ProjectReference Include="..\..\EasyCsv.Processing\EasyCsv.Processing.csproj" />
 	  <ProjectReference Include="..\EasyCsv.Tests.Shared\EasyCsv.Tests.Shared.csproj" />
 	</ItemGroup>
 

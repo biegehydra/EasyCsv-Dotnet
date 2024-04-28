@@ -1,9 +1,9 @@
 using EasyCsv.Core;
 using EasyCsv.Core.Configuration;
-using EasyCsv.Parsing;
+using EasyCsv.Processing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace EasyCsv.Tests.Parsing
+namespace EasyCsv.Tests.Processing
 {
     [TestClass]
     public class CsvParsingTests

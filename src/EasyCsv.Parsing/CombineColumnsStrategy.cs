@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,10 +8,6 @@ namespace EasyCsv.Parsing;
 
 public abstract class CombineColumnsStrategy : ICsvProcessor
 {
-    public abstract string DisplayName { get; }
-    public abstract string Description { get; }
-    public abstract List<Dictionary<string, string>> ExampleInputRows { get; }
-    public abstract List<Dictionary<string, string>> ExampleOutputRows { get; }
     private readonly Func<string?[], string?> _combineValuesFunc;
     private readonly string[] _columnsToJoin;
     private readonly bool _combineIfNotAllPresent;

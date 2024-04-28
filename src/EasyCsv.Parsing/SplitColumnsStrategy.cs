@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using EasyCsv.Core;
@@ -8,10 +7,6 @@ using EasyCsv.Core.Enums;
 namespace EasyCsv.Parsing;
 public class SplitColumnStrategy : ICsvProcessor
 {
-    public string DisplayName => "Split Column";
-    public string Description => throw new NotImplementedException();
-    public List<Dictionary<string, string>> ExampleInputRows => throw new NotImplementedException();
-    public List<Dictionary<string, string>> ExampleOutputRows => throw new NotImplementedException();
     private readonly string[] _newColumnNames;
     private readonly string _columnToSplit;
     private readonly string _delimiter;
@@ -56,9 +51,6 @@ public class SplitColumnStrategy : ICsvProcessor
             });
             return new OperationResult(true, $"Split succeeded on {rowsSplit} rows");
         }
-        else
-        {
-            return new OperationResult(false, $"Csv didn't contain column to split: '{_columnToSplit}'");
-        }
+        return new OperationResult(false, $"Csv didn't contain column to split: '{_columnToSplit}'");
     }
 }

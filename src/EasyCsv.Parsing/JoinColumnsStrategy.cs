@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,10 +7,6 @@ using EasyCsv.Core;
 namespace EasyCsv.Parsing;
 public class JoinColumnsStrategy : ICsvProcessor
 {
-    public string DisplayName => "Join Columns";
-    public string Description => throw new NotImplementedException();
-    public List<Dictionary<string, string>> ExampleInputRows => throw new NotImplementedException();
-    public List<Dictionary<string, string>> ExampleOutputRows => throw new NotImplementedException();
     private readonly string[] _columnsToJoin;
     private readonly string _delimiter;
     private readonly bool _joinIfNotAllPresent;

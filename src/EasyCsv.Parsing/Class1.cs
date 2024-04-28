@@ -4,14 +4,6 @@ using System.Threading.Tasks;
 
 namespace EasyCsv.Parsing;
 
-public interface ICsvColumnProcessorWithExample : ICsvColumnProcessor
-{
-    public string DisplayName { get; }
-    public string Description { get; }
-    public List<Dictionary<string, string>> ExampleInputRows { get; } 
-    public List<Dictionary<string, string>> ExampleOutputRows { get; } 
-}
-
 public interface ICsvColumnProcessor
 {
     public string ColumnName { get; }
@@ -50,7 +42,7 @@ public interface ICsvMerger
 public interface ICell
 {
     public string ColumnName { get; }
-    public string Value { get; set; }
+    public object? Value { get; set; }
 }
 
 public readonly struct OperationResult

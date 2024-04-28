@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using EasyCsv.Core;
 
 namespace EasyCsv.Parsing;
-public class JoinColumnsStrategy : CombineColumnsStrategy, ICsvProcessor
+public class JoinColumnsStrategy : ICsvProcessor
 {
     public string DisplayName => "Join Columns";
     public string Description => throw new NotImplementedException();
@@ -32,14 +32,15 @@ public class JoinColumnsStrategy : CombineColumnsStrategy, ICsvProcessor
 
     public async Task<OperationResult> ProcessCsv(IEasyCsv csv)
     {
-        if (csv.ContainsAllColumns(_columnsToJoin))
+        var toJoin = _columnsToJoin.Where(x => csv.ContainsColumn(x)).ToArray();
+        if (toJoin.Length == _columnsToJoin.Length || (_joinIfNotAllPresent && toJoin.Length > 0))
         {
             await csv.MutateAsync(x =>
             {
                 StringBuilder sb = new StringBuilder();
                 foreach (var row in x.CsvContent)
                 {
-                    foreach (var column in _columnsToJoin)
+                    foreach (var column in toJoin)
                     {
                         if (sb.Length == 0)
                         {
@@ -58,48 +59,11 @@ public class JoinColumnsStrategy : CombineColumnsStrategy, ICsvProcessor
 
                 if (_removeJoinedColumns)
                 {
-                    var columnsToRemove = _columnsToJoin.Where(y => y != _newColumnName);
+                    var columnsToRemove = toJoin.Where(y => y != _newColumnName);
                     x.RemoveColumns(columnsToRemove);
                 }
             });
-            return new OperationResult(false, $"Joined: {string.Join(", ", _columnsToJoin)}");
-        }
-        var joined = _columnsToJoin.Where(x => csv.ContainsColumn(x)).ToArray();
-        if (_joinIfNotAllPresent && joined.Length > 0)
-        {
-            await csv.MutateAsync(x =>
-            {
-                StringBuilder sb = new StringBuilder();
-                foreach (var row in x.CsvContent)
-                {
-                    foreach (var column in _columnsToJoin)
-                    {
-                        if (row.TryGetValue(column, out var value))
-                        {
-                            if (sb.Length == 0)
-                            {
-                                sb.Append(value);
-                            }
-                            else
-                            {
-                                sb.Append(_delimiter);
-                                sb.Append(value);
-                            }
-                        }
-                    }
-
-                    row[_newColumnName] = sb.ToString();
-                    sb.Clear();
-                }
-
-                if (_removeJoinedColumns)
-                {
-                    var columnsToRemove = _columnsToJoin.Where(y => y != _newColumnName && csv.ContainsColumn(y));
-                    x.RemoveColumns(columnsToRemove);
-                }
-            });
-
-            return new OperationResult(false, $"Columns to join were not all present in csv. Proceeded anyway, joined: {string.Join(", ", joined)}");
+            return new OperationResult(false, $"Joined: {string.Join(", ", toJoin)}");
         }
         return new OperationResult(false, $"Columns to join were not present in csv. To join: {string.Join(", ", _columnsToJoin)}");
     }

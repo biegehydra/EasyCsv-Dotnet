@@ -7,7 +7,7 @@
 <StrategyItem DisplayName="Divide And Replicate" Description="Splits column on value" AllowRun="AllowRun" StrategyPicked="DivideAndReplicate">
     <Options>
         <MudListItem>
-            <MudTextField Placeholder="Delimiter" Variant="Variant.Outlined" @bind-Value="_delimiter"></MudTextField>
+            <MudTextField Placeholder="Delimiter" Immediate="true" Variant="Variant.Outlined" @bind-Value="_delimiter"></MudTextField>
         </MudListItem>
     </Options>
 </StrategyItem>
@@ -15,6 +15,7 @@
 @code
 {
     [CascadingParameter] public CsvProcessingStepper CsvProcessor { get; set; } = null!;
+    [Parameter] public bool Immediate { get; set; } = true;
     private bool AllowRun => !string.IsNullOrWhiteSpace(_delimiter);
     private string? _delimiter;
     private async Task DivideAndReplicate(string columnName)

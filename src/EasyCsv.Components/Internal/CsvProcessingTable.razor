@@ -20,8 +20,17 @@
     .csv-processing-popover .mud-nested-list > .mud-list-item {
         padding-right: 25px;
     }
-
+    .easy-csv-fullscreen-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1000; /* This should be lower than the popover's z-index but higher than most other elements on your page */
+        background-color: rgba(0, 0, 0, 0); /* You can adjust the opacity as needed */
+    }
 </style>
+
 @if (EasyCsv?.CsvContent != null && EasyCsv.ColumnNames() != null && ProcessingOptions != null) 
 {
     int tagsColumnIndex = EasyCsv.ColumnNames()?.IndexOf(InternalColumnNames.Tags) ?? -1;
@@ -47,15 +56,22 @@
                             @column
                             <MudIconButton Icon="@Icons.Material.Filled.OpenInFull" OnClick="_ => TogglePopover(column)"></MudIconButton>
                         </div>
-                        <MudPopover Class="csv-processing-popover" OverflowBehavior="OverflowBehavior.FlipAlways" AnchorOrigin="anchorOrigin" TransformOrigin="transformOrigin" Open="_popOverDict[column]">
+                        <MudPopover Open="_popOverDict[column]" Class="csv-processing-popover" OverflowBehavior="OverflowBehavior.FlipAlways" AnchorOrigin="anchorOrigin" TransformOrigin="transformOrigin">
                             <CascadingValue TValue="CsvProcessingStepper" Value="Stepper">
                                 <CascadingValue TValue="StrategyBucket" Value="_strategyBuckets[column]">
-                                    <MudList Clickable="true">
+                                    <MudList Clickable="true" Style="z-index: inherit">
                                         <MudListSubheader>
-                                            Column Strategies <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="x => TogglePopover(column, false)"></MudIconButton>
+                                            <div style="display: flex; flex-direction: row; justify-content: space-between">
+                                                <MudText Class="mt-4" Typo="Typo.h5">Column Strategies</MudText>
+                                                <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="x => TogglePopover(column, false)"></MudIconButton>
+                                            </div>
                                         </MudListSubheader>
                                         @ProcessingOptions(column)
                                     </MudList>
+                                    @if (_popOverDict[column])
+                                    {
+                                        <div @onclick="() => TogglePopover(column, false)" class="easy-csv-fullscreen-backdrop"></div>
+                                    }
                                 </CascadingValue>
                             </CascadingValue>
                         </MudPopover>
@@ -101,6 +117,7 @@
 
     [Parameter] public RenderFragment<string>? ProcessingOptions { get; set; }
     [Parameter] public CsvProcessingStepper Stepper { get; set; } = null!;
+    [Parameter] public CloseBehaviour CloseBehaviour { get; set; } 
     [Parameter] public IEasyCsv? EasyCsv
     {
         get => _easyCsv;

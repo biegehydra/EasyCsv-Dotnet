@@ -1,4 +1,5 @@
-﻿using EasyCsv.Core;
+﻿using EasyCsv.Components.Enums;
+using EasyCsv.Core;
 using EasyCsv.Processing;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
@@ -15,8 +16,8 @@ public partial class CsvProcessingStepper
     /// If true, this component will make a clone of the provided
     /// EasyCsv and operate on the clone
     /// </summary>
-    [Parameter]
-    public RenderFragment<string>? ProcessingOptions { get; set; }
+    [Parameter] public RenderFragment<string>? ProcessingOptions { get; set; }
+    [Parameter] public CloseBehaviour CloseBehaviour { get; set; }
 
     private int _currentIndex = -1;
     internal IEasyCsv? CurrentState => IsIndexValid(_currentIndex) ? _cachedStates[_currentIndex] : null;

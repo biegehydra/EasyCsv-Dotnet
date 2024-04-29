@@ -1,0 +1,158 @@
+﻿@using EasyCsv.Processing
+@using EasyCsv.Core.Extensions
+<style>
+    .mud-input-control-input-container:has(.mud-input-outlined) {
+        margin-top: 0px !important;
+    }
+    .extra-dense {
+        padding: 2px 10px !important;
+    }
+    .text-field-margin-fix .mud-input-slot {
+        padding-top: 16px !important;
+    }
+    .csv-processing-table .mud-table-container {
+        max-height: 60vh;
+    }
+    .csv-processing-popover {
+        width: 500px;
+    }
+
+    .csv-processing-popover .mud-nested-list > .mud-list-item {
+        padding-right: 25px;
+    }
+
+</style>
+@if (EasyCsv?.CsvContent != null && EasyCsv.ColumnNames() != null && ProcessingOptions != null) 
+{
+    int tagsColumnIndex = EasyCsv.ColumnNames()?.IndexOf(InternalColumnNames.Tags) ?? -1;
+    string[] columnNames = EasyCsv.ColumnNames()!;
+                           <CascadingValue TValue="CsvProcessingTable" Name="ProcessingTable" Value="this" >
+        <MudTable T="CsvRow" Class="csv-table-header-matcher" FixedHeader="true" RowsPerPage="100" Items="EasyCsv.CsvContent"
+                  Striped="true" Bordered Dense Hover Elevation="2">
+            <HeaderContent>
+                @for (var i = 0; i < columnNames.Length; i++)
+                {
+                    var column = columnNames[i];
+                    if (i == tagsColumnIndex) continue;
+                    _popOverDict.TryAdd(column, false);
+                    if (!_strategyBuckets.ContainsKey(column))
+                    {
+                        _strategyBuckets.Add(column, new StrategyBucket(column));
+                    }
+                    <MudTh>
+                        @column
+                        <MudIconButton Icon="@Icons.Material.Filled.OpenInFull" OnClick="_ => TogglePopover(column)"></MudIconButton>
+   
+                        <MudPopover Class="csv-processing-popover" OverflowBehavior="OverflowBehavior.FlipAlways" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopRight" Open="_popOverDict[column]">
+                            <CascadingValue TValue="CsvProcessingStepper" Value="Stepper" >
+                                <CascadingValue TValue="StrategyBucket" Value="_strategyBuckets[column]">
+                                    <MudList Clickable="true">
+                                        <MudListSubheader>
+                                            Column Strategies <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="x => TogglePopover(column, false)"></MudIconButton>
+                                        </MudListSubheader>
+                                        @ProcessingOptions(column)
+                                        <Component2></Component2>
+                                    </MudList>
+                                </CascadingValue>
+                            </CascadingValue>
+                        </MudPopover>
+                    </MudTh>
+                }
+                @if (tagsColumnIndex >= 0)
+                {
+                    <MudTh>Tags</MudTh>
+                }
+            </HeaderContent>
+            <RowTemplate Context="row">
+                @for (int i = 0; i < row.Count; i++)
+                {
+                    var value = row.ValueAt(i);
+                    if (i != tagsColumnIndex)
+                    {
+                        <MudTd>@value</MudTd>
+                    }
+                }
+                @if (tagsColumnIndex >= 0)
+                {
+                    var tags = row.ValueAt(tagsColumnIndex)?.ToString()?.Split(",", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                    <MudTd>
+                        @if (tags?.Any() == true)
+                        {
+                            <MudChipSet AllClosable="true">
+                                @foreach (var tag in tags)
+                                {
+                                    AddTag(tag);
+                                    <MudChip Text="@tag" Color="_tagColors[tag]" Size="Size.Small" OnClose="x => RemoveTag(row, tag, tagsColumnIndex)" />
+                                }
+                            </MudChipSet>
+                        }
+                    </MudTd>
+                }
+            </RowTemplate>
+        </MudTable>
+    </CascadingValue>
+}
+
+@code {
+    private static Color[] _defaultColors = [Color.Primary, Color.Secondary, Color.Success, Color.Error, Color.Tertiary, Color.Dark, Color.Warning];
+
+    [Parameter] public RenderFragment<string>? ProcessingOptions { get; set; }
+    [Parameter] public CsvProcessingStepper Stepper { get; set; } = null!;
+    [Parameter] public IEasyCsv? EasyCsv
+    {
+        get => _easyCsv;
+        set
+        {
+            _easyCsv = value;
+            OnEasyCsvChanged();
+        }
+    }
+    private Dictionary<string, bool> _popOverDict = new ();
+    private Dictionary<string, StrategyBucket> _strategyBuckets = new();
+    private Dictionary<string, Color> _tagColors = new();
+    private IEasyCsv? _easyCsv;
+    private int _tagIndex = 0;
+
+    private void AddTag(string tag)
+    {
+        if (!_tagColors.ContainsKey(tag))
+        {
+            int colorIndex = _tagColors.Count % _defaultColors.Length;
+            Color color = _defaultColors[colorIndex];
+            _tagColors.Add(tag, color);
+        }
+    }
+
+    private void OnEasyCsvChanged()
+    {
+        _popOverDict.Clear();
+        _strategyBuckets.Clear();
+    }
+
+    internal void TogglePopover(string column)
+    {
+        bool value = _popOverDict[column];
+        if (value)
+        {
+            _popOverDict[column] = false;
+        }
+        else if (!_popOverDict.Values.Any(x => x)) _popOverDict[column] = true;
+    }
+    internal void TogglePopover(string column, bool open)
+    {
+        if (!open) _popOverDict[column] = open;
+        else if (!_popOverDict.Values.Any(x => x)) _popOverDict[column] = true;
+    }
+
+    private void RemoveTag(CsvRow row, string tag, int tagsIndex)
+    {
+        var tags = row.ValueAt(tagsIndex)?.ToString()?.Split(",", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        int? tagIndex = tags?.IndexOf(tag);
+        if (tagIndex >= 0)
+        {
+            string newTagsStr = string.Join(",", tags!.Take(tagsIndex).Skip(1));
+            row.SetValueAtIndex(tagsIndex, newTagsStr); 
+        }
+    }
+
+}

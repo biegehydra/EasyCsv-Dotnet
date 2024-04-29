@@ -6,13 +6,13 @@
 }
 @if (CsvProcessor.CurrentState != null)
 {
-    <StrategyItem DisplayName="Combine" Description="Splits column on value" AllowRun="AllowRun" StrategyPicked="DivideAndReplicate">
+    <StrategyItem DisplayName="Combine" Description="Combine the specified columns using a delimiter into a new column." ExampleOptions="_exampleOptions" BeforeCsvExample="_beforeExample" AfterCsvExample="_afterExample" AllowRun="AllowRun" StrategyPicked="DivideAndReplicate">
         <Options>
             <MudListItem>
                 <MudCheckBox Disabled="@context" Label="Remove Joined Columns" @bind-Value="_removeJoinedColumns"></MudCheckBox>
             </MudListItem>
             <MudListItem>
-                <MudTextField Disabled="@context" Immediate="Immediate" Required="true" Placeholder="Delimiter" Variant="Variant.Outlined" @bind-Value="_delimiter"></MudTextField>
+                <MudTextField Disabled="@context" Immediate="Immediate" Required="true" Placeholder="Join Delimiter" Variant="Variant.Outlined" @bind-Value="_delimiter"></MudTextField>
             </MudListItem>
             <MudListItem>
                 <MudTextField Disabled="@context" Immediate="Immediate" Required="true" Placeholder="New Column Name" Variant="Variant.Outlined" @bind-Value="_newColumnName"></MudTextField>
@@ -30,8 +30,32 @@
     [CascadingParameter] private StrategyBucket StrategyBucket { get; set; } = null!;
     [Parameter] public bool Immediate { get; set; } = true;
 
+    private static Dictionary<string, string> _exampleOptions = new ()
+    {
+        {"RemoveJoinedColumns", "true"},
+        {"Join Delimiter", "-"},
+        {"New Column Name", "JoinedColumn"}
+    };
+
+    private static Dictionary<string, string>[] _beforeExample =
+    [
+        new Dictionary<string, string>()
+        {
+            {"ColumnToJoin1", "value1"},
+            {"ColumnToJoin2", "value2"},
+            {"ColumnToJoin3", "value3"}
+        },
+    ];
+    private static Dictionary<string, string>[] _afterExample =
+    [
+        new Dictionary<string, string>()
+        {
+            {"JoinedColumn", "value1-value2-value3"},
+        }
+    ];
+
     private bool AllowRun => !string.IsNullOrEmpty(_delimiter) && !string.IsNullOrWhiteSpace(_newColumnName) && _columnsToJoin?.Length > 1;
-    private string[]? _columnsToJoin { get; set; }
+    private string[]? _columnsToJoin;
     private string? _newColumnName;
     private string? _delimiter;
     private bool _removeJoinedColumns;

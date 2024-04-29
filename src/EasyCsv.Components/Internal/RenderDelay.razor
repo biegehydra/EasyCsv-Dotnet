@@ -1,0 +1,29 @@
+﻿@implements IDisposable
+@code {
+    private Timer? _timer = null;
+    [Parameter] public EventCallback DelayComplete { get; set; }
+    [Parameter] public int Delay { get; set; }
+
+    protected override void OnInitialized()
+    {
+        _timer = new Timer(TimerCallback, null, Delay, Timeout.Infinite);
+    }
+
+    private void TimerCallback(object? state)
+    {
+        // Check if the component is still rendered
+        if (_timer != null)
+        {
+            InvokeAsync(async () =>
+            {
+                await DelayComplete.InvokeAsync();
+            });
+        }
+    }
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+        _timer = null;
+    }
+}

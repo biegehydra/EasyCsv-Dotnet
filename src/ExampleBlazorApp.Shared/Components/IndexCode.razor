@@ -1,0 +1,109 @@
+﻿<div class="mud-codeblock">
+<div class="html"><pre>
+<span class="atSign">&#64;</span>using EasyCsv.Components
+<span class="atSign">&#64;</span>using EasyCsv.Core
+
+<span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">PageTitle</span><span class="htmlTagDelimiter">&gt;</span>Index<span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">PageTitle</span><span class="htmlTagDelimiter">&gt;</span>
+
+<span class="atSign">&#64;</span>if (_easyCsv == null)
+{
+    <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">div</span> <span class="htmlAttributeName">class</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="htmlAttributeValue">mb-4 d-flex gap-5</span><span class="quot">&quot;</span> <span class="htmlAttributeName">style</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="htmlAttributeValue">flex-direction: row; align-items: baseline;</span><span class="quot">&quot;</span><span class="htmlTagDelimiter">&gt;</span>
+        <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">MudText</span> <span class="htmlAttributeName">Class</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="htmlAttributeValue">mb-4</span><span class="quot">&quot;</span> <span class="htmlAttributeName">Typo</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="enum">Typo</span><span class="enumValue">.h4</span><span class="quot">&quot;</span><span class="htmlTagDelimiter">&gt;</span>Csv File Input<span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">MudText</span><span class="htmlTagDelimiter">&gt;</span>
+        <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">MudButton</span> <span class="htmlAttributeName">Style</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="htmlAttributeValue">height: fit-content;</span><span class="quot">&quot;</span> <span class="htmlAttributeName">Variant</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="enum">Variant</span><span class="enumValue">.Filled</span><span class="quot">&quot;</span> <span class="htmlAttributeName">Color</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="enum">Color</span><span class="enumValue">.Info</span><span class="quot">&quot;</span> <span class="htmlTagDelimiter">&gt;</span>Use Test Csv<span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">MudButton</span><span class="htmlTagDelimiter">&gt;</span>
+    <span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">div</span><span class="htmlTagDelimiter">&gt;</span>
+
+    <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">CsvFileInput</span> <span class="htmlAttributeName">CsvValid</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="htmlAttributeValue">_easyCsv != null</span><span class="quot">&quot;</span> <span class="htmlAttributeName">OnCsvUpload</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="htmlAttributeValue">x =&gt; _easyCsv = x.Csv</span><span class="quot">&quot;</span> <span class="htmlTagDelimiter">&gt;</span> <span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">CsvFileInput</span><span class="htmlTagDelimiter">&gt;</span>
+}
+else
+{
+    <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">div</span> <span class="htmlAttributeName">class</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="htmlAttributeValue">mb-4 d-flex gap-5</span><span class="quot">&quot;</span> <span class="htmlAttributeName">style</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="htmlAttributeValue">flex-direction: row; align-items: baseline;</span><span class="quot">&quot;</span><span class="htmlTagDelimiter">&gt;</span>
+        <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">MudText</span> <span class="htmlAttributeName">Class</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="htmlAttributeValue">mb-4</span><span class="quot">&quot;</span> <span class="htmlAttributeName">Typo</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="enum">Typo</span><span class="enumValue">.h4</span><span class="quot">&quot;</span><span class="htmlTagDelimiter">&gt;</span>Csv Table Header Matcher<span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">MudText</span><span class="htmlTagDelimiter">&gt;</span>
+        <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">MudButton</span> <span class="htmlAttributeName">Style</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="htmlAttributeValue">height: fit-content;</span><span class="quot">&quot;</span> <span class="htmlAttributeName">Variant</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="enum">Variant</span><span class="enumValue">.Filled</span><span class="quot">&quot;</span> <span class="htmlAttributeName">Color</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="enum">Color</span><span class="enumValue">.Error</span><span class="quot">&quot;</span> <span class="htmlAttributeName">OnClick</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="htmlAttributeValue">() =&gt; { _easyCsv = null; _frozen = false; _records = null; }</span><span class="quot">&quot;</span><span class="htmlTagDelimiter">&gt;</span>Reset<span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">MudButton</span><span class="htmlTagDelimiter">&gt;</span>
+    <span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">div</span><span class="htmlTagDelimiter">&gt;</span>
+
+    <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">CsvTableHeaderMatcher</span> <span class="htmlAttributeName"><span class="atSign">&#64;</span>ref</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="htmlAttributeValue">_tableHeaderMatcher</span><span class="quot">&quot;</span> <span class="htmlAttributeName">T</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="htmlAttributeValue">Person</span><span class="quot">&quot;</span> <span class="htmlAttributeName">Csv</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="htmlAttributeValue">_easyCsv</span><span class="quot">&quot;</span> <span class="htmlAttributeName">Frozen</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="htmlAttributeValue">_frozen</span><span class="quot">&quot;</span> <span class="htmlAttributeName">AllHeadersValidChanged</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="htmlAttributeValue">StateHasChanged</span><span class="quot">&quot;</span> <span class="htmlAttributeName">ExpectedHeaders</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="htmlAttributeValue">_expectedHeaders</span><span class="quot">&quot;</span> <span class="htmlAttributeName">AutoMatch</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="enum">AutoMatching</span><span class="enumValue">.Lenient</span><span class="quot">&quot;</span>   <span class="htmlTagDelimiter">&gt;</span><span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">CsvTableHeaderMatcher</span><span class="htmlTagDelimiter">&gt;</span>
+    <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">div</span> <span class="htmlAttributeName">class</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="htmlAttributeValue">mt-4 d-flex gap-5</span><span class="quot">&quot;</span> <span class="htmlAttributeName">style</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="htmlAttributeValue">flex-direction: row; align-items: center;</span><span class="quot">&quot;</span> <span class="htmlTagDelimiter">&gt;</span>
+        <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">MudCheckBox</span> <span class="htmlAttributeName"><span class="atSign">&#64;</span>bind-Checked</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="htmlAttributeValue">_frozen</span><span class="quot">&quot;</span> <span class="htmlAttributeName">Color</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="enum">Color</span><span class="enumValue">.Primary</span><span class="quot">&quot;</span><span class="htmlTagDelimiter">&gt;</span>Frozen<span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">MudCheckBox</span><span class="htmlTagDelimiter">&gt;</span>
+        <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">MudButton</span> <span class="htmlAttributeName">Disabled</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="htmlAttributeValue">!_tableHeaderMatcher?.ValidateRequiredHeaders() ?? true</span><span class="quot">&quot;</span> <span class="htmlAttributeName">Color</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="enum">Color</span><span class="enumValue">.Primary</span><span class="quot">&quot;</span> <span class="htmlAttributeName">Variant</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="enum">Variant</span><span class="enumValue">.Filled</span><span class="quot">&quot;</span> <span class="htmlAttributeName">OnClick</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="htmlAttributeValue">GetRecords</span><span class="quot">&quot;</span> <span class="htmlTagDelimiter">&gt;</span>Get Records<span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">MudButton</span><span class="htmlTagDelimiter">&gt;</span>
+    <span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">div</span><span class="htmlTagDelimiter">&gt;</span>
+}
+
+<span class="atSign">&#64;</span>if (_records != null)
+{
+    <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">MudTable</span> <span class="htmlAttributeName">Class</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="htmlAttributeValue">mt-7</span><span class="quot">&quot;</span> <span class="htmlAttributeName">Items</span><span class="htmlOperator">=</span><span class="quot">&quot;</span><span class="htmlAttributeValue">_records</span><span class="quot">&quot;</span> <span class="htmlAttributeName">Outlined</span> <span class="htmlAttributeName">Bordered</span> <span class="htmlAttributeName">Dense</span> <span class="htmlAttributeName">Hover</span> <span class="htmlAttributeName">Striped</span><span class="htmlTagDelimiter">&gt;</span>
+        <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">HeaderContent</span><span class="htmlTagDelimiter">&gt;</span>
+            <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">MudTh</span> <span class="htmlTagDelimiter">&gt;</span>First Name<span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">MudTh</span><span class="htmlTagDelimiter">&gt;</span>
+            <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">MudTh</span> <span class="htmlTagDelimiter">&gt;</span>Last Name<span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">MudTh</span><span class="htmlTagDelimiter">&gt;</span>
+            <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">MudTh</span> <span class="htmlTagDelimiter">&gt;</span>Email<span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">MudTh</span><span class="htmlTagDelimiter">&gt;</span>
+            <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">MudTh</span> <span class="htmlTagDelimiter">&gt;</span>Age<span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">MudTh</span><span class="htmlTagDelimiter">&gt;</span>
+            <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">MudTh</span> <span class="htmlTagDelimiter">&gt;</span>City<span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">MudTh</span><span class="htmlTagDelimiter">&gt;</span>
+            <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">MudTh</span> <span class="htmlTagDelimiter">&gt;</span>County<span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">MudTh</span><span class="htmlTagDelimiter">&gt;</span>
+            <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">MudTh</span> <span class="htmlTagDelimiter">&gt;</span>Signed Up<span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">MudTh</span><span class="htmlTagDelimiter">&gt;</span>
+            <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">MudTh</span> <span class="htmlTagDelimiter">&gt;</span>Date Of Birth<span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">MudTh</span><span class="htmlTagDelimiter">&gt;</span>
+        <span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">HeaderContent</span><span class="htmlTagDelimiter">&gt;</span>
+        <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">RowTemplate</span><span class="htmlTagDelimiter">&gt;</span>
+            <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">MudTd</span><span class="htmlTagDelimiter">&gt;</span><span class="atSign">&#64;</span>context.FirstName<span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">MudTd</span><span class="htmlTagDelimiter">&gt;</span>
+            <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">MudTd</span><span class="htmlTagDelimiter">&gt;</span><span class="atSign">&#64;</span>context.LastName<span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">MudTd</span><span class="htmlTagDelimiter">&gt;</span>
+            <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">MudTd</span><span class="htmlTagDelimiter">&gt;</span><span class="atSign">&#64;</span>context.Email<span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">MudTd</span><span class="htmlTagDelimiter">&gt;</span>
+            <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">MudTd</span><span class="htmlTagDelimiter">&gt;</span><span class="atSign">&#64;</span>context.Age<span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">MudTd</span><span class="htmlTagDelimiter">&gt;</span>
+            <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">MudTd</span><span class="htmlTagDelimiter">&gt;</span><span class="atSign">&#64;</span>context.City<span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">MudTd</span><span class="htmlTagDelimiter">&gt;</span>
+            <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">MudTd</span><span class="htmlTagDelimiter">&gt;</span><span class="atSign">&#64;</span>context.Country<span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">MudTd</span><span class="htmlTagDelimiter">&gt;</span>
+            <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">MudTd</span><span class="htmlTagDelimiter">&gt;</span><span class="atSign">&#64;</span>context.SignedUp?.ToShortDateString()<span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">MudTd</span><span class="htmlTagDelimiter">&gt;</span>
+            <span class="htmlTagDelimiter">&lt;</span><span class="htmlElementName">MudTd</span><span class="htmlTagDelimiter">&gt;</span><span class="atSign">&#64;</span>context.DateOfBirth?.ToShortDateString()<span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">MudTd</span><span class="htmlTagDelimiter">&gt;</span>
+        <span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">RowTemplate</span><span class="htmlTagDelimiter">&gt;</span>
+    <span class="htmlTagDelimiter">&lt;/</span><span class="htmlElementName">MudTable</span><span class="htmlTagDelimiter">&gt;</span>
+}
+</pre></div>
+<div class="csharp"><pre>
+<span class="atSign">&#64;</span>code {
+    <span class="keyword">private</span> CsvTableHeaderMatcher&lt;Person&gt;? _tableHeaderMatcher;
+    <span class="keyword">private</span> IEasyCsv? _easyCsv;
+    <span class="keyword">private</span> <span class="keyword">bool</span> _frozen;
+
+    <span class="keyword">private</span> List&lt;Person&gt;? _records;
+
+    <span class="keyword">private</span> <span class="keyword">readonly</span> List&lt;ExpectedHeader&gt; _expectedHeaders = <span class="keyword">new</span> ()
+    {
+        <span class="keyword">new</span> ExpectedHeader(nameof(Person.FirstName), ExpectedHeaderConfig.Required),
+        <span class="keyword">new</span> ExpectedHeader(nameof(Person.LastName), ExpectedHeaderConfig.Required),
+        <span class="keyword">new</span> ExpectedHeader(nameof(Person.Email), ExpectedHeaderConfig.Required),
+        <span class="keyword">new</span> ExpectedHeader(nameof(Person.Age), <span class="keyword">new</span> ExpectedHeaderConfig(DefaultValueType.Numerical, required: <span class="keyword">true</span>)),
+        <span class="keyword">new</span> ExpectedHeader(nameof(Person.City)),
+        <span class="keyword">new</span> ExpectedHeader(nameof(Person.Country), <span class="keyword">new</span> ExpectedHeaderConfig(DefaultValueType.Text, required: <span class="keyword">true</span>, <span class="string">&quot;USA&quot;</span>)),
+        <span class="keyword">new</span> ExpectedHeader(nameof(Person.SignedUp), <span class="keyword">new</span> ExpectedHeaderConfig(DefaultValueType.DateTime)),
+    };
+
+    <span class="keyword">protected</span> <span class="keyword">override</span> <span class="keyword">void</span> OnInitialized()
+    {
+        _expectedHeaders.Add(<span class="keyword">new</span> ExpectedHeader(nameof(Person.DateOfBirth), <span class="string">&quot;Custom Date Time Input&quot;</span>, [nameof(Person.DateOfBirth)], x =&gt; x.DefaultValueRenderFragment = CustomDateTimeDefaultValueFragment()));
+    }
+
+    <span class="keyword">private</span> <span class="keyword">async</span> Task GetRecords()
+    {
+        <span class="keyword">if</span> (_tableHeaderMatcher == <span class="keyword">null</span>) <span class="keyword">return</span>;
+        _records = <span class="keyword">await</span> _tableHeaderMatcher.GetRecords();
+    }
+
+    <span class="keyword">private</span> <span class="keyword">class</span> Person
+    {
+        <span class="keyword">public</span> <span class="keyword">string</span>? FirstName { <span class="keyword">get</span>; <span class="keyword">set</span>; }
+        <span class="keyword">public</span> <span class="keyword">string</span>? LastName { <span class="keyword">get</span>; <span class="keyword">set</span>; }
+        <span class="keyword">public</span> <span class="keyword">string</span>? Email { <span class="keyword">get</span>; <span class="keyword">set</span>; }
+        <span class="keyword">public</span> <span class="keyword">string</span>? City { <span class="keyword">get</span>; <span class="keyword">set</span>; }
+        <span class="keyword">public</span> <span class="keyword">string</span>? Country { <span class="keyword">get</span>; <span class="keyword">set</span>; }
+        <span class="keyword">public</span> DateTime? SignedUp { <span class="keyword">get</span>; <span class="keyword">set</span>; }
+        <span class="keyword">public</span> DateTime? DateOfBirth { <span class="keyword">get</span>; <span class="keyword">set</span>; }
+        <span class="keyword">public</span> <span class="keyword">int</span> Age { <span class="keyword">get</span>; <span class="keyword">set</span>; }
+    }
+
+    <span class="keyword">private</span> RenderFragment&lt;DefaultValueRenderFragmentsArgs&gt; CustomDateTimeDefaultValueFragment()
+    {
+        <span class="keyword">return</span> args =&gt;
+        {
+            <span class="keyword">return</span> <span class="atSign">&#64;</span>&lt;MudDatePicker Disabled=<span class="string">&quot;args.Frozen&quot;</span> Variant=<span class="string">&quot;Variant.Outlined&quot;</span> DateChanged=<span class="string">&quot;x =&gt; args.DefaultValueChanged(x)&quot;</span>&gt;&lt;/MudDatePicker&gt;;
+        };
+    }
+}
+</pre></div>
+</div>
+

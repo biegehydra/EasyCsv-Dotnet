@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+	  <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <ItemGroup>
+	  <PackageReference Include="MudBlazor" Version="6.19.1" />
+	  <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="6.0.29" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EasyCsv.Components\EasyCsv.Components.csproj" />
+    <ProjectReference Include="..\EasyCsv.Tests\EasyCsv.Tests.Parsing\EasyCsv.Tests.Processing.csproj" />
+  </ItemGroup>
+
+</Project>

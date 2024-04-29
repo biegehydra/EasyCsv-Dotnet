@@ -113,7 +113,7 @@ public partial class CsvProcessingStepper
 
     private bool IsIndexValid(int index)
     {
-        return index > 0 && index < _cachedStates.Count;
+        return index >= 0 && index < _cachedStates.Count;
     }
 
     private readonly struct RowCell : ICell

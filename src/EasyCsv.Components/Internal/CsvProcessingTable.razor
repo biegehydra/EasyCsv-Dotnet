@@ -42,8 +42,8 @@
                 @for (var i = 0; i < columnNames.Length; i++)
                 {
                     int mid = columnNames.Length / 2;
-                    var anchorOrigin = i > mid ? Origin.BottomLeft : Origin.BottomRight;
-                    var transformOrigin = i > mid ? Origin.TopRight : Origin.TopLeft;
+                    var anchorOrigin = i >= mid ? Origin.BottomLeft : Origin.BottomRight;
+                    var transformOrigin = i >= mid ? Origin.TopRight : Origin.TopLeft;
                     var column = columnNames[i];
                     if (i == tagsColumnIndex) continue;
                     _popOverDict.TryAdd(column, false);
@@ -51,28 +51,44 @@
                     {
                         _strategyBuckets.Add(column, new StrategyBucket(column, InvokeStateHasChanged));
                     }
+                    _strategyBuckets[column].SetOrigins(anchorOrigin, transformOrigin);
                     <MudTh>
                         <div style="display: flex; flex-direction: row; justify-content: space-between">
                             @column
                             <MudIconButton Icon="@Icons.Material.Filled.OpenInFull" OnClick="_ => TogglePopover(column)"></MudIconButton>
                         </div>
-                        <MudPopover Open="_popOverDict[column]" Class="csv-processing-popover" OverflowBehavior="OverflowBehavior.FlipAlways" AnchorOrigin="anchorOrigin" TransformOrigin="transformOrigin">
+                        <MudPopover Open="_popOverDict[column]" Style="@($"max-height:{Stepper.MaxStrategySelectHeight}")" Class="csv-processing-popover" OverflowBehavior="OverflowBehavior.FlipAlways" AnchorOrigin="anchorOrigin" TransformOrigin="transformOrigin">
                             <CascadingValue TValue="CsvProcessingStepper" Value="Stepper">
                                 <CascadingValue TValue="StrategyBucket" Value="_strategyBuckets[column]">
                                     <MudList Clickable="true" Style="z-index: inherit">
                                         <MudListSubheader>
                                             <div style="display: flex; flex-direction: row; justify-content: space-between">
-                                                <MudText Class="mt-4" Typo="Typo.h5">Column Strategies</MudText>
+                                                <MudText Class="mt-4" Typo="Typo.h5">
+                                                    Column Strategies&nbsp;
+                                                    @if (Stepper.ShowColumnNameInStrategySelect)
+                                                    {
+                                                        @:(@column)
+                                                    }
+                                                </MudText>
                                                 <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="x => TogglePopover(column, false)"></MudIconButton>
                                             </div>
                                         </MudListSubheader>
+                                        @if (Stepper.SearchBar)
+                                        {
+                                            <MudListItem>
+                                                <MudTextField T="string" Disabled="_strategyBuckets[column].IsAnySelected()" Immediate="true" Placeholder="Search strategies" Variant="Variant.Outlined" Value="_strategyBuckets[column].SearchQuery" ValueChanged="_strategyBuckets[column].SetSearchQuery" ></MudTextField>
+                                            </MudListItem>
+                                        }
                                         @ProcessingOptions(column)
-                                        <MudListItem>
-                                            <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between;" >
-                                                <div></div>
-                                                <MudButton Disabled="!_strategyBuckets[column].StrategySelectedAndRunAllowed()" Variant="Variant.Filled" Color="Color.Info" OnClick="x => _strategyBuckets[column].StrategyPicked()">Run Operation</MudButton>
-                                            </div>
-                                        </MudListItem>
+                                        @if (_strategyBuckets[column].IsAnySelected() || Stepper.RunOperationNoneSelectedBehaviour == RunOperationNoneSelectedBehaviour.Disabled)
+                                        {
+                                            <MudListItem>
+                                                <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between;" >
+                                                    <div></div>
+                                                    <MudButton Disabled="!_strategyBuckets[column].StrategySelectedAndRunAllowed()" Variant="Variant.Filled" Color="Color.Info" OnClick="x => _strategyBuckets[column].StrategyPicked()">Run Operation</MudButton>
+                                                </div>
+                                            </MudListItem>
+                                        }
                                     </MudList>
                                     @if (_popOverDict[column] && CloseBehaviour is CloseBehaviour.ClickAway or CloseBehaviour.CloseButtonAndClickAway)
                                     {
@@ -140,7 +156,6 @@
     private Dictionary<string, StrategyBucket> _strategyBuckets = new();
     private Dictionary<string, Color> _tagColors = new();
     private IEasyCsv? _easyCsv;
-    private int _tagIndex = 0;
 
     private void AddTag(string tag)
     {
@@ -188,5 +203,4 @@
     {
         return InvokeAsync(StateHasChanged);
     }
-
 }

@@ -29,7 +29,7 @@
         background-color: rgba(0, 0, 0, 0); /* You can adjust the opacity as needed */
     }
 </style>
-@if (!string.IsNullOrWhiteSpace(DisplayName) && (!CsvProcessor.HideOtherStrategiesOnSelect || !StrategyBucket.IsOtherStrategySelected(this)))
+@if (!string.IsNullOrWhiteSpace(DisplayName) && (IsSelected || StrategyBucket.MatchesSearchQuery(this)) && (!CsvProcessor.HideOtherStrategiesOnSelect || !StrategyBucket.IsOtherStrategySelected(this)))
 {
     @if (Options != null)
     {
@@ -119,9 +119,9 @@
                    @DisplayName
                    @if (!string.IsNullOrWhiteSpace(Description))
                    {
-                       <MudTooltip Delay="1000"  Style="padding: 10px; max-width: 600px;" RootStyle="margin-bottom: -6px;">
+                       <MudTooltip Delay="750"  Style="padding: 10px; max-width: 600px;" RootStyle="margin-bottom: -6px;">
                            <TooltipContent>
-                               <RenderDelay Delay="1000" DelayComplete="() => { _open = true; StateHasChanged(); }" ></RenderDelay>
+                               <RenderDelay Delay="750" DelayComplete="() => { _open = true; StateHasChanged(); }" ></RenderDelay>
                            </TooltipContent>
                            <ChildContent>
                                <MudIcon Icon="@Icons.Material.Filled.Info"></MudIcon>

@@ -36,7 +36,7 @@
     int tagsColumnIndex = EasyCsv.ColumnNames()?.IndexOf(InternalColumnNames.Tags) ?? -1;
     string[] columnNames = EasyCsv.ColumnNames()!;
                            <CascadingValue TValue="CsvProcessingTable" Name="ProcessingTable" Value="this" >
-        <MudTable T="CsvRow" Class="csv-table-header-matcher" FixedHeader="true" RowsPerPage="100" Items="EasyCsv.CsvContent"
+        <MudTable T="CsvRow" Class="csv-table-header-matcher" FixedHeader="true" RowsPerPage="10" Items="EasyCsv.CsvContent"
                   Striped="true" Bordered Dense Hover Elevation="2">
             <HeaderContent>
                 @for (var i = 0; i < columnNames.Length; i++)
@@ -49,7 +49,7 @@
                     _popOverDict.TryAdd(column, false);
                     if (!_strategyBuckets.ContainsKey(column))
                     {
-                        _strategyBuckets.Add(column, new StrategyBucket(column));
+                        _strategyBuckets.Add(column, new StrategyBucket(column, InvokeStateHasChanged));
                     }
                     <MudTh>
                         <div style="display: flex; flex-direction: row; justify-content: space-between">
@@ -67,8 +67,14 @@
                                             </div>
                                         </MudListSubheader>
                                         @ProcessingOptions(column)
+                                        <MudListItem>
+                                            <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between;" >
+                                                <div></div>
+                                                <MudButton Disabled="!_strategyBuckets[column].StrategySelectedAndRunAllowed()" Variant="Variant.Filled" Color="Color.Info" OnClick="x => _strategyBuckets[column].StrategyPicked()">Run Operation</MudButton>
+                                            </div>
+                                        </MudListItem>
                                     </MudList>
-                                    @if (_popOverDict[column])
+                                    @if (_popOverDict[column] && CloseBehaviour is CloseBehaviour.ClickAway or CloseBehaviour.CloseButtonAndClickAway)
                                     {
                                         <div @onclick="() => TogglePopover(column, false)" class="easy-csv-fullscreen-backdrop"></div>
                                     }
@@ -88,13 +94,13 @@
                     var value = row.ValueAt(i);
                     if (i != tagsColumnIndex)
                     {
-                        <MudTd>@value</MudTd>
+                        <MudTd Class="extra-dense">@value</MudTd>
                     }
                 }
                 @if (tagsColumnIndex >= 0)
                 {
                     var tags = row.ValueAt(tagsColumnIndex)?.ToString()?.Split(",", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-                    <MudTd>
+                    <MudTd Class="extra-dense">
                         @if (tags?.Any() == true)
                         {
                             <MudChipSet AllClosable="true">
@@ -108,6 +114,9 @@
                     </MudTd>
                 }
             </RowTemplate>
+            <PagerContent>
+                <MudTablePager></MudTablePager>
+            </PagerContent>
         </MudTable>
     </CascadingValue>
 }
@@ -117,7 +126,7 @@
 
     [Parameter] public RenderFragment<string>? ProcessingOptions { get; set; }
     [Parameter] public CsvProcessingStepper Stepper { get; set; } = null!;
-    [Parameter] public CloseBehaviour CloseBehaviour { get; set; } 
+    [Parameter] public CloseBehaviour CloseBehaviour { get; set; } = Enums.CloseBehaviour.CloseButtonAndClickAway;
     [Parameter] public IEasyCsv? EasyCsv
     {
         get => _easyCsv;
@@ -173,6 +182,11 @@
             string newTagsStr = string.Join(",", tags!.Take(tagsIndex).Skip(1));
             row.SetValueAtIndex(tagsIndex, newTagsStr); 
         }
+    }
+
+    internal Task InvokeStateHasChanged()
+    {
+        return InvokeAsync(StateHasChanged);
     }
 
 }

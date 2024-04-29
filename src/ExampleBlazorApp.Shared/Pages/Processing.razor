@@ -1,6 +1,7 @@
-﻿@using EasyCsv.Core
-@using EasyCsv.Components
+﻿@using EasyCsv.Core.Configuration
 @using EasyCsv.Processing
+@using CsvHelper.Configuration
+@using System.Globalization
 @page "/processing"
 
 <CsvProcessingStepper @ref="_csvProcessor" EasyCsv="_easyCsv">
@@ -14,7 +15,7 @@
 @code {
     [Parameter] public ISnackbar? Snackbar { get; set; }
     private CsvProcessingStepper _csvProcessor = null!;
-    private readonly IEasyCsv? _easyCsv = EasyCsvFactory.FromString("header1,header2,header3,header4\nvalue1,value2,value3,value4.1-value4.2");
+    private readonly IEasyCsv? _easyCsv = EasyCsvFactory.FromFile("C:\\Users\\sweed\\Downloads\\keydatashorted.csv", int.MaxValue, Config);
     private string _tagToAdd;
     private async Task OnTagPicked(string columnName)
     {
@@ -28,4 +29,11 @@
         });
         await _csvProcessor.PerformCsvStrategy(addTagStrategy);
     }
+
+    private static EasyCsvConfiguration Config = new EasyCsvConfiguration()
+    {
+        CsvHelperConfig = new CsvConfiguration(CultureInfo.CurrentCulture),
+        GiveEmptyHeadersNames = true
+    };
+
 }

@@ -6,13 +6,13 @@
 <StrategyItem DisplayName="Split" Description="Splits column on value" AllowRun="AllowRun" StrategyPicked="SplitPicked">
     <Options>
         <MudListItem>
-            <MudTextField Immediate="Immediate" Placeholder="Delimiter" Variant="Variant.Outlined" @bind-Value="_delimiter"></MudTextField>
+            <MudTextField Disabled="context" Immediate="Immediate" Placeholder="Delimiter" Variant="Variant.Outlined" @bind-Value="_delimiter"></MudTextField>
         </MudListItem>
         <MudListItem>
-            <MudTextField Immediate="Immediate" Placeholder="New Column Names" Variant="Variant.Outlined" @bind-Value="_newColumnNames"></MudTextField>
+            <MudTextField Disabled="context" Immediate="Immediate" Placeholder="New Column Names" Variant="Variant.Outlined" @bind-Value="_newColumnNames"></MudTextField>
         </MudListItem>
         <MudListItem>
-            <MudCheckBox Label="Remove Split Column" @bind-Value="_removeSplitColumn"></MudCheckBox>
+            <MudCheckBox Disabled="context" Label="Remove Split Column" @bind-Value="_removeSplitColumn"></MudCheckBox>
         </MudListItem>
     </Options>
 </StrategyItem>

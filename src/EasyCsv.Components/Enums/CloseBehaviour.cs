@@ -3,5 +3,5 @@ public enum CloseBehaviour
 {
     CloseButton,
     ClickAway,
-    CloseButtonOrClickAway,
+    CloseButtonAndClickAway,
 }

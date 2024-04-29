@@ -3,20 +3,43 @@
 @using CsvHelper.Configuration
 @using System.Globalization
 @page "/processing"
-
 <CsvProcessingStepper @ref="_csvProcessor" EasyCsv="_easyCsv">
     <ProcessingOptions>
         <StringSplitStrategyOptions ></StringSplitStrategyOptions>
         <DivideAndReplicateStrategyOptions ></DivideAndReplicateStrategyOptions>
         <CombineStrategyItem ></CombineStrategyItem>
-        <StrategyItem DisplayName="Tag Invalid Email" StrategyPicked="OnTagPicked" />
+        <StrategyItem DisplayName="Tag Invalid Email" Description="Tag all rows with an invalid email on specified column"
+                      BeforeCsvExample="_beforeExample" AfterCsvExample="_afterExample" StrategyPicked="OnTagPicked" />
     </ProcessingOptions>
 </CsvProcessingStepper>
 @code {
     [Parameter] public ISnackbar? Snackbar { get; set; }
     private CsvProcessingStepper _csvProcessor = null!;
     private readonly IEasyCsv? _easyCsv = EasyCsvFactory.FromFile("C:\\Users\\sweed\\Downloads\\keydatashorted.csv", int.MaxValue, Config);
-    private string _tagToAdd;
+    private static Dictionary<string, string>[] _beforeExample =
+    [
+        new Dictionary<string, string>()
+        {
+            {"Email", "not an email"},
+        },
+        new Dictionary<string, string>()
+        {
+            {"Email", "real-email@test.com"},
+        }
+    ];
+    private static Dictionary<string, string>[] _afterExample =
+    [
+        new Dictionary<string, string>()
+        {
+            {"Email", "not an email"},
+            {InternalColumnNames.Tags, "Invalid Email"},
+        },
+        new Dictionary<string, string>()
+        {
+            {"Email", "real-email@test.com"},
+            {InternalColumnNames.Tags, ""},
+        }
+    ];
     private async Task OnTagPicked(string columnName)
     {
         var addTagStrategy = new TagRowsStrategy((row, tags) =>

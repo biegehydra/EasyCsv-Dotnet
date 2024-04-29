@@ -1,3 +1,4 @@
+@using ExampleBlazorApp.Shared.Components
 <Router AppAssembly="@typeof(App).Assembly" AdditionalAssemblies="new[] { typeof(MainLayout).Assembly }">
     <Found Context="routeData">
         <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />

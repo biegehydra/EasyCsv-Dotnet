@@ -37,7 +37,7 @@
     string[] columnNames = EasyCsv.ColumnNames()!;
                            <CascadingValue TValue="CsvProcessingTable" Name="ProcessingTable" Value="this" >
         <MudTable T="CsvRow" Class="csv-table-header-matcher" FixedHeader="true" RowsPerPage="10" Items="EasyCsv.CsvContent"
-                  Striped="true" Bordered Dense Hover Elevation="2">
+                  Striped Bordered Dense Hover Elevation="2">
             <HeaderContent>
                 @for (var i = 0; i < columnNames.Length; i++)
                 {
@@ -122,7 +122,7 @@
 }
 
 @code {
-    private static Color[] _defaultColors = [Color.Primary, Color.Secondary, Color.Success, Color.Error, Color.Tertiary, Color.Dark, Color.Warning];
+    internal static Color[] DefaultColors = [Color.Primary, Color.Secondary, Color.Success, Color.Error, Color.Tertiary, Color.Dark, Color.Warning];
 
     [Parameter] public RenderFragment<string>? ProcessingOptions { get; set; }
     [Parameter] public CsvProcessingStepper Stepper { get; set; } = null!;
@@ -146,8 +146,8 @@
     {
         if (!_tagColors.ContainsKey(tag))
         {
-            int colorIndex = _tagColors.Count % _defaultColors.Length;
-            Color color = _defaultColors[colorIndex];
+            int colorIndex = _tagColors.Count % DefaultColors.Length;
+            Color color = DefaultColors[colorIndex];
             _tagColors.Add(tag, color);
         }
     }

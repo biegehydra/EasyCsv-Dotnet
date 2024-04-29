@@ -2,16 +2,40 @@
 @implements IDisposable
 @inherits EasyCsvStrategyOptionsBase
 @using EasyCsv.Components
+@using EasyCsv.Core.Extensions
+<style>
+    .example-all-options-container {
+        display: flex;
+        flex-direction: column;
+        align-items: baseline;
+    }
+    .example-options-container {
+        display: flex;
+        font-size: x-large;
+    }
+    .example-options-key {
+        color: cornflowerblue;
+    }
+    .example-options-value {
+        color: red;
+    }
+    .easy-csv-fullscreen-backdrop {
+        position: fixed;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        z-index: 1000; /* This should be lower than the popover's z-index but higher than most other elements on your page */
+        background-color: rgba(0, 0, 0, 0); /* You can adjust the opacity as needed */
+    }
+</style>
 @if (!string.IsNullOrWhiteSpace(DisplayName) && (!CsvProcessor.HideOtherStrategiesOnSelect || !StrategyBucket.IsOtherStrategySelected(this)))
 {
     @if (Options != null)
     {
-        <MudListItem Text="@DisplayName">
+        <MudListItem>
             <ChildContent>
-                <div style="display: flex; flex-direction: row; align-items: center; gap: 15px;">
-                    <MudCheckBox T="bool" Disabled="StrategyBucket.IsOtherStrategySelected(this)"  Value="IsSelected" ValueChanged="SelectedChanged"></MudCheckBox>
-                    @DisplayName
-                </div>
+                @MudListItemChildContent()
             </ChildContent>
             <NestedList>
                 @Options(!IsSelected)
@@ -22,17 +46,15 @@
     {
         <MudListItem Text="@DisplayName">
             <ChildContent>
-                <div style="display: flex; flex-direction: row; align-items: center; gap: 15px;">
-                    <MudCheckBox T="bool" Disabled="StrategyBucket.IsOtherStrategySelected(this)"  Value="IsSelected" ValueChanged="SelectedChanged"></MudCheckBox>
-                    @DisplayName
-                </div>
+                @MudListItemChildContent()
             </ChildContent>
         </MudListItem>
     }
 }
 
 @code {
-
+    private bool _open;
+    private bool _backDropOpen;
     public bool IsSelected { get; private set; }
     private bool _allowRun = true;
 
@@ -54,8 +76,9 @@
     [Parameter] public EventCallback<bool> AllowRunChanged { get; set; }
     [Parameter] public string? DisplayName { get; set; }
     [Parameter] public string? Description { get; set; }
-    [Parameter] public IReadOnlyDictionary<string, string>? BeforeColumns { get; set; }
-    [Parameter] public IReadOnlyDictionary<string, string>? AfterColumns { get; set; }
+    [Parameter] public IReadOnlyDictionary<string, string>? ExampleOptions { get; set; }
+    [Parameter] public IReadOnlyList<IReadOnlyDictionary<string, string>>? BeforeCsvExample { get; set; }
+    [Parameter] public IReadOnlyList<IReadOnlyDictionary<string, string>>? AfterCsvExample { get; set; }
     [Parameter] public EventCallback<string> StrategyPicked { get; set; }
     [Parameter] public RenderFragment<bool>? Options { get; set; }
 
@@ -87,5 +110,126 @@
             return StrategyBucket.OnSelectedChanged(this);
         }
         return Task.CompletedTask;
+    }
+
+    private RenderFragment? MudListItemChildContent()
+    {
+        return @<div style="display: flex; flex-direction: row; align-items: center; gap: 15px;">
+                   <MudCheckBox T="bool" Disabled="StrategyBucket.IsOtherStrategySelected(this)"  Value="IsSelected" ValueChanged="SelectedChanged"></MudCheckBox>
+                   @DisplayName
+                   @if (!string.IsNullOrWhiteSpace(Description))
+                   {
+                       <MudTooltip Delay="1000"  Style="padding: 10px; max-width: 600px;" RootStyle="margin-bottom: -6px;">
+                           <TooltipContent>
+                               <RenderDelay Delay="1000" DelayComplete="() => { _open = true; StateHasChanged(); }" ></RenderDelay>
+                           </TooltipContent>
+                           <ChildContent>
+                               <MudIcon Icon="@Icons.Material.Filled.Info"></MudIcon>
+                           </ChildContent>
+                       </MudTooltip>
+                       <MudPopover @onclick="() => { _backDropOpen = false; _open = false; }" Class="easy-csv-fullscreen-backdrop" Open="_open" >
+                           <ChildContent>
+                               @{
+                                   @if (_backDropOpen != true)
+                                   {
+                                       _backDropOpen = true;
+                                       StateHasChanged();
+                                   }
+                               }
+                           </ChildContent>
+                       </MudPopover>
+                       <MudPopover Style="color: var(--mud-palette-dark-text);
+                                          background-color: var(--mud-palette-grey-darker);
+                                          padding: 10px; max-width: 600px;" Open="_backDropOpen" >
+                           <ChildContent>
+                               <MudText Typo="Typo.h6">@Description</MudText>
+                               @ExampleOptionsFragment(ExampleOptions)
+                               @ExampleCsv(BeforeCsvExample, "Before")
+                               @ExampleCsv(AfterCsvExample, "After")
+                                
+                           </ChildContent>
+                       </MudPopover>
+                   }
+               </div>;
+    }
+
+    private static RenderFragment? ExampleOptionsFragment(IReadOnlyDictionary<string, string>? options)
+    {
+        if (options?.Count > 0 != true) return null;
+        return @<text>
+                    <br/>
+                    <MudText Class="mb-3" Typo="Typo.h5">Options Used</MudText>
+                    <div class="example-all-options-container" >
+                        @foreach (var (key, value) in options)
+                        {
+                            <div class="example-options-container">
+                                <div class="example-options-key">@key</div>
+                                <span>:&nbsp;</span>
+                                <div class="example-options-value">@value</div>
+                            </div>
+                        }
+                    </div>
+                </text>;
+    }
+
+    private static RenderFragment? ExampleCsv(IReadOnlyList<IReadOnlyDictionary<string, string>>? exampleCsv, string text)
+    {
+        if (exampleCsv?.Count > 0 != true) return null;
+        int tagsColumnIndex = exampleCsv[0].Keys.IndexOf(InternalColumnNames.Tags);
+        var tagColors =  new Dictionary<string, Color>();
+        void AddTag(string tag)
+        {
+            if (!tagColors.ContainsKey(tag))
+            {
+                int colorIndex = tagColors.Count % CsvProcessingTable.DefaultColors.Length;
+                Color color = CsvProcessingTable.DefaultColors[colorIndex];
+                tagColors.Add(tag, color);
+            }
+        }
+        return @<text>
+                    <br/>
+                    <MudText Class="mb-3" Typo="Typo.h5">@text</MudText>
+                    <MudTable Items="exampleCsv" Hover Striped Bordered Elevation="0">
+                        <HeaderContent>
+                            @foreach (var key in exampleCsv[0].Keys.Where(x => x != InternalColumnNames.Tags))
+                            {
+                                <MudTh>@key</MudTh>
+                            }
+                            @if (tagsColumnIndex >= 0)
+                            {
+                                <MudTh>Tags</MudTh>
+                            }
+                        </HeaderContent>
+                        <RowTemplate Context="row">
+                            @{
+                                int i = -1;
+                            }
+                            @foreach (var (_, value) in row)
+                            {
+                                i++;
+                                if (i != tagsColumnIndex)
+                                {
+                                    <MudTd>@value</MudTd>
+                                }
+                            }
+                            @if (tagsColumnIndex >= 0)
+                            {
+                                var tags = row.Skip(tagsColumnIndex).First().Value?.ToString()?.Split(",", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                                <MudTd Class="extra-dense">
+                                    @if (tags?.Any() == true)
+                                    {
+                                        <MudChipSet >
+                                            @foreach (var tag in tags)
+                                            {
+                                                AddTag(tag);
+                                                <MudChip Text="@tag" Color="tagColors[tag]" Size="Size.Small" />
+                                            }
+                                        </MudChipSet>
+                                    }
+                                </MudTd>
+                            }
+                        </RowTemplate>
+                    </MudTable>
+                </text>;
     }
 }

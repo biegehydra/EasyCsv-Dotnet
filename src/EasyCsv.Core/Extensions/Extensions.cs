@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("EasyCsv.Processing")]
+[assembly: InternalsVisibleTo("EasyCsv.Components")]
 namespace EasyCsv.Core.Extensions;
 internal static class Extensions
 {

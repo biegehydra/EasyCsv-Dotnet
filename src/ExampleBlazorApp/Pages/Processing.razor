@@ -1,17 +1,31 @@
 ﻿@using EasyCsv.Core
 @using EasyCsv.Components
-@using EasyCsv.Components.Strategies
+@using EasyCsv.Processing
 @page "/processing"
 
 <CsvProcessingStepper @ref="_csvProcessor" EasyCsv="_easyCsv">
     <ProcessingOptions>
-        <StringSplitStrategyOptions CsvProcessor="_csvProcessor"></StringSplitStrategyOptions>
-        <DivideAndReplicateStrategyOptions CsvProcessor="_csvProcessor"></DivideAndReplicateStrategyOptions>
-        <CombineStrategyItem CsvProcessor="_csvProcessor" ></CombineStrategyItem>
+        <StringSplitStrategyOptions ></StringSplitStrategyOptions>
+        <DivideAndReplicateStrategyOptions ></DivideAndReplicateStrategyOptions>
+        <CombineStrategyItem ></CombineStrategyItem>
+        <StrategyItem DisplayName="Tag Invalid Email" StrategyPicked="OnTagPicked" />
     </ProcessingOptions>
 </CsvProcessingStepper>
 @code {
     [Parameter] public ISnackbar? Snackbar { get; set; }
     private CsvProcessingStepper _csvProcessor = null!;
     private readonly IEasyCsv? _easyCsv = EasyCsvFactory.FromString("header1,header2,header3,header4\nvalue1,value2,value3,value4.1-value4.2");
+    private string _tagToAdd;
+    private async Task OnTagPicked(string columnName)
+    {
+        var addTagStrategy = new TagRowsStrategy((row, tags) =>
+        {
+            string? rowStr = row[columnName]?.ToString();
+            if (!string.IsNullOrWhiteSpace(rowStr) && rowStr.Contains("@") == false)
+            {
+                tags.Add("Invalid Email");
+            }
+        });
+        await _csvProcessor.PerformCsvStrategy(addTagStrategy);
+    }
 }

@@ -1,0 +1,33 @@
+﻿@namespace EasyCsv.Components
+@if (CsvProcessor == null)
+{
+    throw new ArgumentException("EasyCsv: Attempted to render strategy options not within CsvProcessingStepper", nameof(CsvProcessingStepper));
+}
+<StrategyItem DisplayName="Split" Description="Splits column on value" AllowRun="AllowRun" StrategyPicked="SplitPicked">
+    <Options>
+        <MudListItem>
+            <MudTextField Placeholder="Delimiter" Variant="Variant.Outlined" @bind-Value="_delimiter"></MudTextField>
+        </MudListItem>
+        <MudListItem>
+            <MudTextField Placeholder="New Column Names" Variant="Variant.Outlined" @bind-Value="_newColumnNames"></MudTextField>
+        </MudListItem>
+        <MudListItem>
+            <MudCheckBox Label="Remove Split Column" @bind-Value="_removeSplitColumn"></MudCheckBox>
+        </MudListItem>
+    </Options>
+</StrategyItem>
+
+@code
+{
+    [CascadingParameter] public CsvProcessingStepper CsvProcessor { get; set; } = null!;
+    private bool AllowRun => _newColumnNames?.Contains(',') == true && !string.IsNullOrWhiteSpace(_delimiter);
+    private string? _newColumnNames;
+    private string? _delimiter;
+    private bool _removeSplitColumn;
+    private async Task SplitPicked(string columnName)
+    {
+        if (!AllowRun) return;
+        var splitParsingStrategy = new StringSplitColumnStrategy(columnName, _newColumnNames!.Split(','), _delimiter!, _removeSplitColumn);
+        _ = await CsvProcessor.PerformCsvStrategy(splitParsingStrategy);
+    }
+}

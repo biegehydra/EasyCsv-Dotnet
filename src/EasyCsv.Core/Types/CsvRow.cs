@@ -122,6 +122,16 @@ namespace EasyCsv.Core
             return Keys;
         }
 
+        internal void SetValueAtIndex(int index, object? value)
+        {
+            var key = KeyAt(index);
+            _innerDictionary[key] = value;
+        }
+
+        internal (string, object?) KvpAt(int index)
+        {
+            return (KeyAt(index), ValueAt(index));
+        }
 
         internal string KeyAt(int index)
         {

@@ -1,0 +1,61 @@
+﻿@namespace EasyCsv.Components
+@implements IDisposable
+@if (!string.IsNullOrWhiteSpace(DisplayName))
+{
+    @if (Options != null)
+    {
+        <MudListItem Text="@DisplayName">   
+            <NestedList>
+                @Options
+                <MudListItem>
+                    <MudButton Disabled="!AllowRun" Variant="Variant.Filled" Color="Color.Info" OnClick="x => StrategyPicked.InvokeAsync(StrategyBucket!.ColumnName)" >Run Operation</MudButton>
+                </MudListItem>
+            </NestedList>
+        </MudListItem>
+    }
+    else
+    {
+        <MudListItem>   
+            <ChildContent>
+                <div style="display: flex; flex-direction: row; justify-content: space-between">
+                    @DisplayName <MudButton Disabled="!AllowRun" Variant="Variant.Filled" Color="Color.Info" OnClick="x => StrategyPicked.InvokeAsync(StrategyBucket!.ColumnName)">Run Operation</MudButton>
+                </div>
+            </ChildContent>
+        </MudListItem>
+    }
+}
+
+@code {
+    [CascadingParameter] public CsvProcessingStepper? Stepper { get; set; }
+    [CascadingParameter] private StrategyBucket? StrategyBucket { get; set; }
+    private bool _allowRun = true;
+    [Parameter] public bool AllowRun
+    {
+        get => _allowRun;
+        set
+        {
+            if (value != _allowRun)
+            {
+                _allowRun = value;
+                AllowRunChanged.InvokeAsync(_allowRun);
+            }
+        }
+    }
+    [Parameter] public EventCallback<bool> AllowRunChanged { get; set; }
+    [Parameter] public string? DisplayName { get; set; }
+    [Parameter] public string? Description { get; set; }
+    [Parameter] public IReadOnlyDictionary<string, string>? BeforeColumns { get; set; }
+    [Parameter] public IReadOnlyDictionary<string, string>? AfterColumns { get; set; }
+    [Parameter] public EventCallback<string> StrategyPicked { get; set; }
+    [Parameter] public RenderFragment? Options { get; set; }
+
+    protected override void OnInitialized()
+    {
+        StrategyBucket?.Add(this);
+    }
+
+    public void Dispose()
+    {
+        StrategyBucket?.Remove(this);
+    }
+}

@@ -1,7 +1,7 @@
 ﻿@namespace EasyCsv.Components
 @implements IDisposable
 @inherits EasyCsvStrategyOptionsBase
-@using EasyCsv.Components.Processing
+@using EasyCsv.Components
 @if (!string.IsNullOrWhiteSpace(DisplayName) && (!CsvProcessor.HideOtherStrategiesOnSelect || !StrategyBucket.IsOtherStrategySelected(this)))
 {
     @if (Options != null)

@@ -32,6 +32,9 @@
             <HeaderContent>
                 @for (var i = 0; i < columnNames.Length; i++)
                 {
+                    int mid = columnNames.Length / 2;
+                    var anchorOrigin = i > mid ? Origin.BottomLeft : Origin.BottomRight;
+                    var transformOrigin = i > mid ? Origin.TopRight : Origin.TopLeft;
                     var column = columnNames[i];
                     if (i == tagsColumnIndex) continue;
                     _popOverDict.TryAdd(column, false);
@@ -40,18 +43,18 @@
                         _strategyBuckets.Add(column, new StrategyBucket(column));
                     }
                     <MudTh>
-                        @column
-                        <MudIconButton Icon="@Icons.Material.Filled.OpenInFull" OnClick="_ => TogglePopover(column)"></MudIconButton>
-   
-                        <MudPopover Class="csv-processing-popover" OverflowBehavior="OverflowBehavior.FlipAlways" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopRight" Open="_popOverDict[column]">
-                            <CascadingValue TValue="CsvProcessingStepper" Value="Stepper" >
+                        <div style="display: flex; flex-direction: row; justify-content: space-between">
+                            @column
+                            <MudIconButton Icon="@Icons.Material.Filled.OpenInFull" OnClick="_ => TogglePopover(column)"></MudIconButton>
+                        </div>
+                        <MudPopover Class="csv-processing-popover" OverflowBehavior="OverflowBehavior.FlipAlways" AnchorOrigin="anchorOrigin" TransformOrigin="transformOrigin" Open="_popOverDict[column]">
+                            <CascadingValue TValue="CsvProcessingStepper" Value="Stepper">
                                 <CascadingValue TValue="StrategyBucket" Value="_strategyBuckets[column]">
                                     <MudList Clickable="true">
                                         <MudListSubheader>
                                             Column Strategies <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="x => TogglePopover(column, false)"></MudIconButton>
                                         </MudListSubheader>
                                         @ProcessingOptions(column)
-                                        <Component2></Component2>
                                     </MudList>
                                 </CascadingValue>
                             </CascadingValue>

@@ -8,8 +8,8 @@ namespace EasyCsv.Components;
 
 public partial class CsvProcessingStepper
 {
+    [Inject] public ISnackbar? Snackbar { get; set; }
     [Parameter] public IEasyCsv? EasyCsv { get; set; }
-    [Parameter] public ISnackbar? Snackbar { get; set; }
     [Parameter] public bool UseSnackBars { get; set; } = true;
 
     /// <summary>
@@ -17,7 +17,9 @@ public partial class CsvProcessingStepper
     /// EasyCsv and operate on the clone
     /// </summary>
     [Parameter] public RenderFragment<string>? ProcessingOptions { get; set; }
-    [Parameter] public CloseBehaviour CloseBehaviour { get; set; }
+
+    [Parameter] public CloseBehaviour CloseBehaviour { get; set; } = Enums.CloseBehaviour.CloseButtonAndClickAway;
+    [Parameter] public bool HideOtherStrategiesOnSelect { get; set; } = true;
 
     private int _currentIndex = -1;
     internal IEasyCsv? CurrentState => IsIndexValid(_currentIndex) ? _cachedStates[_currentIndex] : null;

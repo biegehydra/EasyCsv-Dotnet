@@ -1,24 +1,30 @@
 ﻿@namespace EasyCsv.Components
 @implements IDisposable
-@if (!string.IsNullOrWhiteSpace(DisplayName))
+@inherits EasyCsvStrategyOptionsBase
+@using EasyCsv.Components
+@if (!string.IsNullOrWhiteSpace(DisplayName) && (!CsvProcessor.HideOtherStrategiesOnSelect || !StrategyBucket.IsOtherStrategySelected(this)))
 {
     @if (Options != null)
     {
-        <MudListItem Text="@DisplayName">   
+        <MudListItem Text="@DisplayName">
+            <ChildContent>
+                <div style="display: flex; flex-direction: row; align-items: center; gap: 15px;">
+                    <MudCheckBox T="bool" Disabled="StrategyBucket.IsOtherStrategySelected(this)"  Value="IsSelected" ValueChanged="SelectedChanged"></MudCheckBox>
+                    @DisplayName
+                </div>
+            </ChildContent>
             <NestedList>
-                @Options
-                <MudListItem>
-                    <MudButton Disabled="!AllowRun" Variant="Variant.Filled" Color="Color.Info" OnClick="x => StrategyPicked.InvokeAsync(StrategyBucket!.ColumnName)" >Run Operation</MudButton>
-                </MudListItem>
+                @Options(!IsSelected)
             </NestedList>
         </MudListItem>
     }
     else
     {
-        <MudListItem>   
+        <MudListItem Text="@DisplayName">
             <ChildContent>
-                <div style="display: flex; flex-direction: row; justify-content: space-between">
-                    @DisplayName <MudButton Disabled="!AllowRun" Variant="Variant.Filled" Color="Color.Info" OnClick="x => StrategyPicked.InvokeAsync(StrategyBucket!.ColumnName)">Run Operation</MudButton>
+                <div style="display: flex; flex-direction: row; align-items: center; gap: 15px;">
+                    <MudCheckBox T="bool" Disabled="StrategyBucket.IsOtherStrategySelected(this)"  Value="IsSelected" ValueChanged="SelectedChanged"></MudCheckBox>
+                    @DisplayName
                 </div>
             </ChildContent>
         </MudListItem>
@@ -26,9 +32,10 @@
 }
 
 @code {
-    [CascadingParameter] public CsvProcessingStepper? Stepper { get; set; }
-    [CascadingParameter] private StrategyBucket? StrategyBucket { get; set; }
+
+    public bool IsSelected { get; private set; }
     private bool _allowRun = true;
+
     [Parameter] public bool AllowRun
     {
         get => _allowRun;
@@ -38,6 +45,9 @@
             {
                 _allowRun = value;
                 AllowRunChanged.InvokeAsync(_allowRun);
+#pragma warning disable CS4014
+                StrategyBucket?.OnAllowRunChanged();
+#pragma warning restore CS4014 
             }
         }
     }
@@ -47,15 +57,35 @@
     [Parameter] public IReadOnlyDictionary<string, string>? BeforeColumns { get; set; }
     [Parameter] public IReadOnlyDictionary<string, string>? AfterColumns { get; set; }
     [Parameter] public EventCallback<string> StrategyPicked { get; set; }
-    [Parameter] public RenderFragment? Options { get; set; }
+    [Parameter] public RenderFragment<bool>? Options { get; set; }
 
     protected override void OnInitialized()
     {
         StrategyBucket?.Add(this);
     }
 
+    internal Task InvokeStateHasChanged()
+    {
+        return InvokeAsync(StateHasChanged);
+    }
+
     public void Dispose()
     {
         StrategyBucket?.Remove(this);
+    }
+
+    private Task SelectedChanged(bool value)
+    {
+        if (value == false)
+        {
+            IsSelected = false;
+            return StrategyBucket.OnSelectedChanged(this);
+        }
+        if (!StrategyBucket.IsOtherStrategySelected(this))
+        {
+            IsSelected = true;
+            return StrategyBucket.OnSelectedChanged(this);
+        }
+        return Task.CompletedTask;
     }
 }

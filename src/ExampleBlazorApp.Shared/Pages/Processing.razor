@@ -9,13 +9,13 @@
         <DivideAndReplicateStrategyOptions ></DivideAndReplicateStrategyOptions>
         <CombineStrategyItem ></CombineStrategyItem>
         <StrategyItem DisplayName="Tag Invalid Email" Description="Tag all rows with an invalid email on specified column"
-                      BeforeCsvExample="_beforeExample" AfterCsvExample="_afterExample" StrategyPicked="OnTagPicked" />
+                      BeforeCsvExample="_beforeExample" AfterCsvExample="_afterExample" StrategyPicked="OnTagPicked"/>
     </ProcessingOptions>
 </CsvProcessingStepper>
 @code {
     [Parameter] public ISnackbar? Snackbar { get; set; }
     private CsvProcessingStepper _csvProcessor = null!;
-    private readonly IEasyCsv? _easyCsv = EasyCsvFactory.FromFile("C:\\Users\\sweed\\Downloads\\keydatashorted.csv", int.MaxValue, Config);
+    private readonly IEasyCsv? _easyCsv = EasyCsvFactory.FromString("header1,header2\nvalue1,value2-value3", Config);
     private static Dictionary<string, string>[] _beforeExample =
     [
         new Dictionary<string, string>()

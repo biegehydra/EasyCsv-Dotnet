@@ -20,6 +20,10 @@ public partial class CsvProcessingStepper
 
     [Parameter] public CloseBehaviour CloseBehaviour { get; set; } = Enums.CloseBehaviour.CloseButtonAndClickAway;
     [Parameter] public bool HideOtherStrategiesOnSelect { get; set; } = true;
+    [Parameter] public bool SearchBar { get; set; } = true;
+    [Parameter] public bool ShowColumnNameInStrategySelect { get; set; } = true;
+    [Parameter] public RunOperationNoneSelectedBehaviour RunOperationNoneSelectedBehaviour { get; set; } = RunOperationNoneSelectedBehaviour.Hidden;
+    [Parameter] public string MaxStrategySelectHeight { get; set; } = "600px";
 
     private int _currentIndex = -1;
     internal IEasyCsv? CurrentState => IsIndexValid(_currentIndex) ? _cachedStates[_currentIndex] : null;

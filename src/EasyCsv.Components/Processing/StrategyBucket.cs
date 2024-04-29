@@ -1,8 +1,13 @@
-﻿namespace EasyCsv.Components;
+﻿using MudBlazor;
+
+namespace EasyCsv.Components;
 
 public class StrategyBucket
 {
+    public Origin TransformOrigin { get; private set; }
+    public Origin AnchorOrigin { get; private set; }
     public string ColumnName { get; }
+    public string SearchQuery { get; private set; }
     private readonly HashSet<StrategyItem> _strategies = new();
     public IReadOnlyCollection<StrategyItem> Strategies => _strategies;
     private Func<Task> ReRenderStepper { get; }
@@ -10,6 +15,19 @@ public class StrategyBucket
     {
         ColumnName = columnName;
         ReRenderStepper = reRenderStepper;
+    }
+
+    public async Task SetSearchQuery(string query)
+    {
+        if (!query.Equals(SearchQuery, StringComparison.OrdinalIgnoreCase))
+        {
+            SearchQuery = query;
+            await ReRenderStepper();
+            foreach (var strategy in _strategies)
+            {
+                await strategy.InvokeStateHasChanged();
+            }
+        }
     }
 
     public IEnumerable<StrategyItem> Search(string query)
@@ -69,5 +87,17 @@ public class StrategyBucket
         var strategy = _strategies.FirstOrDefault(x => x.IsSelected);
         if (strategy == null) return;
         await strategy.StrategyPicked.InvokeAsync(ColumnName);
+    }
+
+    internal bool MatchesSearchQuery(StrategyItem strategyItem)
+    {
+        return string.IsNullOrWhiteSpace(SearchQuery) || strategyItem.DisplayName?.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase) == true ||
+               strategyItem.Description?.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase) == true;
+    }
+
+    internal void SetOrigins(Origin anchorOrigin, Origin transformOrigin)
+    {
+        AnchorOrigin = anchorOrigin;
+        TransformOrigin = transformOrigin;
     }
 }

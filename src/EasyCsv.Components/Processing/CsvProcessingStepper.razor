@@ -2,16 +2,19 @@
 
 @if (CurrentState != null && ProcessingOptions != null)
 {
-    <div style="display: flex; flex-direction: row;">
+    <MudText Typo="Typo.h5">Current Step: @(_currentIndex + 1)</MudText>
+    <br />
+    <div style="display: flex; gap: 20px; flex-direction: row;">
         @if (IsIndexValid(_currentIndex - 1))
         {
             <MudButton OnClick="GoBackStep" Variant="Variant.Filled" Color="Color.Secondary">Go Back Step</MudButton>
         }
         @if (IsIndexValid(_currentIndex + 1))
         {
-            <MudButton OnClick="GoBackStep" Variant="Variant.Filled" Color="Color.Secondary">Go Forward Step</MudButton>
+            <MudButton OnClick="GoForwardStep" Variant="Variant.Filled" Color="Color.Secondary">Go Forward Step</MudButton>
         }
-        <MudText Typo="Typo.h5">Current Step: @_cachedStates.Count</MudText>
     </div>
+    <br />
+    <br/>
     <CsvProcessingTable ProcessingOptions="ProcessingOptions" Stepper="this" EasyCsv="CurrentState"/>
 }

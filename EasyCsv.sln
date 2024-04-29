@@ -31,9 +31,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyCsv.Tests.Processing", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyCsv.Processing", "src\EasyCsv.Processing\EasyCsv.Processing.csproj", "{FCC9CD1B-B997-4721-A506-B3D8E9455E1F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExampleServerApp", "src\ExampleServerApp\ExampleServerApp.csproj", "{7E19E692-BAC7-44D8-A3D2-A5209143BF4E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExampleServerApp", "src\ExampleServerApp\ExampleServerApp.csproj", "{7E19E692-BAC7-44D8-A3D2-A5209143BF4E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExampleBlazorApp.Shared", "src\ExampleBlazorApp.Shared\ExampleBlazorApp.Shared.csproj", "{E59E73D6-EB49-4FCC-B705-EFE9F954D5DA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExampleBlazorApp.Shared", "src\ExampleBlazorApp.Shared\ExampleBlazorApp.Shared.csproj", "{E59E73D6-EB49-4FCC-B705-EFE9F954D5DA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

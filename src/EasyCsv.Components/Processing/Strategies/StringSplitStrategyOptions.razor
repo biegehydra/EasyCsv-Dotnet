@@ -6,10 +6,10 @@
 <StrategyItem DisplayName="Split" Description="Splits column on value" AllowRun="AllowRun" StrategyPicked="SplitPicked">
     <Options>
         <MudListItem>
-            <MudTextField Placeholder="Delimiter" Variant="Variant.Outlined" @bind-Value="_delimiter"></MudTextField>
+            <MudTextField Immediate="Immediate" Placeholder="Delimiter" Variant="Variant.Outlined" @bind-Value="_delimiter"></MudTextField>
         </MudListItem>
         <MudListItem>
-            <MudTextField Placeholder="New Column Names" Variant="Variant.Outlined" @bind-Value="_newColumnNames"></MudTextField>
+            <MudTextField Immediate="Immediate" Placeholder="New Column Names" Variant="Variant.Outlined" @bind-Value="_newColumnNames"></MudTextField>
         </MudListItem>
         <MudListItem>
             <MudCheckBox Label="Remove Split Column" @bind-Value="_removeSplitColumn"></MudCheckBox>
@@ -20,6 +20,7 @@
 @code
 {
     [CascadingParameter] public CsvProcessingStepper CsvProcessor { get; set; } = null!;
+    [Parameter] public bool Immediate { get; set; } = true;
     private bool AllowRun => _newColumnNames?.Contains(',') == true && !string.IsNullOrWhiteSpace(_delimiter);
     private string? _newColumnNames;
     private string? _delimiter;

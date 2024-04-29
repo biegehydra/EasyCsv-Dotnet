@@ -1,0 +1,29 @@
+﻿@inherits EasyCsvStrategyOptionsBase
+@namespace EasyCsv.Components
+@if (CsvProcessor?.CurrentState != null)
+{
+    <MudSelect Immediate="Immediate" Label="Columns To Join" T="string" MultiSelection="true" MultiSelectionTextFunc="@(x => string.Join(", ", x))" SelectedValues="_selectedValues" SelectedValuesChanged="x => _selectedValues = x?.ToArray() ?? []" >
+        @foreach (var value in CsvProcessor.CurrentState.ColumnNames()!.Where(x => x.Equals(InternalColumnNames.Tags, StringComparison.OrdinalIgnoreCase) == false))
+        {
+            <MudSelectItem Value="value">@value</MudSelectItem>
+        }
+    </MudSelect>
+}
+
+@code {
+    [Parameter] public EventCallback<string[]> SelectedValuesChanged { get; set; }
+    private string[] _selectedValues = [];
+    [Parameter] public string[] SelectedValues
+    {
+        get => _selectedValues;
+        set
+        {
+            if (!ReferenceEquals(_selectedValues, value))
+            {
+                _selectedValues = value;
+                SelectedValuesChanged.InvokeAsync(value);
+            }
+        }
+    }
+    [Parameter] public bool Immediate { get; set; } = true;
+}

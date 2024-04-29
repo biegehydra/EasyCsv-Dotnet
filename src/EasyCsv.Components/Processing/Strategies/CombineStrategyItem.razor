@@ -12,18 +12,13 @@
                 <MudCheckBox Label="Remove Joined Columns" @bind-Value="_removeJoinedColumns"></MudCheckBox>
             </MudListItem>
             <MudListItem>
-                <MudTextField Required="true" Placeholder="Delimiter" Variant="Variant.Outlined" @bind-Value="_delimiter"></MudTextField>
+                <MudTextField Immediate="Immediate" Required="true" Placeholder="Delimiter" Variant="Variant.Outlined" @bind-Value="_delimiter"></MudTextField>
             </MudListItem>
             <MudListItem>
-                <MudTextField Required="true" Placeholder="New Column Name" Variant="Variant.Outlined" @bind-Value="_newColumnName"></MudTextField>
+                <MudTextField Immediate="Immediate" Required="true" Placeholder="New Column Name" Variant="Variant.Outlined" @bind-Value="_newColumnName"></MudTextField>
             </MudListItem>
             <MudListItem>
-                <MudSelect Label="Columns To Join" T="string" MultiSelection="true" MultiSelectionTextFunc="@(x => string.Join(", ", x))" SelectedValues="_columnsToJoin" SelectedValuesChanged="x => _columnsToJoin = x.ToArray()">
-                    @foreach (var value in CsvProcessor.CurrentState.ColumnNames()!)
-                    {
-                        <MudSelectItem Value="value">@value</MudSelectItem>
-                    }
-                </MudSelect>
+                <ColumnNamesInput @bind-SelectedValues="_columnsToJoin" ></ColumnNamesInput>
             </MudListItem>
         </Options>
     </StrategyItem>
@@ -33,6 +28,7 @@
 {
     [CascadingParameter] public CsvProcessingStepper CsvProcessor { get; set; } = null!;
     [CascadingParameter] private StrategyBucket StrategyBucket { get; set; } = null!;
+    [Parameter] public bool Immediate { get; set; } = true;
 
     private bool AllowRun => !string.IsNullOrWhiteSpace(_delimiter) && !string.IsNullOrWhiteSpace(_newColumnName) && _columnsToJoin?.Length > 1;
     private string[]? _columnsToJoin;

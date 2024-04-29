@@ -4,10 +4,44 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
+	  <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+
+	  <PackageReadmeFile>README.md</PackageReadmeFile>
+	  <PackageId>EasyCsv.Processing</PackageId>
+	  <Product>EasyCsv</Product>
+	  <Version>2.0.0-beta1</Version>
+	  <Title>EasyCsv.Processing</Title>
+	  <Description>A package built ontop of CSV Helper to make working with CSVs even easier</Description>
+	  <Copyright>Copyright © 2024 Connor Hallman</Copyright>
+	  <Company>Connor Hallman</Company>
+	  <Authors>Connor Hallman</Authors>
+	  <PackageProjectUrl></PackageProjectUrl>
+	  <PackageIcon>Icon.png</PackageIcon>
+	  <PublishRepositoryUrl>true</PublishRepositoryUrl>
+	  <RepositoryUrl>https://github.com/biegehydra/CsvEasy</RepositoryUrl>
+	  <PackageTags>csv;easycsv;column;row</PackageTags>
+	  <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+	  <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+	  <IncludeSymbols>True</IncludeSymbols>
+	  <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
+	  <DocumentationFile>$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+	  <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+	  <EnableNETAnalyzers>True</EnableNETAnalyzers>
+	  <AnalysisLevel>latest-recommended</AnalysisLevel>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\EasyCsv.Core\EasyCsv.Core.csproj" />
   </ItemGroup>
 
+	<ItemGroup>
+		<None Include="Icon.png" Pack="true" PackagePath="\" />
+		<None Include="README.md" Pack="true" PackagePath="\" />
+		<None Include="LICENSE.txt" Pack="true" PackagePath="\" />
+	</ItemGroup>
+
+	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+		<Exec Command="xcopy &quot;$(SolutionDir)\README.md&quot; &quot;$(ProjectDir)&quot; /Y" />
+	</Target>
 </Project>

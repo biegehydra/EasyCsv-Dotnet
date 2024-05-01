@@ -365,9 +365,9 @@ namespace EasyCsv.Core
             if (columnTwoIndex < 0)
                 throw new ArgumentException("Index cannot be negative", nameof(columnOneIndex));
             var headersCount = headers.Length;
-            if (columnOneIndex > headersCount-1)
+            if (!Utils.IsValidIndex(columnOneIndex, headersCount))
                 throw new ArgumentException($"Index outside bounds. columnOneIndex: {columnOneIndex}, Headers Count: {headersCount}", nameof(columnOneIndex));
-            if (columnTwoIndex > headersCount - 1)
+            if (!Utils.IsValidIndex(columnTwoIndex, headersCount))
                 throw new ArgumentException($"Index outside bounds. columnTwoIndex: {columnTwoIndex}, Headers Count: {headersCount}", nameof(columnTwoIndex));
             var columnOneName = headers[columnOneIndex];
             var columnTwoName = headers[columnTwoIndex];

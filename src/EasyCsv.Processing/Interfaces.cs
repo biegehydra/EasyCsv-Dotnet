@@ -12,7 +12,7 @@ public interface ICsvColumnProcessor : IColumnOperation
     /// have the specified <see cref="ColumnName"/>
     /// </summary>
     /// <param name="cell"></param>
-    public Task<OperationResult> ProcessCell<TCell>(TCell cell) where TCell : ICell;
+    public ValueTask<OperationResult> ProcessCell<TCell>(TCell cell) where TCell : ICell;
 }
 public interface ICsvRowProcessor
 {
@@ -20,12 +20,12 @@ public interface ICsvRowProcessor
     /// This function will be called for each row in the csv.
     /// </summary>
     /// <param name="row"></param>
-    public Task<OperationResult> ProcessRow(CsvRow row);
+    public ValueTask<OperationResult> ProcessRow(CsvRow row);
 }
 
 public interface ICsvColumnDeleteEvaluator : IColumnOperation
 {
-    public Task<OperationDeleteResult> EvaluateDelete<TCell>(TCell cell) where TCell : ICell;
+    public ValueTask<OperationDeleteResult> EvaluateDelete<TCell>(TCell cell) where TCell : ICell;
 }
 
 public interface ICsvRowDeleteEvaluator
@@ -39,7 +39,7 @@ public interface ICsvRowDeleteEvaluator
 
 public interface ICsvReferenceProcessor : IReferenceOperation
 {
-    Task<OperationResult> ProcessCsv(IEasyCsv csv, IEasyCsv referenceCsv);
+    ValueTask<OperationResult> ProcessCsv(IEasyCsv csv, IEasyCsv referenceCsv);
 }
 
 
@@ -49,13 +49,13 @@ public interface ICsvProcessor
     /// This function will be called for each row in the csv.
     /// </summary>
     /// <param name="csv"></param>
-    Task<OperationResult> ProcessCsv(IEasyCsv csv);
+    ValueTask<OperationResult> ProcessCsv(IEasyCsv csv);
 }
 
 
 public interface ICsvMerger
 {
-    public Task<IEasyCsv> Merge(IEasyCsv baseCsv, IEasyCsv additionalCsv);
+    public ValueTask<IEasyCsv> Merge(IEasyCsv baseCsv, IEasyCsv additionalCsv);
 }
 
 public interface ICell

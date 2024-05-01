@@ -27,7 +27,7 @@ public abstract class CombineColumnsStrategy : ICsvProcessor
         _combineValuesFunc = combineValues;
     }
 
-    public async Task<OperationResult> ProcessCsv(IEasyCsv csv)
+    public async ValueTask<OperationResult> ProcessCsv(IEasyCsv csv)
     {
         var toCombine = _columnsToJoin.Where(x => csv.ContainsColumn(x)).ToArray();
         if (toCombine.Length == _columnsToJoin.Length || (_combineIfNotAllPresent && toCombine.Length > 0))

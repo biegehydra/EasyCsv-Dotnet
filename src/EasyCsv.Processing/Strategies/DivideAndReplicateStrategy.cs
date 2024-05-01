@@ -15,7 +15,7 @@ public class DivideAndReplicateStrategy : ICsvProcessor
         _columnName = columnName;
         _divideFunc = divideFunc ?? throw new ArgumentException("DivideFunc cannot be null.", nameof(divideFunc));
     }
-    public async Task<OperationResult> ProcessCsv(IEasyCsv csv)
+    public async ValueTask<OperationResult> ProcessCsv(IEasyCsv csv)
     {
         if (!csv.ContainsColumn(_columnName))
         {

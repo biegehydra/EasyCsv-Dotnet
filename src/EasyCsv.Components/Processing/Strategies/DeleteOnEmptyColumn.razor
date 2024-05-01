@@ -1,0 +1,43 @@
+﻿@namespace EasyCsv.Components
+@inherits StrategyItemBase
+
+@if (CsvProcessor == null)
+{
+    throw new ArgumentException("EasyCsv: Attempted to render strategy options not within CsvProcessingStepper", nameof(CsvProcessingStepper));
+}
+<StrategyItem DisplayName="@DisplayName" Description="@Description" BeforeCsvExample="BeforeExample" AfterCsvExample="AfterExample" AllowRun="true" StrategyPicked="SplitPicked">
+</StrategyItem>
+
+@code
+{
+    [Parameter] public override string? DisplayName { get; set; } = "Delete On Empty";
+    [Parameter] public override string? Description { get; set; } = "Will delete any row where the value in this column is empty";
+    [Parameter] public bool Immediate { get; set; } = true;
+    private static Dictionary<string, string?>[] BeforeExample { get; } =
+    [
+        new Dictionary<string, string>()
+        {
+            {"Column1", "NotEmptyRow"},
+            {"ColumnToDeleteOnEmpty", "NotEmptyRow"},
+        },
+        new Dictionary<string, string>()
+        {
+            {"Column1", "EmptyRow"},
+            {"ColumnToDeleteOnEmpty", null!},
+        },
+    ];
+    private static Dictionary<string, string>[] AfterExample { get;  } =
+    [
+        new Dictionary<string, string>()
+        {
+            {"Column1", "NotEmptyRow"},
+            {"ColumnToDeleteOnEmpty", "NotEmptyRow"},
+        }
+    ];
+
+    private async Task SplitPicked(string columnName)
+    {
+        var deleteEmptyStrategy = new ShouldDeleteColumnStrategy(StrategyBucket.ColumnName, x => string.IsNullOrWhiteSpace(x.Value?.ToString()));
+        _ = await CsvProcessor.PerformColumnEvaluateDelete(deleteEmptyStrategy);
+    }
+}

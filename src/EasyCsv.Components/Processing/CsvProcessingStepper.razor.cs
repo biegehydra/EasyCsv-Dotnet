@@ -11,7 +11,7 @@ public partial class CsvProcessingStepper
 {
     [Inject] public ISnackbar? Snackbar { get; set; }
     [Parameter] public IEasyCsv? EasyCsv { get; set; }
-    [Parameter] public bool UseSnackBars { get; set; } = true;
+    [Parameter] public bool UseSnackBar { get; set; } = true;
 
     /// <summary>
     /// If true, this component will make a clone of the provided
@@ -55,9 +55,10 @@ public partial class CsvProcessingStepper
         }
     }
 
-    public async Task<OperationResult> PerformDeleteRowStrategy(ICsvColumnDeleteEvaluator evaluateDelete)
+    public async Task<AggregateOperationDeleteResult> PerformColumnEvaluateDelete(ICsvColumnDeleteEvaluator evaluateDelete)
     {
-        if (CurrentState == null) return new OperationResult(false, "Component not initialized yet.");
+        if (CurrentState == null) return new AggregateOperationDeleteResult(false, 0, "Component not initialized yet.");
+        if (evaluateDelete == null!) return new AggregateOperationDeleteResult(false, 0, "CsvColumnDeleteEvaluator was null");
         var clone = CurrentState.Clone();
         List<int> rowsToDelete = new List<int>();
         int i = -1;
@@ -71,19 +72,62 @@ public partial class CsvProcessingStepper
             }
             if (operationResult.Success == false)
             {
-                if (UseSnackBars)
+                if (UseSnackBar)
                 {
                     Snackbar?.Add($"Error Performing Strategy: {operationResult.Message}", Severity.Warning);
                 }
                 await InvokeAsync(StateHasChanged);
-                return new OperationResult(false, operationResult.Message);
+                return new AggregateOperationDeleteResult(false, 0, operationResult.Message);
             }
         }
         await clone.MutateAsync(x => x.DeleteRows(rowsToDelete));
+        string message = $"Deleted {rowsToDelete.Count} rows";
+        if (UseSnackBar)
+        {
+            Snackbar?.Add(message);
+        }
 
         AddToTimeline(clone);
         await InvokeAsync(StateHasChanged);
-        return new OperationResult(true);
+        return new AggregateOperationDeleteResult(true, rowsToDelete.Count, message);
+    }
+
+    public async Task<AggregateOperationDeleteResult> PerformRowEvaluateDelete(ICsvRowDeleteEvaluator evaluateDelete)
+    {
+        if (CurrentState == null) return new AggregateOperationDeleteResult(false, 0, "Component not initialized yet.");
+        if (evaluateDelete == null!) return new AggregateOperationDeleteResult(false, 0, "CsvRowDeleteEvaluator was null");
+
+        var clone = CurrentState.Clone();
+        List<int> rowsToDelete = new List<int>();
+        int i = -1;
+        foreach (var row in clone.CsvContent)
+        {
+            i++;
+            var operationResult = await evaluateDelete.EvaluateDelete(row);
+            if (operationResult.Delete)
+            {
+                rowsToDelete.Add(i);
+            }
+            if (operationResult.Success == false)
+            {
+                if (UseSnackBar)
+                {
+                    Snackbar?.Add($"Error Performing Strategy: {operationResult.Message}", Severity.Warning);
+                }
+                await InvokeAsync(StateHasChanged);
+                return new AggregateOperationDeleteResult(false, 0, operationResult.Message);
+            }
+        }
+        await clone.MutateAsync(x => x.DeleteRows(rowsToDelete));
+        string message = $"Deleted {rowsToDelete.Count} rows";
+        if (UseSnackBar)
+        {
+            Snackbar?.Add(message);
+        }
+
+        AddToTimeline(clone);
+        await InvokeAsync(StateHasChanged);
+        return new AggregateOperationDeleteResult(true, rowsToDelete.Count, message);
     }
 
     public async Task<OperationResult> PerformReferenceStrategy(ICsvReferenceProcessor csvReferenceProcessor)
@@ -99,13 +143,13 @@ public partial class CsvProcessingStepper
         var operationResult = await csvReferenceProcessor.ProcessCsv(clone, ReferenceCsvs[referenceId].Csv);
         if (operationResult.Success)
         {
-            if (UseSnackBars && !string.IsNullOrWhiteSpace(operationResult.Message))
+            if (UseSnackBar && !string.IsNullOrWhiteSpace(operationResult.Message))
             {
                 Snackbar?.Add(operationResult.Message, Severity.Success);
             }
             AddToTimeline(clone);
         }
-        else if (UseSnackBars && !string.IsNullOrWhiteSpace(operationResult.Message))
+        else if (UseSnackBar && !string.IsNullOrWhiteSpace(operationResult.Message))
         {
             Snackbar?.Add($"Error Performing Strategy: {operationResult.Message}", Severity.Warning);
         }
@@ -123,7 +167,7 @@ public partial class CsvProcessingStepper
             var operationResult = await columnProcessor.ProcessCell(new RowCell(row, columnProcessor.ColumnName));
             if (operationResult.Success == false)
             {
-                if (UseSnackBars)
+                if (UseSnackBar)
                 {
                     Snackbar?.Add($"Error Performing Strategy: {operationResult.Message}", Severity.Warning);
                 }
@@ -144,13 +188,13 @@ public partial class CsvProcessingStepper
         var operationResult = await csvProcessor.ProcessCsv(clone);
         if (operationResult.Success)
         {
-            if (UseSnackBars && !string.IsNullOrWhiteSpace(operationResult.Message))
+            if (UseSnackBar && !string.IsNullOrWhiteSpace(operationResult.Message))
             {
                 Snackbar?.Add(operationResult.Message, Severity.Success);
             }
             AddToTimeline(clone);
         }
-        else if (UseSnackBars && !string.IsNullOrWhiteSpace(operationResult.Message))
+        else if (UseSnackBar && !string.IsNullOrWhiteSpace(operationResult.Message))
         {
             Snackbar?.Add($"Error Performing Strategy: {operationResult.Message}", Severity.Warning);
         }

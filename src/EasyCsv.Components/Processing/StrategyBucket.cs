@@ -77,6 +77,7 @@ public class StrategyBucket
 
     internal bool StrategySelectedAndRunAllowed()
     {
+        if (string.IsNullOrWhiteSpace(ColumnName)) return false;
         if (!IsAnySelected()) return false;
         var strategy = _strategies.First(x => x.IsSelected);
         return strategy.AllowRun;

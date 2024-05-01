@@ -75,9 +75,9 @@
     [Parameter] public override string? DisplayName { get; set; }
     [Parameter] public override string? Description { get; set; }
     [Parameter] public IReadOnlyDictionary<string, string>? ExampleOptions { get; set; }
-    [Parameter] public IReadOnlyList<IReadOnlyDictionary<string, string>>? ReferenceCsvExample { get; set; }
-    [Parameter] public IReadOnlyList<IReadOnlyDictionary<string, string>>? BeforeCsvExample { get; set; }
-    [Parameter] public IReadOnlyList<IReadOnlyDictionary<string, string>>? AfterCsvExample { get; set; }
+    [Parameter] public IReadOnlyList<IReadOnlyDictionary<string, string?>>? ReferenceCsvExample { get; set; }
+    [Parameter] public IReadOnlyList<IReadOnlyDictionary<string, string?>>? BeforeCsvExample { get; set; }
+    [Parameter] public IReadOnlyList<IReadOnlyDictionary<string, string?>>? AfterCsvExample { get; set; }
     [Parameter] public EventCallback<string> StrategyPicked { get; set; }
     [Parameter] public RenderFragment<bool>? Options { get; set; }
 

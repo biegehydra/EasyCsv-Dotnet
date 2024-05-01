@@ -5,10 +5,11 @@
 {
     throw new ArgumentException("EasyCsv: Attempted to render strategy options not within CsvProcessingStepper", nameof(CsvProcessingStepper));
 }
-<StrategyItem DisplayName="@DisplayName" Description="@Description" BeforeCsvExample="BeforeExample" AfterCsvExample="AfterExample" AllowRun="AllowRun" StrategyPicked="SplitPicked">
+<StrategyItem DisplayName="@DisplayName" Description="@Description" BeforeCsvExample="BeforeExample" AfterCsvExample="AfterExample" 
+              ExampleOptions="@ExampleOptions" AllowRun="AllowRun" StrategyPicked="SplitPicked">
     <Options>
         <MudListItem>
-            <MudTextField Disabled="context" Immediate="Immediate" Placeholder="Delimiter" Variant="Variant.Outlined" @bind-Value="_delimiter"></MudTextField>
+            <MudTextField Disabled="context" Immediate="Immediate" Placeholder="Delimiter To Split" Variant="Variant.Outlined" @bind-Value="_delimiter"></MudTextField>
         </MudListItem>
         <MudListItem>
             <MudTextField Disabled="context" Immediate="Immediate" Placeholder="New Column Names" Variant="Variant.Outlined" @bind-Value="_newColumnNames"></MudTextField>
@@ -25,12 +26,18 @@
     [Parameter] public override string? Description { get; set; } = "Splits values in a column on a specified delimiter into new columns";
     [Parameter] public bool Immediate { get; set; } = true;
     private bool AllowRun => _newColumnNames?.Contains(',') == true && !string.IsNullOrWhiteSpace(_delimiter);
+    private static readonly Dictionary<string, string> ExampleOptions = new Dictionary<string, string>()
+    {
+        {"Delimiter", "-"},
+        {"NewColumnNames", "Part1,Part2"},
+        {"RemoveSplitColumn", "true"}
+    };
     private static Dictionary<string, string>[] BeforeExample { get; set; } =
     [
         new Dictionary<string, string>()
         {
             {"Column1", "value1"},
-            {"ColumnToSplit", "value2,value3"},
+            {"ColumnToSplit", "value2-value3"},
         },
     ];
     private static Dictionary<string, string>[] AfterExample { get; set; } =

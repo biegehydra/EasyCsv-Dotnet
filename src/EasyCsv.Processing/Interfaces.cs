@@ -34,7 +34,7 @@ public interface ICsvRowDeleteEvaluator
     /// This function will be called for each row in the csv.
     /// </summary>
     /// <param name="row"></param>
-    public Task<OperationDeleteResult> EvaluateDelete(CsvRow row);
+    public ValueTask<OperationDeleteResult> EvaluateDelete(CsvRow row);
 }
 
 public interface ICsvReferenceProcessor : IReferenceOperation
@@ -94,5 +94,18 @@ public readonly struct OperationDeleteResult
     }
     public bool Success { get; }
     public bool Delete { get; }
+    public string? Message { get; }
+}
+
+public readonly struct AggregateOperationDeleteResult
+{
+    public AggregateOperationDeleteResult(bool success, int deleted, string? message = null)
+    {
+        Success = success;
+        Message = message;
+        Deleted = deleted;
+    }
+    public bool Success { get; }
+    public int Deleted { get; }
     public string? Message { get; }
 }

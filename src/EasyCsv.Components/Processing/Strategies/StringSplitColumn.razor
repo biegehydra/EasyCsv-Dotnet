@@ -1,9 +1,11 @@
 ﻿@namespace EasyCsv.Components
+@inherits EasyCsvStrategyOptionsBase
+
 @if (CsvProcessor == null)
 {
     throw new ArgumentException("EasyCsv: Attempted to render strategy options not within CsvProcessingStepper", nameof(CsvProcessingStepper));
 }
-<StrategyItem DisplayName="String Split" Description="Splits values in a column on a specified delimiter into new columns." BeforeCsvExample="BeforeExample" AfterCsvExample="AfterExample" AllowRun="AllowRun" StrategyPicked="SplitPicked">
+<StrategyItem DisplayName="@DisplayName" Description="@Description" BeforeCsvExample="BeforeExample" AfterCsvExample="AfterExample" AllowRun="AllowRun" StrategyPicked="SplitPicked">
     <Options>
         <MudListItem>
             <MudTextField Disabled="context" Immediate="Immediate" Placeholder="Delimiter" Variant="Variant.Outlined" @bind-Value="_delimiter"></MudTextField>
@@ -19,7 +21,8 @@
 
 @code
 {
-    [CascadingParameter] public CsvProcessingStepper CsvProcessor { get; set; } = null!;
+    [Parameter] public override string? DisplayName { get; set; } = "String Split";
+    [Parameter] public override string? Description { get; set; } = "Splits values in a column on a specified delimiter into new columns";
     [Parameter] public bool Immediate { get; set; } = true;
     private bool AllowRun => _newColumnNames?.Contains(',') == true && !string.IsNullOrWhiteSpace(_delimiter);
     private static Dictionary<string, string>[] BeforeExample { get; set; } =

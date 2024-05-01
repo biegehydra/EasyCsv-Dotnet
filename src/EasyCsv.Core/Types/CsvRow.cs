@@ -153,5 +153,34 @@ namespace EasyCsv.Core
         {
             return new CsvRow(_innerDictionary);
         }
+        public void AddProcessingTag(string tag)
+        {
+            var existingTags = Extensions.Extensions.ToHashSet(this[InternalColumnNames.Tags]?.ToString()?.Split([","], StringSplitOptions.RemoveEmptyEntries));
+            existingTags ??= new HashSet<string>();
+            existingTags.Add(tag);
+            this[InternalColumnNames.Tags] = string.Join(",", existingTags.Distinct());
+        }
+
+        public void AddProcessingTags(IEnumerable<string> tags)
+        {
+            var existingTags = Extensions.Extensions.ToHashSet(this[InternalColumnNames.Tags]?.ToString()?.Split([","], StringSplitOptions.RemoveEmptyEntries));
+            existingTags ??= new HashSet<string>();
+            foreach (var tag in tags)
+            {
+                existingTags.Add(tag);
+            }
+            this[InternalColumnNames.Tags] = string.Join(",", existingTags);
+        }
+
+        public void AddProcessingReferences(int referenceId, IEnumerable<int> referenceRowIds)
+        {
+            var newReferences = referenceRowIds.Select(y => $"{referenceId}-{y}");
+            var existingReferences = this[InternalColumnNames.References]?.ToString()?.Split([","], StringSplitOptions.RemoveEmptyEntries);
+            if (existingReferences != null)
+            {
+                newReferences = newReferences.Union(existingReferences);
+            }
+            this[InternalColumnNames.References] = string.Join(",", newReferences);
+        }
     }
 }

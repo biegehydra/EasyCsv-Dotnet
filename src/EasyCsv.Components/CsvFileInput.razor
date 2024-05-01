@@ -1,4 +1,7 @@
-﻿<style>
+﻿@using EasyCsv.Components
+@namespace EasyCsv.Test10
+
+<style>
     .drag-drop-zone {
         display: flex;
         flex-direction: column;
@@ -24,30 +27,55 @@
     }
 </style>
 
-<div @onmouseover="@(() => _mouseOver = true)"
-     @onmouseleave="@(() => _mouseOver = false)">
-    <MudPaper Style="@_style"
-              Class="@_class" >
-        @if (_loading)
-        {
-            <MudProgressLinear Indeterminate="true" Size="Size.Large" />
-        }
-        <div class="align-center justify-center mud-width-full" style="display: flex; flex-direction: column; @(_loading ? "display: none" : null)">
-            <InputFile OnChange="OnFileChange" class="drag-drop-input" style="opacity: 0;" accept=".csv" />
-            Drop a single csv file here or click to browse 
-        </div>
-        <MudIcon Style="@(_loading ? "display: none" : null)" Icon="@Icons.Material.Filled.AttachFile"></MudIcon>
-        @if (!string.IsNullOrWhiteSpace(FileName) && CsvValid)
-        {
-            <MudChip Style="@(_loading ? "display: none" : null)" Color="Color.Dark" Text="@FileName" />
-        }
-    </MudPaper>
-</div>
+@if (InputVariant == FileInputVariant.Paper)
+{
+    <div @onmouseover="@(() => _mouseOver = true)"
+         @onmouseleave="@(() => _mouseOver = false)">
+        <MudPaper Style="@_style"
+                  Class="@_class" >
+            @if (_loading)
+            {
+                <MudProgressLinear Indeterminate="true" Size="Size.Large" />
+            }
+            <div class="align-center justify-center mud-width-full" style="display: flex; flex-direction: column; @(_loading ? "display: none" : null)">
+                <InputFile OnChange="OnFileChange" class="drag-drop-input" style="opacity: 0;" accept="@Accept" />
+                Drop a single csv file here or click to browse 
+            </div>
+            <MudIcon Style="@(_loading ? "display: none" : null)" Icon="@Icons.Material.Filled.AttachFile"></MudIcon>
+            @if (!string.IsNullOrWhiteSpace(FileName) && CsvValid)
+            {
+                <MudChip Style="@(_loading ? "display: none" : null)" Color="Color.Dark" Text="@FileName" />
+            }
+        </MudPaper>
+    </div>
+}
+else if (InputVariant == FileInputVariant.Button)
+{
+    <MudFileUpload T="IReadOnlyList<IBrowserFile>" Accept="@Accept" FilesChanged="OnFilesChanged">
+        <ButtonTemplate>
+            <MudButton HtmlTag="label"
+                       Variant="@ButtonVariant"
+                       Color="@ButtonColor"
+                       StartIcon="@ButtonIcon"
+                       for="@context">
+                @ButtonText
+            </MudButton>
+        </ButtonTemplate>
+    </MudFileUpload>
+}
 
 @code {
     [Inject] private ISnackbar? SnackBar { get; set; }
     private bool _loading;
     private bool _mouseOver = false;
+
+    [Parameter] public FileInputVariant InputVariant { get; set; } = FileInputVariant.Paper;
+
+    [Parameter] public Variant ButtonVariant { get; set; } = Variant.Filled;
+    [Parameter] public Color ButtonColor { get; set; } = Color.Primary;
+    [Parameter] public string ButtonIcon { get; set; } = Icons.Material.Filled.AttachFile;
+    [Parameter] public string ButtonText { get; set; } = "Select A Csv";
+    [Parameter] public string Accept { get; set; } = ".csv";
 
     [Parameter]
     public string? Style { get; set; }
@@ -89,8 +117,7 @@
 
     [Parameter] public EventCallback<string?> FileNameChanged { get; set; }
  
-    [Parameter]
-    public EventCallback<(IEasyCsv Csv, string FileName)> OnCsvUpload { get; set; }
+    [Parameter] public EventCallback<CsvUploadedArgs> OnCsvUpload { get; set; }
 
     [Parameter]
     public EasyCsvConfiguration EasyCsvConfig { get; set; } = new()
@@ -109,28 +136,32 @@
 
     private async Task OnFileChange(InputFileChangeEventArgs args)
     {
+        await OnFilesChanged(args.GetMultipleFiles());
+    }
+
+    private async Task OnFilesChanged(IReadOnlyList<IBrowserFile> browserFiles)
+    {
         _loading = true;
         await InvokeAsync(StateHasChanged);
         try
         {
             _mouseOver = false;
-            var files = args.GetMultipleFiles();
-            if (files.Count == 0)
+            if (browserFiles.Count == 0)
             {
                 return;
             }
-            if (files.Count > 1)
+            if (browserFiles.Count > 1)
             {
                 SnackBar?.Add($"Only one file can be uploaded at a time", Severity.Error, x => x.VisibleStateDuration = 300);
                 return;
             }
-            var file = files.FirstOrDefault();
+            var file = browserFiles.FirstOrDefault();
             if (file == null)
             {
                 return;
             }
 
-            if (files.Count > 0)
+            if (browserFiles.Count > 0)
             {
                 if (Path.GetExtension(file.Name) != ".csv")
                 {
@@ -146,7 +177,7 @@
                     SnackBar?.Add($"Failed to read csv file", Severity.Error, x => x.VisibleStateDuration = 300);
                     return;
                 }
-                await OnCsvUpload.InvokeAsync((easyCsv, _fileName));
+                await OnCsvUpload.InvokeAsync(new CsvUploadedArgs(easyCsv, _fileName));
             }
         }
         finally
@@ -154,4 +185,5 @@
             _loading = false;
         }
     }
+
 }

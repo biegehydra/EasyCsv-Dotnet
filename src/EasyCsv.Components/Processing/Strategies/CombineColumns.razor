@@ -1,4 +1,5 @@
 ﻿@namespace EasyCsv.Components
+@inherits EasyCsvStrategyOptionsBase
 
 @if (CsvProcessor == null || StrategyBucket == null)
 {
@@ -6,7 +7,8 @@
 }
 @if (CsvProcessor.CurrentState != null)
 {
-    <StrategyItem DisplayName="Combine" Description="Combine the specified columns using a delimiter into a new column." ExampleOptions="_exampleOptions" BeforeCsvExample="_beforeExample" AfterCsvExample="_afterExample" AllowRun="AllowRun" StrategyPicked="DivideAndReplicate">
+    <StrategyItem DisplayName="@DisplayName" Description="@Description" ExampleOptions="_exampleOptions" BeforeCsvExample="_beforeExample"
+                  AfterCsvExample="_afterExample" AllowRun="AllowRun" StrategyPicked="RunCombineColumns">
         <Options>
             <MudListItem>
                 <MudCheckBox Disabled="@context" Label="Remove Joined Columns" @bind-Value="_removeJoinedColumns"></MudCheckBox>
@@ -18,7 +20,7 @@
                 <MudTextField Disabled="@context" Immediate="Immediate" Required="true" Placeholder="New Column Name" Variant="Variant.Outlined" @bind-Value="_newColumnName"></MudTextField>
             </MudListItem>
             <MudListItem>
-                <ColumnNamesInput Disabled="context" @bind-SelectedValues="_columnsToJoin"></ColumnNamesInput>
+                <ColumnNamesSelect Disabled="context" @bind-ColumnName="_columnsToJoin"></ColumnNamesSelect>
             </MudListItem>
         </Options>
     </StrategyItem>
@@ -26,9 +28,9 @@
 
 @code
 {
-    [CascadingParameter] public CsvProcessingStepper CsvProcessor { get; set; } = null!;
-    [CascadingParameter] private StrategyBucket StrategyBucket { get; set; } = null!;
     [Parameter] public bool Immediate { get; set; } = true;
+    [Parameter] public override string? DisplayName { get; set; } = "Combine Columns";
+    [Parameter] public override string? Description { get; set; } = "Combine the specified columns using a delimiter into a new column.";
 
     private static Dictionary<string, string> _exampleOptions = new ()
     {
@@ -70,7 +72,7 @@
         }
     }
 
-    private async Task DivideAndReplicate(string columnName)
+    private async Task RunCombineColumns(string columnName)
     {
         if (!AllowRun) return;
         var splitParsingStrategy = new JoinColumnsStrategy(_columnsToJoin!, _newColumnName!, _delimiter!, _removeJoinedColumns);

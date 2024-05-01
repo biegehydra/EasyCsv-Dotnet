@@ -1,0 +1,65 @@
+﻿@namespace EasyCsv.Components
+@inherits EasyCsvStrategyOptionsBase
+
+@if (CsvProcessor == null)
+{
+    throw new ArgumentException("EasyCsv: Attempted to render strategy options not within CsvProcessingStepper", nameof(CsvProcessingStepper));
+}
+<StrategyItem DisplayName="@DisplayName" Description="@Description" BeforeCsvExample="BeforeExample" AfterCsvExample="AfterExample" ExampleOptions="ExampleOptions" AllowRun="AllowRun" StrategyPicked="DivideAndReplicate">
+    <Options>
+        <MudListItem>
+            <MudTextField Disabled="context" Placeholder="Delimiter" Immediate="true" Variant="Variant.Outlined" @bind-Value="_columnName"></MudTextField>
+        </MudListItem>
+    </Options>
+</StrategyItem>
+
+@code
+{
+    [Parameter] public override string? DisplayName { get; set; } = "Reference Compare And Tag";
+    [Parameter] public override string? Description { get; set; } = "Compare all the values in a column in the csv being processing to all the values in the column of a reference csv. On any exact matches, the specified tag will be added to the row, and a link to the reference table will be created.";
+    [Parameter] public bool Immediate { get; set; } = true;
+
+    private static readonly Dictionary<string, string> ExampleOptions = new Dictionary<string, string>()
+    {
+        {"Delimiter", "-"}
+    };
+
+    private static readonly Dictionary<string, string>[] BeforeExample =
+    [
+        new Dictionary<string, string>()
+        {
+            {"Column1", "value1"},
+            {"ColumnToDivideAndReplicate", "value2-value3"},
+        },
+    ];
+    private static readonly Dictionary<string, string>[] AfterExample =
+    [
+        new Dictionary<string, string>()
+        {
+            {"Column1", "value1"},
+            {"ColumnToDivideAndReplicate", "value2"},
+        },
+        new Dictionary<string, string>()
+        {
+            {"Column1", "value1"},
+            {"ColumnToDivideAndReplicate", "value3"},
+        }
+    ];
+
+    private bool AllowRun => !string.IsNullOrWhiteSpace(_columnName) && !string.IsNullOrWhiteSpace(_referenceColumnName) && _referenceColumnId is >= 0;
+    private string? _columnName;
+    private string? _referenceColumnName;
+    private int? _referenceColumnId;
+    private string? _tagToAdd;
+
+    private async Task DivideAndReplicate(string columnName)
+    {
+        if (!AllowRun) return;
+        if (string.IsNullOrWhiteSpace(_columnName) || string.IsNullOrWhiteSpace(_referenceColumnName) || _referenceColumnId is not >= 0)
+        {
+            return;
+        }
+        var tagAndReferenceMatchesStrategy = new TagAndReferenceMatchesStrategy(_referenceColumnId.Value, _columnName, _referenceColumnName, _tagToAdd);
+        _ = await CsvProcessor.PerformReferenceStrategy(tagAndReferenceMatchesStrategy);
+    }
+}

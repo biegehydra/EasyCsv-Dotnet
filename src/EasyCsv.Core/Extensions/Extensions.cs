@@ -20,10 +20,11 @@ internal static class Extensions
         }
         return -1;
     }
-    internal static HashSet<T> ToHashSet<T>(this IEnumerable<T> enumerable, IEqualityComparer<T>? equalityComparer = null)
+    internal static HashSet<T> ToHashSet<T>(this IEnumerable<T>? enumerable, IEqualityComparer<T>? equalityComparer = null)
     {
         equalityComparer ??= EqualityComparer<T>.Default;
         var hashSet = new HashSet<T>(equalityComparer);
+        if (enumerable == null) return hashSet;
         foreach (var item in enumerable)
         {
             hashSet.Add(item);

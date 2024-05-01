@@ -1,10 +1,11 @@
 ﻿@namespace EasyCsv.Components
+@inherits EasyCsvStrategyOptionsBase
 
 @if (CsvProcessor == null)
 {
     throw new ArgumentException("EasyCsv: Attempted to render strategy options not within CsvProcessingStepper", nameof(CsvProcessingStepper));
 }
-<StrategyItem DisplayName="Divide And Replicate" Description="@Description" BeforeCsvExample="_beforeExample" AfterCsvExample="_afterExample" ExampleOptions="_exampleOptions" AllowRun="AllowRun" StrategyPicked="DivideAndReplicate">
+<StrategyItem DisplayName="@DisplayName" Description="@Description" BeforeCsvExample="BeforeExample" AfterCsvExample="AfterExample" ExampleOptions="ExampleOptions" AllowRun="AllowRun" StrategyPicked="RunDivideAndReplicate">
     <Options>
         <MudListItem>
             <MudTextField Disabled="context" Placeholder="Delimiter" Immediate="true" Variant="Variant.Outlined" @bind-Value="_delimiter"></MudTextField>
@@ -14,15 +15,15 @@
 
 @code
 {
-    [CascadingParameter] public CsvProcessingStepper CsvProcessor { get; set; } = null!;
     [Parameter] public bool Immediate { get; set; } = true;
-    private const string Description = "Splits the values in a column on a specified delimiter into parts and then creates a copy of the row for each part";
+    [Parameter] public override string? DisplayName { get; set; } = "Divide And Replicate";
+    [Parameter] public override string? Description { get; set; } = "Splits the values in a column on a specified delimiter into parts and then creates a copy of the row for each part";
 
-    private static Dictionary<string, string> _exampleOptions = new Dictionary<string, string>()
+    private static readonly Dictionary<string, string> ExampleOptions = new Dictionary<string, string>()
     {
         {"Delimiter", "-"}
     };
-    private static Dictionary<string, string>[] _beforeExample =
+    private static readonly Dictionary<string, string>[] BeforeExample =
     [
         new Dictionary<string, string>()
         {
@@ -30,7 +31,7 @@
             {"ColumnToDivideAndReplicate", "value2-value3"},
         },
     ];
-    private static Dictionary<string, string>[] _afterExample =
+    private static readonly Dictionary<string, string>[] AfterExample =
     [
         new Dictionary<string, string>()
         {
@@ -46,10 +47,10 @@
 
     private bool AllowRun => !string.IsNullOrWhiteSpace(_delimiter);
     private string? _delimiter;
-    private async Task DivideAndReplicate(string columnName)
+    private async Task RunDivideAndReplicate(string columnName)
     {
         if (!AllowRun) return;
-        var splitParsingStrategy = new DivideAndReplicate(columnName, y => y?.ToString()?.Split(_delimiter).Cast<object?>().ToArray());
+        var splitParsingStrategy = new DivideAndReplicateStrategy(columnName, y => y?.ToString()?.Split(_delimiter).Cast<object?>().ToArray());
         _ = await CsvProcessor.PerformCsvStrategy(splitParsingStrategy);
     }
 }

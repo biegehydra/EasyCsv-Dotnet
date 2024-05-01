@@ -2,11 +2,12 @@
 @using EasyCsv.Processing
 @using CsvHelper.Configuration
 @using System.Globalization
+@using EasyCsv.Processing.Strategies
 @page "/processing"
 <CsvProcessingStepper @ref="_csvProcessor" EasyCsv="_easyCsv">
     <ProcessingOptions>
         <StringSplitStrategyOptions ></StringSplitStrategyOptions>
-        <DivideAndReplicateStrategyOptions ></DivideAndReplicateStrategyOptions>
+        <DivideAndReplicateStrategyStrategyOptions ></DivideAndReplicateStrategyStrategyOptions>
         <CombineStrategyItem ></CombineStrategyItem>
         <StrategyItem DisplayName="Tag Invalid Email" Description="Tag all rows with an invalid email on specified column"
                       BeforeCsvExample="_beforeExample" AfterCsvExample="_afterExample" StrategyPicked="OnTagPicked"/>
@@ -15,8 +16,8 @@
 @code {
     [Parameter] public ISnackbar? Snackbar { get; set; }
     private CsvProcessingStepper _csvProcessor = null!;
-    private readonly IEasyCsv? _easyCsv = EasyCsvFactory.FromString("header1,header2\nvalue1,value2-value3", Config);
-    private static Dictionary<string, string>[] _beforeExample =
+    private readonly IEasyCsv? _easyCsv = EasyCsvFactory.FromFile("C:\\Users\\sweed\\Downloads\\Test.csv", int.MaxValue, Config);
+    private static readonly Dictionary<string, string>[] _beforeExample =
     [
         new Dictionary<string, string>()
         {
@@ -27,7 +28,7 @@
             {"Email", "real-email@test.com"},
         }
     ];
-    private static Dictionary<string, string>[] _afterExample =
+    private static readonly Dictionary<string, string>[] _afterExample =
     [
         new Dictionary<string, string>()
         {

@@ -1,0 +1,41 @@
+﻿@namespace EasyCsv.Components
+@inherits EasyCsvStrategyOptionsBase
+
+@if (CsvProcessor?.CurrentState != null)
+{
+    <MudSelect Immediate="Immediate" Disabled="Disabled" Label="@Label" T="string" MultiSelection="true" MultiSelectionTextFunc="@(x => string.Join(", ", x))" SelectedValues="ColumnNames" SelectedValuesChanged="x => ColumnNames = x?.ToArray() ?? []">
+        @foreach (var value in CsvProcessor.CurrentState.ColumnNames()!.Where(x => x.Equals(InternalColumnNames.Tags, StringComparison.OrdinalIgnoreCase) == false))
+        {
+            <MudSelectItem Value="value">@value</MudSelectItem>
+        }
+    </MudSelect>
+}
+
+@code {
+    [Parameter] public EventCallback<string[]> ColumnNamesChanged { get; set; }
+    private string[] _columnNames = [];
+    [Parameter] public string[] ColumnNames
+    {
+        get => _columnNames;
+        set
+        {
+            if (value == null!)
+            {
+                if (_columnNames.Length > 0)
+                {
+                    _columnNames = [];
+                }
+                return;
+            }
+            if (_columnNames.Length == value.Length && _columnNames.All(value.Contains))
+            {
+                return;
+            }
+            _columnNames = value;
+            ColumnNamesChanged.InvokeAsync(value);
+        }
+    }
+    [Parameter] public bool Immediate { get; set; } = true;
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public string Label { get; set; } = "Column Names";
+}

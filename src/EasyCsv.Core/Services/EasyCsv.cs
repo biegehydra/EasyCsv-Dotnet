@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using EasyCsv.Core.Configuration;
 
 [assembly: InternalsVisibleTo("EasyCsv.Files")]
+[assembly: InternalsVisibleTo("EasyCsv.Components")]
 [assembly: InternalsVisibleTo("EasyCsv.Tests.Files")]
 [assembly: InternalsVisibleTo("EasyCsv.Tests.Core")]
 [assembly: InternalsVisibleTo("EasyCsv.Tests.Processing")]

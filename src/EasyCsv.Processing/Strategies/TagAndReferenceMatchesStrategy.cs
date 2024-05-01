@@ -34,7 +34,7 @@ public class TagAndReferenceMatchesStrategy : ICsvReferenceProcessor
             return new OperationResult(false, $"Csv missing column. {ColumnName}");
         }
 
-        if (!referenceCsv.ContainsColumn(ColumnName))
+        if (!referenceCsv.ContainsColumn(ReferenceColumnName))
         {
             return new OperationResult(false, $"Reference csv missing column. {ColumnName}");
         }

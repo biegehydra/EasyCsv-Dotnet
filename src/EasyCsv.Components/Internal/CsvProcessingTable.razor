@@ -303,7 +303,7 @@
                                        ? FormatReferenceText(group)
                                        : DefaultFormatReferenceText(group);
                                    <MudChip Text="@text" Color="@Stepper.ReferenceChipColor" Size="Size.Small" OnClick="x => _referencesOpen[referenceGroup] = true"/>
-                                   <MudPopover AnchorOrigin="anchorOrigin" TransformOrigin="transformOrigin" Style="color: var(--mud-palette-dark-text); background-color: var(--mud-palette-grey-darker); padding: 10px; max-width: 600px;" Open="_referencesOpen[referenceGroup]">
+                                   <MudPopover AnchorOrigin="anchorOrigin" TransformOrigin="transformOrigin" Style="color: var(--mud-palette-dark-text); background-color: var(--mud-palette-grey-darker); padding: 10px; max-width: 1000px;" Open="_referencesOpen[referenceGroup]">
                                        <ChildContent>
                                            @{
                                                string referencesStr = references.Length == 1 ? "reference" : "references";

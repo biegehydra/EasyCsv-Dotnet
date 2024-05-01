@@ -1,0 +1,51 @@
+﻿@namespace EasyCsv.Components
+@inherits EasyCsvStrategyOptionsBase
+@if (CsvProcessor?.CurrentState != null)
+{
+    <MudSelect Immediate="Immediate" Disabled="Disabled" Label="@Label" T="string" MultiSelection="true" MultiSelectionTextFunc="@(x => string.Join(", ", x))"
+               SelectedValues="ReferenceColumnNames" SelectedValuesChanged="x => ReferenceColumnNames = x?.ToArray() ?? []"
+               Clearable="true" OnClearButtonClick="x => ReferenceColumnNames = []">
+        @{
+            string[]? referenceColumnNames;
+        }
+        @if (CsvProcessor.IsReferenceIndexValid(ReferenceCsvId) && (referenceColumnNames = CsvProcessor.ReferenceCsvs[ReferenceCsvId].Csv.ColumnNames()) != null)
+        {
+            @foreach (var referenceColumnName in referenceColumnNames)
+            {
+                <MudSelectItem Value="referenceColumnName">@referenceColumnName</MudSelectItem>
+            }
+        }
+    </MudSelect>
+}
+
+@code {
+    [Parameter] public EventCallback<string[]> ReferenceColumnNamesChanged { get; set; }
+    [Parameter] public int ReferenceCsvId { get; set; } = -1;
+    private string[] _referenceColumnNames = [];
+    [Parameter]
+    public string[] ReferenceColumnNames
+    {
+        get => _referenceColumnNames;
+        set
+        {
+            if (value == null!)
+            {
+                if (_referenceColumnNames.Length > 0)
+                {
+                    _referenceColumnNames = [];
+                    ReferenceColumnNamesChanged.InvokeAsync(value);
+                }
+                return;
+            }
+            if (_referenceColumnNames.Length == value.Length && _referenceColumnNames.All(value.Contains))
+            {
+                return;
+            }
+            _referenceColumnNames = value;
+            ReferenceColumnNamesChanged.InvokeAsync(value);
+        }
+    }
+    [Parameter] public bool Immediate { get; set; } = true;
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public string Label { get; set; } = "Column Name";
+}

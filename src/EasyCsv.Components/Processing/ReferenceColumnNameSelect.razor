@@ -1,0 +1,50 @@
+﻿@namespace EasyCsv.Components
+@inherits EasyCsvStrategyOptionsBase
+@if (CsvProcessor?.CurrentState != null)
+{
+    <MudSelect T="string" @bind-Value="ReferenceColumnName" Immediate="Immediate" Disabled="Disabled || !CsvProcessor.IsReferenceIndexValid(ReferenceCsvId)"
+               Label="@Label" Clearable="true" OnClearButtonClick="x => ReferenceColumnName = null">
+        @{
+            string[]? referenceColumnNames;
+        }
+        @if (CsvProcessor.IsReferenceIndexValid(ReferenceCsvId) && (referenceColumnNames = CsvProcessor.ReferenceCsvs[ReferenceCsvId].Csv.ColumnNames()) != null)
+        {
+            @foreach (var referenceColumnName in referenceColumnNames)
+            {
+                <MudSelectItem Value="referenceColumnName">@referenceColumnName</MudSelectItem>
+            }
+        }
+    </MudSelect>
+}
+
+@code {
+    [Parameter] public EventCallback<string?> ReferenceColumnNameChanged { get; set; }
+    [Parameter] public int ReferenceCsvId { get; set; } = -1;
+    private string? _referenceColumnName;
+    [Parameter]
+    public string? ReferenceColumnName
+    {
+        get => _referenceColumnName;
+        set
+        {
+            if (value == null)
+            {
+                if (_referenceColumnName != null)
+                {
+                    _referenceColumnName = value;
+                    ReferenceColumnNameChanged.InvokeAsync(value);
+                }
+                return;
+            }
+            if (_referenceColumnName?.Equals(value) == true)
+            {
+                return;
+            }
+            _referenceColumnName = value;
+            ReferenceColumnNameChanged.InvokeAsync(value);
+        }
+    }
+    [Parameter] public bool Immediate { get; set; } = true;
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public string Label { get; set; } = "Column Name";
+}

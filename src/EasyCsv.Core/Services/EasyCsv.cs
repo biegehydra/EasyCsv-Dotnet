@@ -18,7 +18,7 @@ namespace EasyCsv.Core
         public byte[]? ContentBytes { get; internal set; }
         public string? ContentStr { get; internal set; }
 
-        public List<CsvRow>? CsvContent { get; set; }
+        public List<CsvRow> CsvContent { get; set; }
 
         public int RowCount() => CsvContent?.Count ?? 0;
 

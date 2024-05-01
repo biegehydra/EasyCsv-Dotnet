@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using System;
+using System.Collections.Generic;
 
 namespace EasyCsv.Core
 {
@@ -93,5 +94,7 @@ namespace EasyCsv.Core
         /// <typeparam name="T">The type of object the row will be read into</typeparam>
         /// <returns>A <code>IDictionary string, object</code> representing properties and values of row. </returns>
         T? GetRow<T>(int index) where T : class;
+
+        IEasyCsv CondenseTo(ICollection<string> columnNames, ICollection<int>? rowIndexes);
     }
 }

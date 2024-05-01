@@ -2,7 +2,8 @@
 @inherits StrategyBucketItemBase
 @if (CsvProcessor?.Runner?.CurrentCsv != null)
 {
-    <MudSelect Immediate="Immediate" Disabled="Disabled" Label="@Label" T="string" @bind-Value="ColumnName" Clearable="true" OnClearButtonClick="x => ColumnName = null" >
+    <MudSelect Immediate="Immediate" Disabled="Disabled" Label="@Label" T="string" @bind-Value="ColumnName" Clearable="true" OnClearButtonClick="x => ColumnName = null" 
+               Variant="@Variant">
         @foreach (var value in CsvProcessor.Runner.CurrentCsv.ColumnNames()!.Where(x => x.Equals(InternalColumnNames.Tags, StringComparison.OrdinalIgnoreCase) == false))
         {
             <MudSelectItem Value="value">@value</MudSelectItem>
@@ -39,4 +40,5 @@
     [Parameter] public bool Immediate { get; set; } = true;
     [Parameter] public bool Disabled { get; set; }
     [Parameter] public string Label { get; set; } = "Column Name";
+    [Parameter] public Variant Variant { get; set; } = Variant.Outlined;
 }

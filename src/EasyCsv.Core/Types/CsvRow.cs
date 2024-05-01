@@ -145,9 +145,9 @@ namespace EasyCsv.Core
             return _innerDictionary.Values.ElementAt(index);
         }
 
-        public bool AnyColumnMatchesValues(IEnumerable<string> columns, object? value, IEqualityComparer<object>? comparer = null)
+        public bool AnyColumnMatchesValues(IEnumerable<string>? columns, object? value, IEqualityComparer<object>? comparer = null)
         {
-            if (value == null) return false;
+            if (value == null || columns == null!) return true;
             comparer ??= EqualityComparer<object>.Default;
             foreach (var column in columns)
             {
@@ -159,9 +159,9 @@ namespace EasyCsv.Core
             return false;
         }
 
-        public bool AnyColumnContainsValues(IEnumerable<string> columns, string? value, StringComparison stringComparisonType = StringComparison.OrdinalIgnoreCase)
+        public bool AnyColumnContainsValues(IEnumerable<string>? columns, string? value, StringComparison stringComparisonType = StringComparison.OrdinalIgnoreCase)
         {
-            if (string.IsNullOrWhiteSpace(value)) return false;
+            if (string.IsNullOrWhiteSpace(value) || columns == null) return true;
             foreach (var column in columns)
             {
 #if NETSTANDARD2_0
@@ -217,6 +217,45 @@ namespace EasyCsv.Core
         {
             int tagsColumnIndex = Keys.IndexOf(InternalColumnNames.Tags);
             return RemoveTag(tagsColumnIndex, tag);
+        }
+
+        public bool ContainsTag(int tagsColumnIndex, string tag)
+        {
+            if (string.IsNullOrWhiteSpace(tag)) return false;
+            return ValueAt(tagsColumnIndex)?.ToString()?.Contains(tag) == true;
+        }
+
+        public bool ContainsAnyTag(int tagsColumnIndex, IEnumerable<string> tags)
+        {
+            if (tags == null!) return false;
+            string? strValue = ValueAt(tagsColumnIndex)?.ToString();
+            if (string.IsNullOrWhiteSpace(strValue)) return false;
+            foreach (var tag in tags)
+            {
+                if (string.IsNullOrWhiteSpace(tag)) continue;
+                if (strValue!.Contains(tag)) return true;
+            }
+            return false;
+        }
+
+        public bool MatchesIncludeTagsAndExcludeTags(int tagsColumnIndex, IEnumerable<string> includeTags, IEnumerable<string> excludeTags)
+        {
+            if (includeTags == null! || excludeTags == null!) return false;
+            string? strValue = ValueAt(tagsColumnIndex)?.ToString();
+            if (string.IsNullOrWhiteSpace(strValue)) return false;
+            foreach (var excludeTag in excludeTags)
+            {
+                if (string.IsNullOrWhiteSpace(excludeTag)) continue;
+                if (strValue!.Contains(excludeTag)) return false;
+            }
+            bool any = false;
+            foreach (var includeTag in includeTags)
+            {
+                if (string.IsNullOrWhiteSpace(includeTag)) continue;
+                any = true;
+                if (strValue!.Contains(includeTag)) return true;
+            }
+            return !any;
         }
 
         public string[]? Tags(int tagsColumnIndex)

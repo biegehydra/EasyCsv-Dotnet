@@ -1,5 +1,5 @@
 ﻿@namespace EasyCsv.Components
-@inherits EasyCsvStrategyOptionsBase
+@inherits StrategyBucketItemBase
 
 @if (CsvProcessor?.CurrentState != null)
 {
@@ -41,4 +41,15 @@
     [Parameter] public bool Immediate { get; set; } = true;
     [Parameter] public bool Disabled { get; set; }
     [Parameter] public string Label { get; set; } = "Column Names";
+    [Parameter] public bool InitializeWithStrategyBucketColumnName { get; set; }
+
+    private bool _initialized = false;
+    protected override void OnParametersSet()
+    {
+        if (StrategyBucket != null! && !_initialized && InitializeWithStrategyBucketColumnName)
+        {
+            _initialized = true;
+            ColumnNames = [StrategyBucket.ColumnName];
+        }
+    }
 }

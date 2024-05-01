@@ -17,6 +17,7 @@ public partial class CsvProcessingStepper
     /// EasyCsv and operate on the clone
     /// </summary>
     [Parameter] public RenderFragment<string>? ProcessingOptions { get; set; }
+    [Parameter] public RenderFragment? ErrorBoundaryContent { get; set; }
 
     [Parameter] public CloseBehaviour CloseBehaviour { get; set; } = Enums.CloseBehaviour.CloseButtonAndClickAway;
     [Parameter] public bool HideOtherStrategiesOnSelect { get; set; } = true;

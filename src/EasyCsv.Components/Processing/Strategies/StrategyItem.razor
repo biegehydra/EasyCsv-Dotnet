@@ -1,6 +1,6 @@
 ﻿@namespace EasyCsv.Components
 @implements IDisposable
-@inherits EasyCsvStrategyOptionsBase
+@inherits StrategyItemBase
 <style>
     .example-all-options-container {
         display: flex;
@@ -72,8 +72,8 @@
         }
     }
     [Parameter] public EventCallback<bool> AllowRunChanged { get; set; }
-    [Parameter] public string? DisplayName { get; set; }
-    [Parameter] public string? Description { get; set; }
+    [Parameter] public override string? DisplayName { get; set; }
+    [Parameter] public override string? Description { get; set; }
     [Parameter] public IReadOnlyDictionary<string, string>? ExampleOptions { get; set; }
     [Parameter] public IReadOnlyList<IReadOnlyDictionary<string, string>>? ReferenceCsvExample { get; set; }
     [Parameter] public IReadOnlyList<IReadOnlyDictionary<string, string>>? BeforeCsvExample { get; set; }

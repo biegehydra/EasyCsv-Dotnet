@@ -3,14 +3,17 @@
 
 @if (CsvProcessor?.Runner?.CurrentCsv != null)
 {
-    <MudSelect Immediate="Immediate" Disabled="Disabled" Label="@Label" T="string" MultiSelection="true" MultiSelectionTextFunc="@(x => string.Join(", ", x))"
-               SelectedValues="Tags" SelectedValuesChanged="x => Tags = x?.ToArray() ?? []" Variant="@Variant"
-               Clearable="true" OnClearButtonClick="x => Tags = []" SelectAll="@SelectAll" SelectAllText="@SelectAllText">
-        @foreach (var value in _uniqueTags)
-        {
-            <MudSelectItem Disabled="DisabledTags != null && DisabledTags.Contains(value)" Value="value">@value</MudSelectItem>
-        }
-    </MudSelect>
+    if (!HideNoTags || CsvProcessor.Runner.CurrentTags?.Count > 0)
+    {
+        <MudSelect Immediate="Immediate" Disabled="Disabled" Label="@Label" T="string" MultiSelection="true" MultiSelectionTextFunc="@(x => string.Join(", ", x))"
+                   SelectedValues="Tags" SelectedValuesChanged="x => Tags = x?.ToArray() ?? []" Variant="@Variant" Style="min-width: 300px;"
+                   Clearable="true" OnClearButtonClick="x => Tags = []" SelectAll="@SelectAll" SelectAllText="@SelectAllText">
+            @foreach (var value in CsvProcessor.Runner.CurrentTags ?? Enumerable.Empty<string>())
+            {
+                <MudSelectItem Disabled="DisabledTags != null && DisabledTags.Contains(value)" Value="value">@value</MudSelectItem>
+            }
+        </MudSelect>
+    }
 }
 
 @code {
@@ -46,13 +49,6 @@
     [Parameter] public bool SelectAll { get; set; }
     [Parameter] public Variant Variant { get; set; } = Variant.Outlined;
     [Parameter] public string? SelectAllText { get; set; }
-
-    private HashSet<string> _uniqueTags;
-
-    protected override void OnInitialized()
-    {
-        _uniqueTags = CsvProcessor?.AllUniqueTags() ?? [];
-    }
-
+    [Parameter] public bool HideNoTags { get; set; }
 }
 

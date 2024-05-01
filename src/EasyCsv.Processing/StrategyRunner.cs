@@ -12,15 +12,19 @@ public class StrategyRunner
     private int _currentIndex = -1;
     public int CurrentIndex => _currentIndex;
     public IEasyCsv? CurrentCsv => IsCacheIndexValid(_currentIndex) ? _cachedCsvs[_currentIndex] : null;
+    public HashSet<string>? CurrentTags => Utils.IsValidIndex(_currentIndex, _tagsCache.Count) ? _tagsCache[_currentIndex] : null;
     private readonly List<(IEasyCsv Csv, string FileName)> _referenceCsvs = new();
     public IReadOnlyList<(IEasyCsv Csv, string FileName)> ReferenceCsvs => _referenceCsvs;
     public IReadOnlyList<IEasyCsv> CachedCsvs => _cachedCsvs;
     private readonly List<IEasyCsv> _cachedCsvs = new();
+    private List<HashSet<string>> _tagsCache = new();
+    public IReadOnlyList<ICollection<string>> TagsCache => _tagsCache;
 
     public StrategyRunner(IEasyCsv baseCsv)
     {
         _cachedCsvs.Add(baseCsv.Clone());
         SetCurrentIndexSafe(0);
+        _tagsCache.Add(AllUniqueTags());
     }
 
     public async Task<AggregateOperationDeleteResult> PerformColumnEvaluateDelete(ICsvColumnDeleteEvaluator evaluateDelete, ICollection<int>? filteredRowIds)
@@ -161,12 +165,33 @@ public class StrategyRunner
         {
 #if NETSTANDARD2_0
             _cachedCsvs.Remove(_cachedCsvs[_cachedCsvs.Count - 1]);
+            _tagsCache.Remove(_tagsCache[_tagsCache.Count - 1]);
 #else
-            _cachedCsvs.Remove(_cachedCsvs[^1]);
+            _cachedCsvs.RemoveAt(_cachedCsvs.Count-1);
+            _tagsCache.RemoveAt(_tagsCache.Count-1);
 #endif
         }
         _cachedCsvs.Add(csv);
         SetCurrentIndexSafe(_cachedCsvs.Count - 1);
+        _tagsCache.Add(AllUniqueTags());
+    }
+
+    internal HashSet<string> AllUniqueTags()
+    {
+        var uniqueTags = new HashSet<string>();
+        if (CurrentCsv?.CsvContent == null) return uniqueTags;
+        foreach (var row in CurrentCsv.CsvContent)
+        {
+            var tags = row.Tags();
+            if (tags != null)
+            {
+                foreach (var tag in tags)
+                {
+                    uniqueTags.Add(tag);
+                }
+            }
+        }
+        return uniqueTags;
     }
 
     public bool GoBackStep()

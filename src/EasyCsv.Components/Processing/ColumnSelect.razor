@@ -3,7 +3,7 @@
 @if (CsvProcessor?.Runner?.CurrentCsv != null)
 {
     <MudSelect Immediate="Immediate" Disabled="Disabled" Label="@Label" T="string" @bind-Value="ColumnName" Clearable="true" OnClearButtonClick="x => ColumnName = null" 
-               Variant="@Variant">
+               Variant="@Variant" Style="min-width: 250px;" >
         @foreach (var value in CsvProcessor.Runner.CurrentCsv.ColumnNames()!.Where(x => x.Equals(InternalColumnNames.Tags, StringComparison.OrdinalIgnoreCase) == false))
         {
             <MudSelectItem Value="value">@value</MudSelectItem>

@@ -238,22 +238,27 @@ namespace EasyCsv.Core
             return false;
         }
 
-        public bool MatchesIncludeTagsAndExcludeTags(int tagsColumnIndex, IEnumerable<string> includeTags, IEnumerable<string> excludeTags)
+        public bool MatchesIncludeTagsAndExcludeTags(int tagsColumnIndex, IEnumerable<string>? includeTags, IEnumerable<string>? excludeTags)
         {
-            if (includeTags == null! || excludeTags == null!) return false;
             string? strValue = ValueAt(tagsColumnIndex)?.ToString();
             if (string.IsNullOrWhiteSpace(strValue)) return false;
-            foreach (var excludeTag in excludeTags)
+            if (excludeTags != null)
             {
-                if (string.IsNullOrWhiteSpace(excludeTag)) continue;
-                if (strValue!.Contains(excludeTag)) return false;
+                foreach (var excludeTag in excludeTags)
+                {
+                    if (string.IsNullOrWhiteSpace(excludeTag)) continue;
+                    if (strValue!.Contains(excludeTag)) return false;
+                }
             }
             bool any = false;
-            foreach (var includeTag in includeTags)
+            if (includeTags != null)
             {
-                if (string.IsNullOrWhiteSpace(includeTag)) continue;
-                any = true;
-                if (strValue!.Contains(includeTag)) return true;
+                foreach (var includeTag in includeTags)
+                {
+                    if (string.IsNullOrWhiteSpace(includeTag)) continue;
+                    any = true;
+                    if (strValue!.Contains(includeTag)) return true;
+                }
             }
             return !any;
         }

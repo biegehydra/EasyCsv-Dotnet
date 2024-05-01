@@ -211,43 +211,48 @@ namespace EasyCsv.Core
             return this;
         }
 
-        public IEasyMutations InsertRecord(List<object?> rowValues, int index = -1)
+        public IEasyMutations InsertRow(List<object?> rowValues, int index = -1)
         {
-            _csv.InsertRecord(rowValues, index);
+            _csv.InsertRow(rowValues, index);
             return this;
         }
 
-        public IEasyMutations UpsertRecord(CsvRow row, int index = -1)
+        public IEasyMutations UpsertRow(CsvRow row, int index = -1)
         {
-            _csv.UpsertRecord(row, index);
+            _csv.UpsertRow(row, index);
             return this;
         }
 
-        public IEasyMutations UpsertRecords(IEnumerable<CsvRow> rows)
+        public IEasyMutations UpsertRows(IEnumerable<CsvRow> rows)
         {
-            _csv.UpsertRecords(rows);
+            _csv.UpsertRows(rows);
             return this;
         }
 
-        public CsvRow? GetRecord(int index)
+        public CsvRow? GetRow(int index)
         {
-            return _csv.GetRecord(index);
+            return _csv.GetRow(index);
         }
 
-        public T? GetRecord<T>(int index) where T : class
+        public T? GetRow<T>(int index) where T : class
         {
-            return _csv.GetRecord<T>(index);
+            return _csv.GetRow<T>(index);
         }
 
-        public IEasyMutations UpdateRecord(int index, CsvRow newRow)
+        public IEasyMutations UpdateRow(int index, CsvRow newRow)
         {
-             _csv.UpdateRecord(index, newRow);
+             _csv.UpdateRow(index, newRow);
              return this;
         }
 
-        public IEasyMutations DeleteRecord(int index)
+        public IEasyMutations DeleteRow(int index)
         {
-            _csv.DeleteRecord(index);
+            _csv.DeleteRow(index);
+            return this;
+        }
+        public IEasyMutations DeleteRows(IEnumerable<int> indexes)
+        {
+            _csv.DeleteRows(indexes);
             return this;
         }
     }

@@ -1,12 +1,10 @@
 ﻿using EasyCsv.Core;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace EasyCsv.Processing;
 
-public interface ICsvColumnProcessor
+public interface ICsvColumnProcessor : IColumnOperation
 {
-    public string ColumnName { get; }
     /// <summary>
     /// Process row will be called for each row in the
     /// csv. You will be able to modify the value of
@@ -25,9 +23,22 @@ public interface ICsvRowProcessor
     public Task<OperationResult> ProcessRow(CsvRow row);
 }
 
-public interface ICsvReferenceProcessor
+public interface ICsvColumnDeleteEvaluator : IColumnOperation
 {
-    public int ReferenceCsvId { get; }
+    public Task<OperationDeleteResult> EvaluateDelete<TCell>(TCell cell) where TCell : ICell;
+}
+
+public interface ICsvRowDeleteEvaluator
+{
+    /// <summary>
+    /// This function will be called for each row in the csv.
+    /// </summary>
+    /// <param name="row"></param>
+    public Task<OperationDeleteResult> EvaluateDelete(CsvRow row);
+}
+
+public interface ICsvReferenceProcessor : IReferenceOperation
+{
     Task<OperationResult> ProcessCsv(IEasyCsv csv, IEasyCsv referenceCsv);
 }
 
@@ -53,6 +64,15 @@ public interface ICell
     public object? Value { get; set; }
 }
 
+public interface IColumnOperation
+{
+    public string ColumnName { get; }
+}
+public interface IReferenceOperation
+{
+    public int ReferenceCsvId { get; }
+}
+
 public readonly struct OperationResult
 {
     public OperationResult(bool success, string? message = null)
@@ -62,4 +82,17 @@ public readonly struct OperationResult
     }
     public bool Success { get; }
     public string? Message { get; } 
+}
+
+public readonly struct OperationDeleteResult
+{
+    public OperationDeleteResult(bool success, bool delete, string? message = null)
+    {
+        Success = success;
+        Message = message;
+        Delete = delete;
+    }
+    public bool Success { get; }
+    public bool Delete { get; }
+    public string? Message { get; }
 }

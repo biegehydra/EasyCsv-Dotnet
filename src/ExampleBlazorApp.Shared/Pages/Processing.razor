@@ -1,14 +1,14 @@
 ﻿@using EasyCsv.Core.Configuration
-@using EasyCsv.Processing
 @using CsvHelper.Configuration
 @using System.Globalization
 @using EasyCsv.Processing.Strategies
 @page "/processing"
 <CsvProcessingStepper @ref="_csvProcessor" EasyCsv="_easyCsv">
     <ProcessingOptions>
-        <StringSplitStrategyOptions ></StringSplitStrategyOptions>
-        <DivideAndReplicateStrategyStrategyOptions ></DivideAndReplicateStrategyStrategyOptions>
-        <CombineStrategyItem ></CombineStrategyItem>
+        <StringSplitColumn ></StringSplitColumn>
+        <DivideAndReplicate ></DivideAndReplicate>
+        <CombineColumns  ></CombineColumns>
+        <TagAndReferenceMatches ></TagAndReferenceMatches>
         <StrategyItem DisplayName="Tag Invalid Email" Description="Tag all rows with an invalid email on specified column"
                       BeforeCsvExample="_beforeExample" AfterCsvExample="_afterExample" StrategyPicked="OnTagPicked"/>
     </ProcessingOptions>

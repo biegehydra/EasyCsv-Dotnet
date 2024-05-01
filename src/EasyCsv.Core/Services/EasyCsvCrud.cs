@@ -8,7 +8,7 @@ namespace EasyCsv.Core
 {
     internal partial class EasyCsv
     {
-        public IEasyCsv InsertRecord(List<object?> rowValues, int index = -1)
+        public IEasyCsv InsertRow(List<object?> rowValues, int index = -1)
         {
             var headers = ColumnNames();
             if (CsvContent == null) return this;
@@ -33,7 +33,7 @@ namespace EasyCsv.Core
             return row;
         }
 
-        public IEasyCsv UpsertRecord(CsvRow row, int index = -1)
+        public IEasyCsv UpsertRow(CsvRow row, int index = -1)
         {
             if (CsvContent == null) return this;
 
@@ -57,17 +57,35 @@ namespace EasyCsv.Core
             return this;
         }
 
-        public IEasyCsv UpsertRecords(IEnumerable<CsvRow> rows)
+        public IEasyCsv AddRow(CsvRow row) => InsertRow(row);
+        public IEasyCsv InsertRow(CsvRow row, int index = -1)
         {
-            foreach (var row in rows)
+            var headers = ColumnNames();
+            if (CsvContent == null) return this;
+            if (headers?.Length == null || headers.Length == 0 || headers.Length != row.Count) return this;
+            if (index == -1 || index >= CsvContent.Count)
             {
-                UpsertRecord(row);
+                CsvContent.Add(row);
+            }
+            else
+            {
+                CsvContent.Insert(index, row);
             }
 
             return this;
         }
 
-        public CsvRow? GetRecord(int index)
+        public IEasyCsv UpsertRows(IEnumerable<CsvRow> rows)
+        {
+            foreach (var row in rows)
+            {
+                UpsertRow(row);
+            }
+
+            return this;
+        }
+
+        public CsvRow? GetRow(int index)
         {
             if (CsvContent == null || index < 0 || index >= CsvContent.Count)
             {
@@ -77,13 +95,13 @@ namespace EasyCsv.Core
             return CsvContent.ElementAt(index);
         }
 
-        public T? GetRecord<T>(int index) where T : class
+        public T? GetRow<T>(int index) where T : class
         {
             if (CsvContent == null || index < 0 || index >= CsvContent.Count)
             {
                 return null;
             }
-            var row = GetRecord(index);
+            var row = GetRow(index);
             if (row == null) return null;
             var content = new List<CsvRow>() { row };
             var easyCsv = new EasyCsv(content, Config);
@@ -93,7 +111,7 @@ namespace EasyCsv.Core
             return csvReader.GetRecord<T>();
         }
 
-        public IEasyCsv UpdateRecord(int index, CsvRow newRow)
+        public IEasyCsv UpdateRow(int index, CsvRow newRow)
         {
             if (CsvContent == null || index < 0 || index >= CsvContent.Count)
             {
@@ -104,7 +122,7 @@ namespace EasyCsv.Core
             return this;
         }
 
-        public IEasyCsv DeleteRecord(int index)
+        public IEasyCsv DeleteRow(int index)
         {
             if (CsvContent == null || index < 0 || index >= CsvContent.Count)
             {
@@ -112,6 +130,30 @@ namespace EasyCsv.Core
             }
 
             CsvContent.RemoveAt(index);
+            return this;
+        }
+
+        public IEasyCsv DeleteRows(IEnumerable<int> indexes)
+        {
+            if (CsvContent == null)
+            {
+                return this;
+            }
+
+            var indexesArr = indexes.ToArray();
+            foreach (var index in indexesArr)
+            {
+                if (!Utils.IsValidIndex(index, CsvContent.Count))
+                {
+                    return this;
+                }
+            }
+
+            foreach (var index in indexesArr.Distinct().OrderByDescending(x => x))
+            {
+                CsvContent.RemoveAt(index);
+            }
+
             return this;
         }
     }

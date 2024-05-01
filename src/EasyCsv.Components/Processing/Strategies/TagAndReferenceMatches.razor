@@ -8,10 +8,10 @@
 <StrategyItem DisplayName="@DisplayName" Description="@Description" BeforeCsvExample="BeforeExample" AfterCsvExample="AfterExample" ExampleOptions="ExampleOptions" AllowRun="AllowRun" StrategyPicked="DivideAndReplicate">
     <Options>
         <MudListItem>
-            <ReferenceSelect Immediate="@Immediate" Disabled="context" @bind-ReferenceId="_referenceId"></ReferenceSelect>
+            <ReferenceCsvSelect  Immediate="@Immediate" Disabled="context" @bind-ReferenceCsvId="_referenceCsvId"></ReferenceCsvSelect>
         </MudListItem>
         <MudListItem>
-            <ReferenceColumnSelect Immediate="@Immediate" Disabled="context" @bind-ReferenceColumnName="_referenceColumnName"></ReferenceColumnSelect>
+            <ReferenceColumnSelect ReferenceCsvId="_referenceCsvId" Immediate="@Immediate" Disabled="context" @bind-ReferenceColumnName="_referenceColumnName"></ReferenceColumnSelect>
         </MudListItem>
         <MudListItem>
             <MudTextField T="string" Immediate="@Immediate" Variant="Variant.Outlined" Disabled="context" @bind-Value="_tagToAdd"></MudTextField>
@@ -52,19 +52,19 @@
         }
     ];
 
-    private bool AllowRun => !string.IsNullOrWhiteSpace(StrategyBucket.ColumnName) && !string.IsNullOrWhiteSpace(_referenceColumnName) && _referenceId is >= 0;
+    private bool AllowRun => !string.IsNullOrWhiteSpace(StrategyBucket.ColumnName) && !string.IsNullOrWhiteSpace(_referenceColumnName) && _referenceCsvId is >= 0;
     private string? _referenceColumnName;
-    private int? _referenceId;
+    private int? _referenceCsvId;
     private string? _tagToAdd;
 
     private async Task DivideAndReplicate(string columnName)
     {
         if (!AllowRun) return;
-        if (string.IsNullOrWhiteSpace(StrategyBucket.ColumnName) || string.IsNullOrWhiteSpace(_referenceColumnName) || _referenceId is not >= 0)
+        if (string.IsNullOrWhiteSpace(StrategyBucket.ColumnName) || string.IsNullOrWhiteSpace(_referenceColumnName) || _referenceCsvId is not >= 0)
         {
             return;
         }
-        var tagAndReferenceMatchesStrategy = new TagAndReferenceMatchesStrategy(_referenceId.Value, StrategyBucket.ColumnName, _referenceColumnName, _tagToAdd);
+        var tagAndReferenceMatchesStrategy = new TagAndReferenceMatchesStrategy(_referenceCsvId.Value, StrategyBucket.ColumnName, _referenceColumnName, _tagToAdd);
         _ = await CsvProcessor.PerformReferenceStrategy(tagAndReferenceMatchesStrategy);
     }
 }

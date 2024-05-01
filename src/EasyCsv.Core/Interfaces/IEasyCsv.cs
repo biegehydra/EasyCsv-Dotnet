@@ -83,7 +83,7 @@ namespace EasyCsv.Core
         /// </summary>
         /// <param name="index">Index of the row you want.</param>
         /// <returns>A <code>IDictionary string, object</code> representing properties and values of row. </returns>
-        CsvRow? GetRecord(int index);
+        CsvRow? GetRow(int index);
 
 
         /// <summary>
@@ -92,6 +92,6 @@ namespace EasyCsv.Core
         /// <param name="index">Index of the row you want.</param>
         /// <typeparam name="T">The type of object the row will be read into</typeparam>
         /// <returns>A <code>IDictionary string, object</code> representing properties and values of row. </returns>
-        T? GetRecord<T>(int index) where T : class;
+        T? GetRow<T>(int index) where T : class;
     }
 }

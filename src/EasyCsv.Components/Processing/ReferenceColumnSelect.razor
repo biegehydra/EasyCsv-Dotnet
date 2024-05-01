@@ -3,7 +3,7 @@
 @if (CsvProcessor?.Runner?.CurrentCsv != null)
 {
     <MudSelect T="string" @bind-Value="ReferenceColumnName" Immediate="Immediate" Disabled="Disabled || !CsvProcessor.Runner.IsReferenceIndexValid(ReferenceCsvId)"
-               Label="@Label" Clearable="true" OnClearButtonClick="x => ReferenceColumnName = null" Variant="@Variant" >
+               Label="@Label" Clearable="true" OnClearButtonClick="x => ReferenceColumnName = null" Variant="@Variant" Style="min-width: 250px;">
         @{
             string[]? referenceColumnNames;
         }

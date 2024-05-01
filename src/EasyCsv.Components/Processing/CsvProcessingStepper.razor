@@ -71,14 +71,20 @@
         <DialogContent >
             <CascadingValue TValue="CsvProcessingStepper" Value="this" IsFixed="true">
                 <div class="csv-processing-download-popup-container">
-                    <MudText Typo="Typo.h5">Download Snapshot Options</MudText>
+                    <MudText Class="mb-2" Typo="Typo.h5"><b>Download Snapshot Options</b></MudText>
+                    <MudTextField T="string" DebounceInterval="SearchDebounceInterval" Immediate="true" Label="File Name"
+                                  HelperText="Name given to downloaded file" HelperTextOnFocus Variant="Variant.Outlined" @bind-Value="_fileName"
+                                  Clearable OnClearButtonClick="x => _sq = null"/>
+                    <MudText Typo="Typo.h6">Column Filter</MudText>
                     <MultiColumnSelect @bind-ColumnNames="_columnsToDownload" Label="Columns To Download" SelectAll="true" SelectAllText="Download All Columns"></MultiColumnSelect>
-                    <MudTextField T="string" Class="csv-processing-toolbar-search-field" DebounceInterval="SearchDebounceInterval" Immediate="true" Label="Search Query"
+                    <MudText Typo="Typo.h6">Search Filter</MudText>
+                    <MudTextField T="string" DebounceInterval="SearchDebounceInterval" Immediate="true" Label="Search Query"
                                   HelperText="Value to search for" HelperTextOnFocus Variant="Variant.Outlined" @bind-Value="_sq"
                                   Clearable OnClearButtonClick="x => _sq = null"/>
                     <MultiColumnSelect @bind-ColumnNames="_searchColumns" Label="Columns To Search" SelectAll="true" SelectAllText="Search All Columns"></MultiColumnSelect>
                     @if (columnNames.Contains(InternalColumnNames.Tags))
                     {
+                        <MudText Typo="Typo.h6">Tags Filter</MudText>
                         <MultiTagSelect @bind-Tags="_includeTags" DisabledTags="_excludeTags" Label="Include Tags"></MultiTagSelect>
                         <MultiTagSelect @bind-Tags="_excludeTags" DisabledTags="_includeTags" Label="Exclude Tags"></MultiTagSelect>
                     }
@@ -87,7 +93,7 @@
         </DialogContent>
         <DialogActions>
             <MudButton StartIcon="@Icons.Material.Filled.Close" Variant="Variant.Outlined" Color="Color.Default" OnClick="x => _isDownloadDialogVisible = false"  >Cancel</MudButton>
-            <MudButton StartIcon="@Icons.Material.Filled.Download" Variant="Variant.Filled" Color="Color.Info" OnClick="async _ => await DownloadSnapShot()">Download</MudButton>
+            <MudButton Disabled="string.IsNullOrWhiteSpace(_fileName)" StartIcon="@Icons.Material.Filled.Download" Variant="Variant.Filled" Color="Color.Info" OnClick="async _ => await DownloadSnapShot()">Download</MudButton>
         </DialogActions>
     </MudDialog>
 }
@@ -98,6 +104,7 @@
     private string[] _includeTags = [];
     private string[] _excludeTags = [];
     private string? _sq;
+    private string? _fileName;
 
     private void OpenDownloadDialog()
     {
@@ -117,6 +124,8 @@
         {
             _excludeTags = [];
         }
+
+        _fileName = DefaultDownloadFileName;
         _sq = null;
         _isDownloadDialogVisible = true;
     }

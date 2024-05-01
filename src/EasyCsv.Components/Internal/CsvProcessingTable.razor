@@ -207,7 +207,8 @@
     private Dictionary<ReferenceGroup, bool> _referencesOpen = new();
     private Dictionary<ReferenceGroup, bool> _referencesBackDropsOpen = new();
     private Dictionary<string, bool> _popOverDict = new ();
-    private Dictionary<string, bool> _searchColumns = new();
+    private string[] _searchColumns = [];
+    private string[] _searchTags = [];
     private Dictionary<string, StrategyBucket> _strategyBuckets = new();
     private Dictionary<string, Color> _tagColors = new();
     private IEasyCsv? _easyCsv;
@@ -217,8 +218,8 @@
     {
         if (IsFiltered())
         {
-            var columnsToSearch = _searchColumns.Where(x => x.Value).Select(x => x.Key).ToArray();
-            return EasyCsv?.CsvContent.Where(x => x.AnyColumnContainsValues(columnsToSearch, _sq)) ?? Enumerable.Empty<CsvRow>();
+            var tagsColumnIndex = EasyCsv?.ColumnNames()?.IndexOf(x => x == InternalColumnNames.Tags) ?? -1;
+            return EasyCsv?.CsvContent.Where(x => x.AnyColumnContainsValues(_searchColumns, _sq) && (tagsColumnIndex < 0 || x.MatchesIncludeTagsAndExcludeTags(tagsColumnIndex, _searchTags, null))) ?? Enumerable.Empty<CsvRow>();
         }
         return EasyCsv?.CsvContent ?? Enumerable.Empty<CsvRow>();
     }
@@ -226,17 +227,18 @@
     [Pure]
     internal HashSet<int> FilteredRowIndexes()
     {
-        var columnsToSearch = _searchColumns.Where(x => x.Value).Select(x => x.Key).ToArray();
+        var tagsColumnIndex = EasyCsv?.ColumnNames()?.IndexOf(x => x == InternalColumnNames.Tags) ?? -1;
         return EasyCsv?.CsvContent
             .Select((row, index) => (row, index))
-            .Where(x => x.row.AnyColumnContainsValues(columnsToSearch, _sq))
+            .Where(x => x.row.AnyColumnContainsValues(_searchColumns, _sq))
+            .Where(x => tagsColumnIndex < 0 || x.row.MatchesIncludeTagsAndExcludeTags(tagsColumnIndex, _searchTags, null))
             .Select(x => x.index)
             .ToHashSet() ?? new HashSet<int>();
     }
 
     public bool IsFiltered()
     {
-        if (_searchColumns.Count(x => x.Value) > 0 && !string.IsNullOrWhiteSpace(_sq))
+        if ((_searchColumns.Length > 0 && !string.IsNullOrWhiteSpace(_sq)) || _searchTags.Length > 0)
         {
             return true;
         }
@@ -265,15 +267,11 @@
         var columnNames = EasyCsv?.ColumnNames();
         if (columnNames != null)
         {
-            var except = _searchColumns.Keys.Except(columnNames);
-            foreach (var toRemove in except)
-            {
-                _searchColumns.Remove(toRemove);
-            }
+            _searchColumns = _searchColumns.Where(x => columnNames.Contains(x)).ToArray();
         }
         else
         {
-            _searchColumns.Clear();
+            _searchColumns = [];
         }
     }
 
@@ -281,22 +279,6 @@
     {
         if ((string.IsNullOrWhiteSpace(searchQuery) && string.IsNullOrWhiteSpace(_sq)) || _sq?.Equals(searchQuery) == true) return Task.CompletedTask;
         _sq = searchQuery;
-        return InvokeStateHasChanged();
-    }
-
-    public Task SetColumnsToSearch(IEnumerable<string>? columnsToSearch)
-    {
-        string[] currentColumns = _searchColumns.Keys.ToArray();
-        foreach (var column in currentColumns)
-        {
-            _searchColumns[column] = false;
-        }
-
-        if (columnsToSearch == null) return Task.CompletedTask;
-        foreach (var column in columnsToSearch)
-        {
-            _searchColumns[column] = true;
-        }
         return InvokeStateHasChanged();
     }
 
@@ -378,14 +360,10 @@
                    <MudTextField T="string" Class="csv-processing-toolbar-search-field" DebounceInterval="Stepper.SearchDebounceInterval" Immediate="true" Label="Search Csv"
                                  HelperText="Value to search for" HelperTextOnFocus Variant="Variant.Outlined" Value="_sq" ValueChanged="x => SetSearchQuery(x)" 
                                  Clearable OnClearButtonClick="x => SetSearchQuery(null)"/>
-                   <MudSelect T="string" Class="csv-processing-toolbar-search-field" Immediate="true" Label="Columns To Search" 
-                              Variant="Variant.Outlined" MultiSelection="true"  SelectedValues="_searchColumns.Where(x => x.Value).Select(x => x.Key).ToArray()"
-                              SelectedValuesChanged="x => SetColumnsToSearch(x)" Clearable OnClearButtonClick="() => SetColumnsToSearch(null)" >
-                              @foreach (var columnName in columnNames)
-                              {
-                                  <MudSelectItem T="string" Value="columnName" >@columnName</MudSelectItem>
-                              }
-                   </MudSelect>
+                   <CascadingValue TValue="CsvProcessingStepper" Value="@Stepper" IsFixed="true"  >
+                       <MultiColumnSelect InitializeWithStrategyBucketColumnName="false" Label="Columns To Search" @bind-ColumnNames="_searchColumns" SelectAll="true" SelectAllText="Search All Columns" ></MultiColumnSelect>
+                       <MultiTagSelect Label="Tag Filter" @bind-Tags="_searchTags" HideNoTags="true" ></MultiTagSelect>
+                   </CascadingValue>
                </div>;
     }
 

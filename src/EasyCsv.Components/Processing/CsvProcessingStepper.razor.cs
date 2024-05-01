@@ -46,6 +46,8 @@ public partial class CsvProcessingStepper
     [Parameter] public bool OperateOnFilteredRows { get; set; }
     [Parameter] public Color ReferenceChipColor { get; set; } = Color.Primary;
     [Parameter] public string MaxStrategySelectHeight { get; set; } = "600px";
+    [Parameter] public string DefaultDownloadFileName { get; set; } = "CsvSnapshot";
+    [Parameter] public bool AutoControlExpandOptionsOnSelect { get; set; } = true;
     public StrategyRunner? Runner { get; private set; }
     private CsvProcessingTable? _csvProcessingTable { get; set; }
 
@@ -55,24 +57,6 @@ public partial class CsvProcessingStepper
         {
             Runner = new StrategyRunner(EasyCsv);
         }
-    }
-
-    internal HashSet<string> AllUniqueTags()
-    {
-        var uniqueTags = new HashSet<string>();
-        if (Runner?.CurrentCsv?.CsvContent == null) return uniqueTags;
-        foreach (var row in Runner.CurrentCsv.CsvContent)
-        {
-            var tags = row.Tags();
-            if (tags != null)
-            {
-                foreach (var tag in tags)
-                {
-                    uniqueTags.Add(tag);
-                }
-            }
-        }
-        return uniqueTags;
     }
 
     public void AddReferenceCsv(CsvUploadedArgs csvFileArgs, bool useSnackbar = true)
@@ -204,8 +188,17 @@ public partial class CsvProcessingStepper
 
     private async ValueTask DownloadSnapShot()
     {
-        if (Js == null || Runner?.CurrentCsv == null) return;
+        if (Js == null || Runner?.CurrentCsv == null || string.IsNullOrWhiteSpace(_fileName)) return;
         var rowIndexes = GetFilteredRowIndexesForDownload();
+        if (rowIndexes.Count == 0)
+        {
+            _isDownloadDialogVisible = false;
+            if (UseSnackBar)
+            {
+                Snackbar?.Add($"No rows matched filter, nothing to download.", Severity.Warning);
+            }
+            return;
+        }
         if (!rowIndexes.Any()) return;
         var clone = Runner.CurrentCsv.Clone();
         var downloadModel = clone.CondenseTo(_columnsToDownload, rowIndexes);
@@ -213,7 +206,11 @@ public partial class CsvProcessingStepper
         _isDownloadDialogVisible = false;
         using var streamRef = new DotNetStreamReference(stream:
             new MemoryStream(downloadModel.ContentBytes));
-        await Js.InvokeVoidAsync("downloadFileFromStreamEasyCsv", "UnmatchedAddresses.csv", streamRef);
+        if (!_fileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+        {
+            _fileName += ".csv";
+        }
+        await Js.InvokeVoidAsync("downloadFileFromStreamEasyCsv", _fileName, streamRef);
         if (UseSnackBar)
         {
             Snackbar?.Add($"Downloaded {downloadModel.CsvContent.Count} rows");

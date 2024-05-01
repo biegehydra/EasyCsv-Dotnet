@@ -3,7 +3,7 @@
 @if (CsvProcessor?.Runner?.CurrentCsv != null)
 {
     <MudSelect Immediate="Immediate" Disabled="Disabled" Label="@Label" T="string" MultiSelection="true" MultiSelectionTextFunc="@(x => string.Join(", ", x))"
-               SelectedValues="ReferenceColumnNames" SelectedValuesChanged="x => ReferenceColumnNames = x?.ToArray() ?? []"
+               SelectedValues="ReferenceColumnNames" SelectedValuesChanged="x => ReferenceColumnNames = x?.ToArray() ?? []" Style="min-width: 300px;"
                Clearable="true" OnClearButtonClick="x => ReferenceColumnNames = []" Variant="@Variant" >
         @{
             string[]? referenceColumnNames;

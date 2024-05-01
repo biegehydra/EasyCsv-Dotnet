@@ -1,5 +1,5 @@
 ﻿@namespace EasyCsv.Components
-@inherits EasyCsvStrategyOptionsBase
+@inherits StrategyItemBase
 
 @if (CsvProcessor == null || StrategyBucket == null)
 {
@@ -20,7 +20,7 @@
                 <MudTextField Disabled="@context" Immediate="Immediate" Required="true" Placeholder="New Column Name" Variant="Variant.Outlined" @bind-Value="_newColumnName"></MudTextField>
             </MudListItem>
             <MudListItem>
-                <ColumnNamesSelect Disabled="context" @bind-ColumnName="_columnsToJoin"></ColumnNamesSelect>
+                <MultiColumnSelect InitializeWithStrategyBucketColumnName  Disabled="context" @bind-ColumnName="_columnsToJoin"></MultiColumnSelect>
             </MudListItem>
         </Options>
     </StrategyItem>
@@ -61,16 +61,6 @@
     private string? _newColumnName;
     private string? _delimiter;
     private bool _removeJoinedColumns;
-
-    private bool _initialized = false;
-    protected override void OnParametersSet()
-    {
-        if (StrategyBucket != null! && !_initialized)
-        {
-            _initialized = true;
-            _columnsToJoin = [StrategyBucket.ColumnName];
-        }
-    }
 
     private async Task RunCombineColumns(string columnName)
     {

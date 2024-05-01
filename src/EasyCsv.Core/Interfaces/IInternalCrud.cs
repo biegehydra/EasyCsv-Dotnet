@@ -4,10 +4,11 @@ namespace EasyCsv.Core
 {
     public interface IInternalCrud
     {
-        internal IEasyCsv InsertRecord(List<object?> rowValues, int index = -1);
-        internal IEasyCsv UpsertRecord(CsvRow row, int index = -1);
-        internal IEasyCsv UpsertRecords(IEnumerable<CsvRow> rows);
-        internal IEasyCsv UpdateRecord(int index, CsvRow newRow);
-        internal IEasyCsv DeleteRecord(int index);
+        internal IEasyCsv InsertRow(List<object?> rowValues, int index = -1);
+        internal IEasyCsv UpsertRow(CsvRow row, int index = -1);
+        internal IEasyCsv UpsertRows(IEnumerable<CsvRow> rows);
+        internal IEasyCsv UpdateRow(int index, CsvRow newRow);
+        internal IEasyCsv DeleteRow(int index);
+        internal IEasyCsv DeleteRows(IEnumerable<int> index);
     }
 }

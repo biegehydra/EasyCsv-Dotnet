@@ -16,9 +16,9 @@ public class TagAndReferenceMatchesStrategy : ICsvReferenceProcessor
     private readonly IEqualityComparer<string> _comparer;
     public TagAndReferenceMatchesStrategy(int referenceCsvId, string columnName, string referenceColumnName, string? tagToAdd, IEqualityComparer<string>? comparer = null)
     {
-        if (string.IsNullOrWhiteSpace(ColumnName)) throw new ArgumentException("Column name cannot be null");
-        if (string.IsNullOrWhiteSpace(ReferenceColumnName)) throw new ArgumentException("Reference column name cannot be null");
-        if (ReferenceCsvId <= 0) throw new ArgumentException("Reference column id must be greater than or equal to 0");
+        if (string.IsNullOrWhiteSpace(columnName)) throw new ArgumentException("Column name cannot be null");
+        if (string.IsNullOrWhiteSpace(referenceColumnName)) throw new ArgumentException("Reference column name cannot be null");
+        if (referenceCsvId < 0) throw new ArgumentException("Reference column id must be greater than or equal to 0");
         comparer ??= EqualityComparer<string>.Default;
         ColumnName = columnName;
         ReferenceColumnName = referenceColumnName;
@@ -43,6 +43,7 @@ public class TagAndReferenceMatchesStrategy : ICsvReferenceProcessor
         int matched = 0;
         await csv.MutateAsync(x =>
         {
+            x.AddColumn(InternalColumnNames.Tags, null, ExistingColumnHandling.Keep);
             x.AddColumn(InternalColumnNames.References, null, ExistingColumnHandling.Keep);
             foreach (var row in x.CsvContent)
             {

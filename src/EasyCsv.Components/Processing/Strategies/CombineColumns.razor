@@ -20,7 +20,7 @@
                 <MudTextField Disabled="@context" Immediate="Immediate" Required="true" Placeholder="New Column Name" Variant="Variant.Outlined" @bind-Value="_newColumnName"></MudTextField>
             </MudListItem>
             <MudListItem>
-                <MultiColumnSelect InitializeWithStrategyBucketColumnName  Disabled="context" @bind-ColumnName="_columnsToJoin"></MultiColumnSelect>
+                <MultiColumnSelect InitializeWithStrategyBucketColumnName  Disabled="context" @bind-ColumnNames="_columnsToJoin"></MultiColumnSelect>
             </MudListItem>
         </Options>
     </StrategyItem>

@@ -3,6 +3,7 @@ using EasyCsv.Core;
 using EasyCsv.Processing;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
+using System.Diagnostics.CodeAnalysis;
 
 namespace EasyCsv.Components;
 
@@ -52,6 +53,37 @@ public partial class CsvProcessingStepper
         {
             Snackbar?.Add($"Added '{fileName}' to references");
         }
+    }
+
+    public async Task<OperationResult> PerformDeleteRowStrategy(ICsvColumnDeleteEvaluator evaluateDelete)
+    {
+        if (CurrentState == null) return new OperationResult(false, "Component not initialized yet.");
+        var clone = CurrentState.Clone();
+        List<int> rowsToDelete = new List<int>();
+        int i = -1;
+        foreach (var row in clone.CsvContent)
+        {
+            i++;
+            var operationResult = await evaluateDelete.EvaluateDelete(new RowCell(row, evaluateDelete.ColumnName));
+            if (operationResult.Delete)
+            {
+                rowsToDelete.Add(i);
+            }
+            if (operationResult.Success == false)
+            {
+                if (UseSnackBars)
+                {
+                    Snackbar?.Add($"Error Performing Strategy: {operationResult.Message}", Severity.Warning);
+                }
+                await InvokeAsync(StateHasChanged);
+                return new OperationResult(false, operationResult.Message);
+            }
+        }
+        await clone.MutateAsync(x => x.DeleteRows(rowsToDelete));
+
+        AddToTimeline(clone);
+        await InvokeAsync(StateHasChanged);
+        return new OperationResult(true);
     }
 
     public async Task<OperationResult> PerformReferenceStrategy(ICsvReferenceProcessor csvReferenceProcessor)
@@ -162,12 +194,12 @@ public partial class CsvProcessingStepper
         }
     }
 
-    public bool IsCacheIndexValid(int index)
+    public bool IsCacheIndexValid([NotNullWhen(true)] int? index)
     {
         return Utils.IsValidIndex(index, _cachedStates.Count);
     }
 
-    public bool IsReferenceIndexValid(int index)
+    public bool IsReferenceIndexValid([NotNullWhen(true)] int? index)
     {
         return Utils.IsValidIndex(index, ReferenceCsvs.Count);
     }

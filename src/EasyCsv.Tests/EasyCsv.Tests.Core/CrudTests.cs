@@ -10,7 +10,7 @@ public class CrudTests
     public void AddRecordTest()
     {
         IEasyCsv easyCsv = CreateCsvWithSampleData();
-        easyCsv.Mutate(x => x.InsertRecord(new List<object> { "Value3", "Value4" }));
+        easyCsv.Mutate(x => x.InsertRow(new List<object> { "Value3", "Value4" }));
 
         Assert.Equal(3, easyCsv.CsvContent!.Count);
         Assert.Equal("Value3", easyCsv.CsvContent[2]["Header1"]);
@@ -21,7 +21,7 @@ public class CrudTests
     public void InsertRecordTest()
     {
         IEasyCsv easyCsv = CreateCsvWithSampleData();
-        easyCsv.InsertRecord(["Value3", "Value4"], 1);
+        easyCsv.InsertRow(["Value3", "Value4"], 1);
 
         Assert.Equal(3, easyCsv.CsvContent!.Count);
         Assert.Equal("Value3", easyCsv.CsvContent[1]["Header1"]);
@@ -34,7 +34,7 @@ public class CrudTests
         IEasyCsv easyCsv = CreateCsvWithSampleData();
         var newRow = new CsvRow(new Dictionary<string, object>() { { "Header1", "Value1" }, { "Header2", "UpdatedValue" } });
 
-        easyCsv.UpsertRecord(newRow);
+        easyCsv.UpsertRow(newRow);
 
         Assert.Equal(3, easyCsv.CsvContent!.Count);
         Assert.Equal("Value1", easyCsv.CsvContent[2]["Header1"]);
@@ -47,7 +47,7 @@ public class CrudTests
         IEasyCsv easyCsv = CreateCsvWithSampleData();
         var newRow = new CsvRow(new Dictionary<string, object>() { { "Header1", "Value1" }, { "Header2", "UpdatedValue" } });
 
-        easyCsv.UpsertRecord(newRow, 1);
+        easyCsv.UpsertRow(newRow, 1);
 
         Assert.Equal(2, easyCsv.CsvContent!.Count);
         Assert.Equal("Value1", easyCsv.CsvContent[1]["Header1"]);
@@ -58,7 +58,7 @@ public class CrudTests
     public void GetRecordTest()
     {
         IEasyCsv easyCsv = CreateCsvWithSampleData();
-        var row = easyCsv.GetRecord(0);
+        var row = easyCsv.GetRow(0);
 
         Assert.NotNull(row);
         Assert.Equal("Value1", row["Header1"]);
@@ -71,7 +71,7 @@ public class CrudTests
         IEasyCsv easyCsv = CreateCsvWithSampleData();
         var newRow = new CsvRow(new Dictionary<string, object>() { { "Header1", "UpdatedValue1" }, { "Header2", "UpdatedValue2" } });
 
-        easyCsv.UpdateRecord(0, newRow);
+        easyCsv.UpdateRow(0, newRow);
 
         Assert.Equal(2, easyCsv.CsvContent!.Count);
         Assert.Equal("UpdatedValue1", easyCsv.CsvContent[0]["Header1"]);
@@ -82,7 +82,7 @@ public class CrudTests
     public void DeleteRecordTest()
     {
         IEasyCsv easyCsv = CreateCsvWithSampleData();
-        easyCsv.DeleteRecord(0);
+        easyCsv.DeleteRow(0);
 
         Assert.Single(easyCsv.CsvContent!);
     }

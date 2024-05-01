@@ -9,7 +9,7 @@ namespace EasyCsv.Core
         /// </summary>
         /// <param name="index">Index of the row you want.</param>
         /// <returns>A <code>IDictionary string, object</code> representing properties and values of row. </returns>
-        CsvRow? GetRecord(int index);
+        CsvRow? GetRow(int index);
 
 
         /// <summary>
@@ -18,7 +18,7 @@ namespace EasyCsv.Core
         /// <param name="index">Index of the row you want.</param>
         /// <typeparam name="T">The type of object the row will be read into</typeparam>
         /// <returns>A <code>IDictionary string, object</code> representing properties and values of row. </returns>
-        T? GetRecord<T>(int index) where T : class;
+        T? GetRow<T>(int index) where T : class;
 
         #region CRUD
 
@@ -29,7 +29,7 @@ namespace EasyCsv.Core
         /// <param name="rowValues">The row to insert, represented as an list of strings representing the values of the row.</param>
         /// <param name="index">The index at which to insert the row. If the index is -1, the row will be appended to the end of the CSV.</param>
         /// <returns>An IEasyCsv instance with the row inserted.</returns>
-        IEasyMutations InsertRecord(List<object?> rowValues, int index = -1);
+        IEasyMutations InsertRow(List<object?> rowValues, int index = -1);
 
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace EasyCsv.Core
         /// </summary>
         /// <param name="row">The row to update or insert, represented as an IDictionary of field names and their corresponding values.</param>
         /// <returns>An IEasyCsv instance with the row updated or inserted.</returns>
-        IEasyMutations UpsertRecord(CsvRow row, int index = -1);
+        IEasyMutations UpsertRow(CsvRow row, int index = -1);
 
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace EasyCsv.Core
         /// </summary>
         /// <param name="rows">An IEnumerable of rows to update or insert, each represented as an IDictionary of field names and their corresponding values.</param>
         /// <returns>An IEasyCsv instance with the rows updated or inserted.</returns>
-        IEasyMutations UpsertRecords(IEnumerable<CsvRow> rows);
+        IEasyMutations UpsertRows(IEnumerable<CsvRow> rows);
 
 
 
@@ -56,7 +56,7 @@ namespace EasyCsv.Core
         /// <param name="newRow">The row to update or insert, represented as an IDictionary of field names and their corresponding values.</param>
         /// <remarks>Very prone to break. Not recommended to use right now. Better implementation will be added that will probably create breaking change</remarks>
         /// <returns></returns>
-        IEasyMutations UpdateRecord(int index, CsvRow newRow);
+        IEasyMutations UpdateRow(int index, CsvRow newRow);
 
 
 
@@ -65,7 +65,10 @@ namespace EasyCsv.Core
         /// </summary>
         /// <param name="index">Index of row to delete</param>
         /// <returns></returns>
-        IEasyMutations DeleteRecord(int index);
+        IEasyMutations DeleteRow(int index);
+
+        IEasyMutations DeleteRows(IEnumerable<int> indexes);
+
 
         #endregion
     }

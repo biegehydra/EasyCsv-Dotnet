@@ -3,7 +3,9 @@
 
 @if (CsvProcessor?.CurrentState != null)
 {
-    <MudSelect Immediate="Immediate" Disabled="Disabled" Label="@Label" T="string" MultiSelection="true" MultiSelectionTextFunc="@(x => string.Join(", ", x))" SelectedValues="ColumnNames" SelectedValuesChanged="x => ColumnNames = x?.ToArray() ?? []">
+    <MudSelect Immediate="Immediate" Disabled="Disabled" Label="@Label" T="string" MultiSelection="true" MultiSelectionTextFunc="@(x => string.Join(", ", x))" 
+               SelectedValues="ColumnNames" SelectedValuesChanged="x => ColumnNames = x?.ToArray() ?? []"
+               Clearable="true" OnClearButtonClick="x => ColumnNames = []">
         @foreach (var value in CsvProcessor.CurrentState.ColumnNames()!.Where(x => x.Equals(InternalColumnNames.Tags, StringComparison.OrdinalIgnoreCase) == false))
         {
             <MudSelectItem Value="value">@value</MudSelectItem>
@@ -24,6 +26,7 @@
                 if (_columnNames.Length > 0)
                 {
                     _columnNames = [];
+                    ColumnNamesChanged.InvokeAsync(value);
                 }
                 return;
             }

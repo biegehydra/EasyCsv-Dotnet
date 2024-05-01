@@ -27,7 +27,7 @@ public partial class CsvProcessingStepper
     [Parameter] public string MaxStrategySelectHeight { get; set; } = "600px";
 
     private int _currentIndex = -1;
-    internal IEasyCsv? CurrentState => IsIndexValid(_currentIndex) ? _cachedStates[_currentIndex] : null;
+    internal IEasyCsv? CurrentState => IsCacheIndexValid(_currentIndex) ? _cachedStates[_currentIndex] : null;
     protected override void OnParametersSet()
     {
         if (EasyCsv != null && CurrentState == null)
@@ -155,15 +155,20 @@ public partial class CsvProcessingStepper
 
     private void SetCurrentIndexSafe(int index)
     {
-        if (IsIndexValid(index))
+        if (IsCacheIndexValid(index))
         {
             _currentIndex = index;
         }
     }
 
-    private bool IsIndexValid(int index)
+    public bool IsCacheIndexValid(int index)
     {
-        return index >= 0 && index < _cachedStates.Count;
+        return Utils.IsValidIndex(index, _cachedStates.Count);
+    }
+
+    public bool IsReferenceIndexValid(int index)
+    {
+        return Utils.IsValidIndex(index, ReferenceCsvs.Count);
     }
 
     private readonly struct RowCell : ICell

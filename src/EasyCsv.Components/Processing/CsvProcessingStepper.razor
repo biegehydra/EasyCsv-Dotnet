@@ -7,11 +7,11 @@
     <br />
     <div style="display: flex; flex-direction: row; justify-content: space-between;" >
         <div style="display: flex; gap: 20px; flex-direction: row;">
-            @if (IsIndexValid(_currentIndex - 1))
+            @if (IsCacheIndexValid(_currentIndex - 1))
             {
                 <MudButton OnClick="GoBackStep" Variant="Variant.Filled" Color="Color.Secondary">Go Back Step</MudButton>
             }
-            @if (IsIndexValid(_currentIndex + 1))
+            @if (IsCacheIndexValid(_currentIndex + 1))
             {
                 <MudButton OnClick="GoForwardStep" Variant="Variant.Filled" Color="Color.Secondary">Go Forward Step</MudButton>
             }

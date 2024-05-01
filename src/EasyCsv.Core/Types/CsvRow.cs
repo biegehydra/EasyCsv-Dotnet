@@ -145,6 +145,19 @@ namespace EasyCsv.Core
             return _innerDictionary.Values.ElementAt(index);
         }
 
+        public bool AnyColumnMatchesValues(IEnumerable<string> columns, object? value, IEqualityComparer<object>? comparer = null)
+        {
+            comparer ??= EqualityComparer<object>.Default;
+            foreach (var column in columns)
+            {
+                if (TryGetValue(column, out object? columnValue) && comparer.Equals(columnValue, value))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public bool RemoveReference(int referencesColumnIndex, int referenceCsvId, int referenceRowId)
         {
             if (!Utils.IsValidIndex(referencesColumnIndex, Count)) return false;

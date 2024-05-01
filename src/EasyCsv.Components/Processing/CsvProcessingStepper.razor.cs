@@ -27,6 +27,8 @@ public partial class CsvProcessingStepper
     [Parameter] public RunOperationNoneSelectedBehaviour RunOperationNoneSelectedBehaviour { get; set; } = RunOperationNoneSelectedBehaviour.Hidden;
     [Parameter] public ColumnLocation TagsAndReferencesLocation { get; set; } = ColumnLocation.Beginning;
     [Parameter] public bool AllowControlTagsAndReferencesLocation { get; set; } = true;
+    [Parameter] public bool UseToolbar { get; set; } = true;
+    [Parameter] public double SearchDebounceInterval { get; set; } = 250;
     [Parameter] public Color ReferenceChipColor { get; set; } = Color.Primary;
     [Parameter] public string MaxStrategySelectHeight { get; set; } = "600px";
     public StrategyRunner? Runner { get; private set; }

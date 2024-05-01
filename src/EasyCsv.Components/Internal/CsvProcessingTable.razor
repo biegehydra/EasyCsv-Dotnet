@@ -34,6 +34,7 @@
 @if (EasyCsv?.CsvContent != null && EasyCsv.ColumnNames() != null && ProcessingOptions != null) 
 {
     int tagsColumnIndex = EasyCsv.ColumnNames()?.IndexOf(InternalColumnNames.Tags) ?? -1;
+    int referenceColumnIndex = EasyCsv.ColumnNames()?.IndexOf(InternalColumnNames.References) ?? -1;
     string[] columnNames = EasyCsv.ColumnNames()!;
                            <CascadingValue TValue="CsvProcessingTable" Name="ProcessingTable" Value="this" >
         <MudTable T="CsvRow" Class="csv-table-header-matcher" FixedHeader="true" RowsPerPage="10" Items="EasyCsv.CsvContent"
@@ -45,7 +46,7 @@
                     var anchorOrigin = i >= mid ? Origin.BottomLeft : Origin.BottomRight;
                     var transformOrigin = i >= mid ? Origin.TopRight : Origin.TopLeft;
                     var column = columnNames[i];
-                    if (i == tagsColumnIndex) continue;
+                    if (i == tagsColumnIndex || i == referenceColumnIndex) continue;
                     _popOverDict.TryAdd(column, false);
                     if (!_strategyBuckets.ContainsKey(column))
                     {
@@ -101,6 +102,10 @@
                         </MudPopover>
                     </MudTh>
                 }
+                @if (referenceColumnIndex >= 0)
+                {
+                    <MudTh>Tags</MudTh>
+                }
                 @if (tagsColumnIndex >= 0)
                 {
                     <MudTh>Tags</MudTh>
@@ -114,6 +119,27 @@
                     {
                         <MudTd Class="extra-dense">@value</MudTd>
                     }
+                }
+                @if (referenceColumnIndex >= 0)
+                {
+                    var references = row.References();
+                    <MudTd Class="extra-dense">
+                        @if (references?.Any() == true)
+                        {
+                            int i = -1;
+                            <MudChipSet AllClosable="true">
+                                @foreach (var reference in references)
+                                {
+                                    i++;
+                                    string text = FormatReferenceText != null
+                                        ? FormatReferenceText(reference)
+                                        : DefaultFormatReferenceText(reference.CsvId, reference.RowId);
+
+                                    <MudChip Text="@text" Color="DefaultColors[i % DefaultColors.Length]" Size="Size.Small" OnClose="x => RemoveTag(row, tag, tagsColumnIndex)" />
+                                }
+                            </MudChipSet>
+                        }
+                    </MudTd>
                 }
                 @if (tagsColumnIndex >= 0)
                 {
@@ -142,6 +168,7 @@
 @code {
     internal static Color[] DefaultColors = [Color.Primary, Color.Secondary, Color.Success, Color.Error, Color.Tertiary, Color.Dark, Color.Warning];
 
+    [Parameter] public Func<(int ReferenceCsvId, int ReferenceRowId), string>? FormatReferenceText { get; set; } 
     [Parameter] public RenderFragment<string>? ProcessingOptions { get; set; }
     [Parameter] public CsvProcessingStepper Stepper { get; set; } = null!;
     [Parameter] public CloseBehaviour CloseBehaviour { get; set; } = Enums.CloseBehaviour.CloseButtonAndClickAway;
@@ -192,6 +219,11 @@
 
     private void RemoveTag(CsvRow row, string tag, int tagsIndex)
     {
+        row.RemoveTag(tagsIndex, tag);
+    }
+
+    private void RemoveReference(CsvRow row, string tag, int tagsIndex)
+    {
         var tags = row.ValueAt(tagsIndex)?.ToString()?.Split(",", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
         int? tagIndex = tags?.IndexOf(tag);
         if (tagIndex >= 0)
@@ -199,6 +231,11 @@
             string newTagsStr = string.Join(",", tags!.Take(tagsIndex).Skip(1));
             row.SetValueAtIndex(tagsIndex, newTagsStr); 
         }
+    }
+
+    private string DefaultFormatReferenceText(int referenceCsvId, int referenceRowId)
+    {
+        return $"Csv: {referenceCsvId}, Row: {referenceRowId}";
     }
 
     internal Task InvokeStateHasChanged()

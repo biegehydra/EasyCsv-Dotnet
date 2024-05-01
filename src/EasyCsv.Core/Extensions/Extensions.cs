@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("EasyCsv.Processing")]
@@ -13,6 +14,20 @@ internal static class Extensions
         foreach (var item in enumerable)
         {
             if (equalityComparer.Equals(item, value))
+            {
+                return i;
+            }
+            i++;
+        }
+        return -1;
+    }
+    internal static int IndexOf<T>(this IEnumerable<T> enumerable, Func<T, bool> predicate, IEqualityComparer<T>? equalityComparer = null)
+    {
+        equalityComparer ??= EqualityComparer<T>.Default;
+        int i = 0;
+        foreach (var item in enumerable)
+        {
+            if (predicate(item))
             {
                 return i;
             }

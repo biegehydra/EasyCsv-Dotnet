@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using EasyCsv.Core;
 using EasyCsv.Core.Enums;
 
-namespace EasyCsv.Processing;
+namespace EasyCsv.Processing.Strategies;
 public class TagRowsAsyncStrategy : ICsvProcessor
 {
     public string ColumnName { get; }

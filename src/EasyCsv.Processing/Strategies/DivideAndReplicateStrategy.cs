@@ -4,12 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using EasyCsv.Core;
 
-namespace EasyCsv.Processing;
-public class DivideAndReplicate : ICsvProcessor
+namespace EasyCsv.Processing.Strategies;
+public class DivideAndReplicateStrategy : ICsvProcessor
 {
     private readonly string _columnName;
     private readonly Func<object?, object?[]?> _divideFunc;
-    public DivideAndReplicate(string columnName, Func<object?, object?[]?> divideFunc)
+    public DivideAndReplicateStrategy(string columnName, Func<object?, object?[]?> divideFunc)
     {
         if (string.IsNullOrWhiteSpace(columnName)) throw new ArgumentException("Column name cannot be null or whitespace.", nameof(columnName));
         _columnName = columnName;

@@ -4,7 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using EasyCsv.Core;
 
-namespace EasyCsv.Processing;
+namespace EasyCsv.Processing.Strategies;
 
 public abstract class CombineColumnsStrategy : ICsvProcessor
 {

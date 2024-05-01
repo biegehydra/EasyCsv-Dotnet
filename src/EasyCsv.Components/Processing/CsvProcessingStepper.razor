@@ -1,17 +1,24 @@
 ﻿@namespace EasyCsv.Components
+@using EasyCsv.Test10
 
 @if (CurrentState != null && ProcessingOptions != null)
 {
     <MudText Typo="Typo.h5">Current Step: @(_currentIndex + 1)</MudText>
     <br />
-    <div style="display: flex; gap: 20px; flex-direction: row;">
-        @if (IsIndexValid(_currentIndex - 1))
+    <div style="display: flex; flex-direction: row; justify-content: space-between;" >
+        <div style="display: flex; gap: 20px; flex-direction: row;">
+            @if (IsIndexValid(_currentIndex - 1))
+            {
+                <MudButton OnClick="GoBackStep" Variant="Variant.Filled" Color="Color.Secondary">Go Back Step</MudButton>
+            }
+            @if (IsIndexValid(_currentIndex + 1))
+            {
+                <MudButton OnClick="GoForwardStep" Variant="Variant.Filled" Color="Color.Secondary">Go Forward Step</MudButton>
+            }
+        </div>
+        @if (ShowAddReferenceCsvs)
         {
-            <MudButton OnClick="GoBackStep" Variant="Variant.Filled" Color="Color.Secondary">Go Back Step</MudButton>
-        }
-        @if (IsIndexValid(_currentIndex + 1))
-        {
-            <MudButton OnClick="GoForwardStep" Variant="Variant.Filled" Color="Color.Secondary">Go Forward Step</MudButton>
+            <CsvFileInput InputVariant="@FileInputVariant.Button"  ButtonText="Add Reference Csv" OnCsvUpload="x => AddReferenceCsv(x)" ></CsvFileInput>
         }
     </div>
     <br />

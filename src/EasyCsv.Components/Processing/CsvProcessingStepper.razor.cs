@@ -22,6 +22,7 @@ public partial class CsvProcessingStepper
     [Parameter] public bool HideOtherStrategiesOnSelect { get; set; } = true;
     [Parameter] public bool SearchBar { get; set; } = true;
     [Parameter] public bool ShowColumnNameInStrategySelect { get; set; } = true;
+    [Parameter] public bool ShowAddReferenceCsvs { get; set; } = true;
     [Parameter] public RunOperationNoneSelectedBehaviour RunOperationNoneSelectedBehaviour { get; set; } = RunOperationNoneSelectedBehaviour.Hidden;
     [Parameter] public string MaxStrategySelectHeight { get; set; } = "600px";
 
@@ -36,7 +37,49 @@ public partial class CsvProcessingStepper
         }
     }
 
+    internal readonly List<(IEasyCsv Csv, string FileName)> ReferenceCsvs = new();
     private readonly List<IEasyCsv> _cachedStates = new();
+
+    public void AddReferenceCsv(CsvUploadedArgs csvFileArgs, bool useSnackbar = true)
+    {
+        if (csvFileArgs.Csv == null!) return;
+        string fileName = !string.IsNullOrWhiteSpace(csvFileArgs.FileName)
+            ? csvFileArgs.FileName
+            : $"Unnamed Csv{ReferenceCsvs.Count + 1}";
+        ReferenceCsvs.Add((csvFileArgs.Csv, fileName));
+        if (useSnackbar)
+        {
+            Snackbar?.Add($"Added '{fileName}' to references");
+        }
+    }
+
+    public async Task<OperationResult> PerformReferenceStrategy(ICsvReferenceProcessor csvReferenceProcessor)
+    {
+        if (csvReferenceProcessor == null!) return new OperationResult(false, "CsvReferenceProcessor was null");
+        int referenceId = csvReferenceProcessor.ReferenceCsvId;
+        if (referenceId < 0 || referenceId >= ReferenceCsvs.Count)
+        {
+            return new OperationResult(false, "Invalid reference id");
+        }
+        if (CurrentState == null) return new OperationResult(false, "Component not initialized yet.");
+        var clone = CurrentState.Clone();
+        var operationResult = await csvReferenceProcessor.ProcessCsv(clone, ReferenceCsvs[referenceId].Csv);
+        if (operationResult.Success)
+        {
+            if (UseSnackBars && !string.IsNullOrWhiteSpace(operationResult.Message))
+            {
+                Snackbar?.Add(operationResult.Message, Severity.Success);
+            }
+            AddToTimeline(clone);
+        }
+        else if (UseSnackBars && !string.IsNullOrWhiteSpace(operationResult.Message))
+        {
+            Snackbar?.Add($"Error Performing Strategy: {operationResult.Message}", Severity.Warning);
+        }
+
+        await InvokeAsync(StateHasChanged);
+        return operationResult;
+    }
 
     public async Task<OperationResult> PerformColumnStrategy(ICsvColumnProcessor columnProcessor)
     {

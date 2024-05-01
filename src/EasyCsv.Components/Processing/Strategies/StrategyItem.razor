@@ -1,8 +1,6 @@
 ﻿@namespace EasyCsv.Components
 @implements IDisposable
 @inherits EasyCsvStrategyOptionsBase
-@using EasyCsv.Components
-@using EasyCsv.Core.Extensions
 <style>
     .example-all-options-container {
         display: flex;
@@ -77,6 +75,7 @@
     [Parameter] public string? DisplayName { get; set; }
     [Parameter] public string? Description { get; set; }
     [Parameter] public IReadOnlyDictionary<string, string>? ExampleOptions { get; set; }
+    [Parameter] public IReadOnlyList<IReadOnlyDictionary<string, string>>? ReferenceCsvExample { get; set; }
     [Parameter] public IReadOnlyList<IReadOnlyDictionary<string, string>>? BeforeCsvExample { get; set; }
     [Parameter] public IReadOnlyList<IReadOnlyDictionary<string, string>>? AfterCsvExample { get; set; }
     [Parameter] public EventCallback<string> StrategyPicked { get; set; }
@@ -144,9 +143,9 @@
                            <ChildContent>
                                <MudText Typo="Typo.h6">@Description</MudText>
                                @ExampleOptionsFragment(ExampleOptions)
-                               @ExampleCsv(BeforeCsvExample, "Before")
-                               @ExampleCsv(AfterCsvExample, "After")
-                                
+                               @ExampleCsv(ReferenceCsvExample, "Reference Csv")
+                               @ExampleCsv(BeforeCsvExample, "Before Operation")
+                               @ExampleCsv(AfterCsvExample, "After Operation")
                            </ChildContent>
                        </MudPopover>
                    }

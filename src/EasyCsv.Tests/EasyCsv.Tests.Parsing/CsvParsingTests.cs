@@ -1,6 +1,6 @@
 using EasyCsv.Core;
 using EasyCsv.Core.Configuration;
-using EasyCsv.Processing;
+using EasyCsv.Processing.Strategies;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace EasyCsv.Tests.Processing
@@ -47,7 +47,7 @@ namespace EasyCsv.Tests.Processing
             // Arrange
             var fileContent = "Name,Email\nJohn,\"jane.smith@gmail.com,joe.smith@gmail.com\"";
             IEasyCsv easyCsv = new Core.EasyCsv(fileContent, EasyCsvConfiguration.Instance);
-            var parsingStrategy = new DivideAndReplicate("Email", x => x?.ToString()?.Split(',')?.Cast<object>().ToArray());
+            var parsingStrategy = new DivideAndReplicateStrategy("Email", x => x?.ToString()?.Split(',')?.Cast<object>().ToArray());
 
             await parsingStrategy.ProcessCsv(easyCsv);
 

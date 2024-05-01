@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using EasyCsv.Core;
 using EasyCsv.Core.Enums;
 
-namespace EasyCsv.Processing;
+namespace EasyCsv.Processing.Strategies;
 public class TagRowsStrategy : ICsvProcessor
 {
     private readonly Action<CsvRow, IList<string>> _addTagsFunc;

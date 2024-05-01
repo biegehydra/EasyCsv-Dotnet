@@ -76,7 +76,9 @@
                                         @if (Stepper.SearchBar)
                                         {
                                             <MudListItem>
-                                                <MudTextField T="string" Disabled="_strategyBuckets[column].IsAnySelected()" Immediate="true" Placeholder="Search strategies" Variant="Variant.Outlined" Value="_strategyBuckets[column].SearchQuery" ValueChanged="_strategyBuckets[column].SetSearchQuery" ></MudTextField>
+                                                <MudTextField T="string" Disabled="_strategyBuckets[column].IsAnySelected()" Immediate="true" Placeholder="Search strategies" Variant="Variant.Outlined" Value="_strategyBuckets[column].SearchQuery"
+                                                              ValueChanged="_strategyBuckets[column].SetSearchQuery" 
+                                                              Clearable="true" OnClearButtonClick="() => _strategyBuckets[column].SetSearchQuery(string.Empty)"></MudTextField>
                                             </MudListItem>
                                         }
                                         @ProcessingOptions(column)

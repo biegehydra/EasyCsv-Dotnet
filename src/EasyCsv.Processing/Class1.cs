@@ -25,6 +25,13 @@ public interface ICsvRowProcessor
     public Task<OperationResult> ProcessRow(CsvRow row);
 }
 
+public interface ICsvReferenceProcessor
+{
+    public int ReferenceCsvId { get; }
+    Task<OperationResult> ProcessCsv(IEasyCsv csv, IEasyCsv referenceCsv);
+}
+
+
 public interface ICsvProcessor
 {
     /// <summary>
@@ -33,6 +40,7 @@ public interface ICsvProcessor
     /// <param name="csv"></param>
     Task<OperationResult> ProcessCsv(IEasyCsv csv);
 }
+
 
 public interface ICsvMerger
 {

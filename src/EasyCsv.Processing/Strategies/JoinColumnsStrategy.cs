@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using EasyCsv.Core;
+using EasyCsv.Core.Extensions;
 
 namespace EasyCsv.Processing.Strategies;
 public class JoinColumnsStrategy : ICsvProcessor
@@ -25,7 +27,7 @@ public class JoinColumnsStrategy : ICsvProcessor
         _newColumnName = newColumnName;
     }
 
-    public async ValueTask<OperationResult> ProcessCsv(IEasyCsv csv)
+    public async ValueTask<OperationResult> ProcessCsv(IEasyCsv csv, ICollection<int>? filteredRowIndexes = null)
     {
         var toJoin = _columnsToJoin.Where(x => csv.ContainsColumn(x)).ToArray();
         if (toJoin.Length == _columnsToJoin.Length || (_joinIfNotAllPresent && toJoin.Length > 0))
@@ -33,7 +35,7 @@ public class JoinColumnsStrategy : ICsvProcessor
             await csv.MutateAsync(x =>
             {
                 StringBuilder sb = new StringBuilder();
-                foreach (var row in x.CsvContent)
+                foreach (var row in x.CsvContent.FilterByIndexes(filteredRowIndexes))
                 {
                     foreach (var column in toJoin)
                     {

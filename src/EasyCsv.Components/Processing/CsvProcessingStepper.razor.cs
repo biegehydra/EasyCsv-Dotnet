@@ -1,5 +1,7 @@
 ﻿using EasyCsv.Components.Enums;
+using EasyCsv.Components.Internal;
 using EasyCsv.Core;
+using EasyCsvInternal;
 using EasyCsv.Processing;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
@@ -8,6 +10,11 @@ namespace EasyCsv.Components;
 
 public partial class CsvProcessingStepper
 {
+    private static AggregateOperationDeleteResult _runnerNullAggregateDelete = new AggregateOperationDeleteResult(false, 0, "Runner was null");
+    private static AggregateOperationDeleteResult _processingTableNullAggregateDelete = new AggregateOperationDeleteResult(false, 0, "Processing table was null");
+    private static OperationResult _runnerNull = new OperationResult(false, "Runner was null");
+    private static OperationResult _processingTableNull = new OperationResult(false, "Processing table was null");
+
     [Inject] public ISnackbar? Snackbar { get; set; }
     [Parameter] public IEasyCsv? EasyCsv { get; set; }
     [Parameter] public bool UseSnackBar { get; set; } = true;
@@ -29,9 +36,16 @@ public partial class CsvProcessingStepper
     [Parameter] public bool AllowControlTagsAndReferencesLocation { get; set; } = true;
     [Parameter] public bool UseToolbar { get; set; } = true;
     [Parameter] public double SearchDebounceInterval { get; set; } = 250;
+    /// <summary>
+    /// If true, operations will only run on filtered rows,
+    /// otherwise they will run on every row
+    /// </summary>
+    [Parameter] public bool OperateOnFilteredRows { get; set; }
     [Parameter] public Color ReferenceChipColor { get; set; } = Color.Primary;
     [Parameter] public string MaxStrategySelectHeight { get; set; } = "600px";
     public StrategyRunner? Runner { get; private set; }
+    private CsvProcessingTable? _csvProcessingTable { get; set; }
+
     protected override void OnParametersSet()
     {
         if (EasyCsv != null && Runner == null)
@@ -53,12 +67,13 @@ public partial class CsvProcessingStepper
             Snackbar?.Add($"Added '{fileName}' to references");
         }
     }
-    private static AggregateOperationDeleteResult _runnerNullAggregateDelete = new AggregateOperationDeleteResult(false, 0, "Runner was null");
-    private static OperationResult _runnerNull = new OperationResult(false, "Runner was null");
+
     public async Task<AggregateOperationDeleteResult> PerformColumnEvaluateDelete(ICsvColumnDeleteEvaluator evaluateDelete)
     {
         if (Runner == null) return _runnerNullAggregateDelete;
-        var aggregateOperationDeleteResult = await Runner.PerformColumnEvaluateDelete(evaluateDelete);
+        if (_csvProcessingTable == null) return _processingTableNullAggregateDelete;
+        var filteredRowIds = FilteredRowIds();
+        var aggregateOperationDeleteResult = await Runner.PerformColumnEvaluateDelete(evaluateDelete, filteredRowIds);
         AddAggregateDeleteOperationResultSnackbar(aggregateOperationDeleteResult);
         await InvokeAsync(StateHasChanged);
         return aggregateOperationDeleteResult;
@@ -67,7 +82,9 @@ public partial class CsvProcessingStepper
     public async Task<AggregateOperationDeleteResult> PerformRowEvaluateDelete(ICsvRowDeleteEvaluator evaluateDelete)
     {
         if (Runner == null) return _runnerNullAggregateDelete;
-        var aggregateOperationDeleteResult = await Runner.RunRowEvaluateDelete(evaluateDelete);
+        if (_csvProcessingTable == null) return _processingTableNullAggregateDelete;
+        var filteredRowIds = FilteredRowIds();
+        var aggregateOperationDeleteResult = await Runner.RunRowEvaluateDelete(evaluateDelete, filteredRowIds);
         AddAggregateDeleteOperationResultSnackbar(aggregateOperationDeleteResult);
         await InvokeAsync(StateHasChanged);
         return aggregateOperationDeleteResult;
@@ -76,7 +93,9 @@ public partial class CsvProcessingStepper
     public async Task<OperationResult> PerformReferenceStrategy(ICsvReferenceProcessor csvReferenceProcessor)
     {
         if (Runner == null) return _runnerNull;
-        var operationResult = await Runner.RunReferenceStrategy(csvReferenceProcessor);
+        if (_csvProcessingTable == null) return _processingTableNull;
+        var filteredRowIds = FilteredRowIds();
+        var operationResult = await Runner.RunReferenceStrategy(csvReferenceProcessor, filteredRowIds);
         AddOperationResultSnackbar(operationResult);
         await InvokeAsync(StateHasChanged);
         return operationResult;
@@ -85,7 +104,20 @@ public partial class CsvProcessingStepper
     public async Task<OperationResult> PerformColumnStrategy(ICsvColumnProcessor columnProcessor)
     {
         if (Runner == null) return _runnerNull;
-        var operationResult = await Runner.RunColumnStrategy(columnProcessor);
+        if (_csvProcessingTable == null) return _processingTableNull;
+        var filteredRowIds = FilteredRowIds();
+        var operationResult = await Runner.RunColumnStrategy(columnProcessor, filteredRowIds);
+        AddOperationResultSnackbar(operationResult, skipSuccess: true);
+        await InvokeAsync(StateHasChanged);
+        return operationResult;
+    }
+
+    public async Task<OperationResult> PerformRowStrategy(ICsvRowProcessor rowProcessor)
+    {
+        if (Runner == null) return _runnerNull;
+        if (_csvProcessingTable == null) return _processingTableNull;
+        var filteredRowIds = FilteredRowIds();
+        var operationResult = await Runner.RunRowStrategy(rowProcessor, filteredRowIds);
         AddOperationResultSnackbar(operationResult, skipSuccess: true);
         await InvokeAsync(StateHasChanged);
         return operationResult;
@@ -94,10 +126,23 @@ public partial class CsvProcessingStepper
     public async Task<OperationResult> PerformCsvStrategy(ICsvProcessor csvProcessor)
     {
         if (Runner == null) return _runnerNull;
-        var operationResult = await Runner.RunCsvStrategy(csvProcessor);
+        if (_csvProcessingTable == null) return _processingTableNull;
+        var filteredRowIds = FilteredRowIds();
+        var operationResult = await Runner.RunCsvStrategy(csvProcessor, filteredRowIds);
         AddOperationResultSnackbar(operationResult);
         await InvokeAsync(StateHasChanged);
         return operationResult;
+    }
+
+    private HashSet<int>? FilteredRowIds()
+    {
+        if (_csvProcessingTable == null) return null;
+        HashSet<int>? filteredIndexes = null;
+        if (_csvProcessingTable.IsFiltered())
+        {
+            filteredIndexes = _csvProcessingTable.FilteredRowIndexes();
+        }
+        return filteredIndexes;
     }
 
     private void AddOperationResultSnackbar(OperationResult operationResult, bool skipSuccess = false)

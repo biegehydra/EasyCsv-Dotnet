@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using EasyCsv.Core.Extensions;
 
 [assembly: InternalsVisibleTo("EasyCsv.Components")]
 namespace EasyCsv.Processing;
@@ -22,14 +23,14 @@ public class StrategyRunner
         SetCurrentIndexSafe(0);
     }
 
-    public async Task<AggregateOperationDeleteResult> PerformColumnEvaluateDelete(ICsvColumnDeleteEvaluator evaluateDelete)
+    public async Task<AggregateOperationDeleteResult> PerformColumnEvaluateDelete(ICsvColumnDeleteEvaluator evaluateDelete, ICollection<int>? filteredRowIds)
     {
         if (CurrentCsv == null) return new AggregateOperationDeleteResult(false, 0, "Component not initialized yet.");
         if (evaluateDelete == null!) return new AggregateOperationDeleteResult(false, 0, "CsvColumnDeleteEvaluator was null");
         var clone = CurrentCsv.Clone();
         List<int> rowsToDelete = new List<int>();
         int i = -1;
-        foreach (var row in clone.CsvContent)
+        foreach (var row in clone.CsvContent.FilterByIndexes(filteredRowIds))
         {
             i++;
             var operationResult = await evaluateDelete.EvaluateDelete(new RowCell(row, evaluateDelete.ColumnName));
@@ -49,7 +50,7 @@ public class StrategyRunner
         return new AggregateOperationDeleteResult(true, rowsToDelete.Count, message);
     }
 
-    public async Task<AggregateOperationDeleteResult> RunRowEvaluateDelete(ICsvRowDeleteEvaluator evaluateDelete)
+    public async Task<AggregateOperationDeleteResult> RunRowEvaluateDelete(ICsvRowDeleteEvaluator evaluateDelete, ICollection<int>? filteredRowIds)
     {
         if (CurrentCsv == null) return new AggregateOperationDeleteResult(false, 0, "Component not initialized yet.");
         if (evaluateDelete == null!) return new AggregateOperationDeleteResult(false, 0, "CsvRowDeleteEvaluator was null");
@@ -57,7 +58,7 @@ public class StrategyRunner
         var clone = CurrentCsv.Clone();
         List<int> rowsToDelete = new List<int>();
         int i = -1;
-        foreach (var row in clone.CsvContent)
+        foreach (var row in clone.CsvContent.FilterByIndexes(filteredRowIds))
         {
             i++;
             var operationResult = await evaluateDelete.EvaluateDelete(row);
@@ -77,7 +78,7 @@ public class StrategyRunner
         return new AggregateOperationDeleteResult(true, rowsToDelete.Count, message);
     }
 
-    public async Task<OperationResult> RunReferenceStrategy(ICsvReferenceProcessor csvReferenceProcessor)
+    public async Task<OperationResult> RunReferenceStrategy(ICsvReferenceProcessor csvReferenceProcessor, ICollection<int>? filteredRowIds)
     {
         if (csvReferenceProcessor == null!) return new OperationResult(false, "CsvReferenceProcessor was null");
         int referenceId = csvReferenceProcessor.ReferenceCsvId;
@@ -87,7 +88,7 @@ public class StrategyRunner
         }
         if (CurrentCsv == null) return new OperationResult(false, "Component not initialized yet.");
         var clone = CurrentCsv.Clone();
-        var operationResult = await csvReferenceProcessor.ProcessCsv(clone, ReferenceCsvs[referenceId].Csv);
+        var operationResult = await csvReferenceProcessor.ProcessCsv(clone, ReferenceCsvs[referenceId].Csv, filteredRowIds);
         if (operationResult.Success)
         {
             AddToTimeline(clone);
@@ -95,11 +96,11 @@ public class StrategyRunner
         return operationResult;
     }
 
-    public async Task<OperationResult> RunColumnStrategy(ICsvColumnProcessor columnProcessor)
+    public async Task<OperationResult> RunColumnStrategy(ICsvColumnProcessor columnProcessor, ICollection<int>? filteredRowIds)
     {
         if (CurrentCsv == null) return new OperationResult(false, "Component not initialized yet.");
         var clone = CurrentCsv.Clone();
-        foreach (var row in clone.CsvContent)
+        foreach (var row in clone.CsvContent.FilterByIndexes(filteredRowIds))
         {
             var operationResult = await columnProcessor.ProcessCell(new RowCell(row, columnProcessor.ColumnName));
             if (operationResult.Success == false)
@@ -112,11 +113,27 @@ public class StrategyRunner
         return new OperationResult(true);
     }
 
-    public async Task<OperationResult> RunCsvStrategy(ICsvProcessor csvProcessor)
+    public async Task<OperationResult> RunRowStrategy(ICsvRowProcessor rowProcessor, ICollection<int>? filteredRowIds)
     {
         if (CurrentCsv == null) return new OperationResult(false, "Component not initialized yet.");
         var clone = CurrentCsv.Clone();
-        var operationResult = await csvProcessor.ProcessCsv(clone);
+        foreach (var row in clone.CsvContent.FilterByIndexes(filteredRowIds))
+        {
+            var operationResult = await rowProcessor.ProcessRow(row);
+            if (operationResult.Success == false)
+            {
+                return operationResult;
+            }
+        }
+        AddToTimeline(clone);
+        return new OperationResult(true);
+    }
+
+    public async Task<OperationResult> RunCsvStrategy(ICsvProcessor csvProcessor, ICollection<int>? filteredRowIds)
+    {
+        if (CurrentCsv == null) return new OperationResult(false, "Component not initialized yet.");
+        var clone = CurrentCsv.Clone();
+        var operationResult = await csvProcessor.ProcessCsv(clone, filteredRowIds);
         if (operationResult.Success)
         {
             AddToTimeline(clone);

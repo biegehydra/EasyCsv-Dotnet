@@ -147,10 +147,28 @@ namespace EasyCsv.Core
 
         public bool AnyColumnMatchesValues(IEnumerable<string> columns, object? value, IEqualityComparer<object>? comparer = null)
         {
+            if (value == null) return false;
             comparer ??= EqualityComparer<object>.Default;
             foreach (var column in columns)
             {
                 if (TryGetValue(column, out object? columnValue) && comparer.Equals(columnValue, value))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public bool AnyColumnContainsValues(IEnumerable<string> columns, string? value, StringComparison stringComparisonType = StringComparison.OrdinalIgnoreCase)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return false;
+            foreach (var column in columns)
+            {
+#if NETSTANDARD2_0
+                if (TryGetValue(column, out object? columnValue) && columnValue?.ToString()?.Contains(value) == true)
+#else
+                if (TryGetValue(column, out object? columnValue) && columnValue?.ToString()?.Contains(value, stringComparisonType) == true)
+#endif
                 {
                     return true;
                 }
@@ -206,7 +224,11 @@ namespace EasyCsv.Core
             if (!Utils.IsValidIndex(tagsColumnIndex, Count)) return null;
             string? value = ValueAt(tagsColumnIndex)?.ToString();
             if (string.IsNullOrWhiteSpace(value)) return null;
+#if NETSTANDARD2_0
             var split = value.Split([","], StringSplitOptions.RemoveEmptyEntries);
+#else
+            var split = value.Split(',', StringSplitOptions.RemoveEmptyEntries);
+#endif
             return split;
         }
 

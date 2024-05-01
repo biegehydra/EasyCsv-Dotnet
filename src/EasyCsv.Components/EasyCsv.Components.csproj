@@ -5,6 +5,7 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<langversion>preview</langversion>
+		<RootNamespace>EasyCsv.Components</RootNamespace>
 
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<Title>EasyCsv.Components</Title>
@@ -26,6 +27,7 @@
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
 		<DocumentationFile>$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 		<NoWarn>1701;1702;1591;1573</NoWarn>
+		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
 	</PropertyGroup>
 
 

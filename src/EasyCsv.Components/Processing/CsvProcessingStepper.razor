@@ -1,5 +1,5 @@
 ﻿@namespace EasyCsv.Components
-
+@using EasyCsvInternal
 <ErrorBoundary >
     <ChildContent>
         @if (Runner?.CurrentCsv != null && ProcessingOptions != null)
@@ -35,7 +35,7 @@
             </div>
             <br />
             <br />
-            <CsvProcessingTable ProcessingOptions="ProcessingOptions" Stepper="this" EasyCsv="Runner.CurrentCsv" />
+            <CsvProcessingTable @ref="_csvProcessingTable" ProcessingOptions="ProcessingOptions" Stepper="this" EasyCsv="Runner.CurrentCsv" />
         }
     </ChildContent>
     <ErrorContent>

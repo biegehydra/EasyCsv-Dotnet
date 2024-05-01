@@ -6,7 +6,9 @@
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<LangVersion>preview</LangVersion>
-	
+		<RootNamespace>EasyCsv.Core</RootNamespace>
+
+
 		<!--NuGet-->
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageId>EasyCsv.Core</PackageId>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using EasyCsv.Core;
@@ -16,8 +17,8 @@ public class StringSplitColumnStrategy : ICsvProcessor
             x => x?.ToString()?.Split([delimiter], stringSplitOptions)?.Cast<object?>().ToArray());
     }
 
-    public async ValueTask<OperationResult> ProcessCsv(IEasyCsv csv)
+    public async ValueTask<OperationResult> ProcessCsv(IEasyCsv csv, ICollection<int>? filteredRowIndexes = null)
     {
-        return await _splitColumnStrategy.ProcessCsv(csv);
+        return await _splitColumnStrategy.ProcessCsv(csv, filteredRowIndexes);
     }
 }

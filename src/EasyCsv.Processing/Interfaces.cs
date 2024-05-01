@@ -1,4 +1,5 @@
-﻿using EasyCsv.Core;
+﻿using System.Collections.Generic;
+using EasyCsv.Core;
 using System.Threading.Tasks;
 
 namespace EasyCsv.Processing;
@@ -39,7 +40,7 @@ public interface ICsvRowDeleteEvaluator
 
 public interface ICsvReferenceProcessor : IReferenceOperation
 {
-    ValueTask<OperationResult> ProcessCsv(IEasyCsv csv, IEasyCsv referenceCsv);
+    ValueTask<OperationResult> ProcessCsv(IEasyCsv csv, IEasyCsv referenceCsv, ICollection<int>? filteredRowIndexes = null);
 }
 
 
@@ -49,7 +50,7 @@ public interface ICsvProcessor
     /// This function will be called for each row in the csv.
     /// </summary>
     /// <param name="csv"></param>
-    ValueTask<OperationResult> ProcessCsv(IEasyCsv csv);
+    ValueTask<OperationResult> ProcessCsv(IEasyCsv csv, ICollection<int>? filteredRowIndexes = null);
 }
 
 
@@ -75,24 +76,28 @@ public interface IReferenceOperation
 
 public readonly struct OperationResult
 {
-    public OperationResult(bool success, string? message = null)
+    public OperationResult(bool success, string? message = null, double progress = 0)
     {
         Success = success;
         Message = message;
+        Progress = progress;
     }
+    public double Progress { get; }
     public bool Success { get; }
     public string? Message { get; } 
 }
 
 public readonly struct OperationDeleteResult
 {
-    public OperationDeleteResult(bool success, bool delete, string? message = null)
+    public OperationDeleteResult(bool success, bool delete, string? message = null, double progress = 0)
     {
         Success = success;
         Message = message;
         Delete = delete;
+        Progress = progress;
     }
     public bool Success { get; }
+    public double Progress { get; }
     public bool Delete { get; }
     public string? Message { get; }
 }

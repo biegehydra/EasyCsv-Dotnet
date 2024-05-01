@@ -1,4 +1,5 @@
-﻿@code {
+﻿@using EasyCsvInternal
+@code {
     public static RenderFragment? ExampleCsv(IReadOnlyList<IReadOnlyDictionary<string, string?>>? exampleCsv, string? text, bool brBefore = true)
     {
         if (exampleCsv?.Count > 0 != true) return null;

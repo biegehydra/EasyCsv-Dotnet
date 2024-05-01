@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using EasyCsv.Core;
+using EasyCsv.Core.Extensions;
 
 namespace EasyCsv.Processing.Strategies;
 public class DivideAndReplicateStrategy : ICsvProcessor
@@ -15,7 +16,7 @@ public class DivideAndReplicateStrategy : ICsvProcessor
         _columnName = columnName;
         _divideFunc = divideFunc ?? throw new ArgumentException("DivideFunc cannot be null.", nameof(divideFunc));
     }
-    public async ValueTask<OperationResult> ProcessCsv(IEasyCsv csv)
+    public async ValueTask<OperationResult> ProcessCsv(IEasyCsv csv, ICollection<int>? filteredRowIndexes = null)
     {
         if (!csv.ContainsColumn(_columnName))
         {
@@ -26,7 +27,7 @@ public class DivideAndReplicateStrategy : ICsvProcessor
         await csv.MutateAsync(x =>
         {
             int i = 0;
-            foreach (var row in x.CsvContent)
+            foreach (var row in x.CsvContent.FilterByIndexes(filteredRowIndexes))
             {
                 var divided = _divideFunc(row[_columnName]);
                 if (divided?.Length > 1)

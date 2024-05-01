@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using EasyCsv.Core;
+using EasyCsv.Core.Extensions;
 
 namespace EasyCsv.Processing.Strategies;
 
@@ -27,7 +29,7 @@ public abstract class CombineColumnsStrategy : ICsvProcessor
         _combineValuesFunc = combineValues;
     }
 
-    public async ValueTask<OperationResult> ProcessCsv(IEasyCsv csv)
+    public async ValueTask<OperationResult> ProcessCsv(IEasyCsv csv, ICollection<int>? filteredRowIndexes = null)
     {
         var toCombine = _columnsToJoin.Where(x => csv.ContainsColumn(x)).ToArray();
         if (toCombine.Length == _columnsToJoin.Length || (_combineIfNotAllPresent && toCombine.Length > 0))
@@ -35,7 +37,7 @@ public abstract class CombineColumnsStrategy : ICsvProcessor
             await csv.MutateAsync(x =>
             {
                 StringBuilder sb = new StringBuilder();
-                foreach (var row in x.CsvContent)
+                foreach (var row in x.CsvContent.FilterByIndexes(filteredRowIndexes))
                 {
                     string?[] values = new string[toCombine.Length];
                     int i = 0;

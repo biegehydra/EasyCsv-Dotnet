@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using EasyCsv.Core;
 using EasyCsv.Core.Enums;
+using EasyCsv.Core.Extensions;
 
 namespace EasyCsv.Processing.Strategies;
 public class TagAndReferenceMatchesStrategy : ICsvReferenceProcessor
@@ -27,7 +28,7 @@ public class TagAndReferenceMatchesStrategy : ICsvReferenceProcessor
         TagToAdd = tagToAdd;
     }
 
-    public async ValueTask<OperationResult> ProcessCsv(IEasyCsv csv, IEasyCsv referenceCsv)
+    public async ValueTask<OperationResult> ProcessCsv(IEasyCsv csv, IEasyCsv referenceCsv, ICollection<int>? filteredRowIds)
     {
         if (!csv.ContainsColumn(ColumnName))
         {
@@ -45,7 +46,7 @@ public class TagAndReferenceMatchesStrategy : ICsvReferenceProcessor
         {
             x.AddColumn(InternalColumnNames.Tags, null, ExistingColumnHandling.Keep);
             x.AddColumn(InternalColumnNames.References, null, ExistingColumnHandling.Keep);
-            foreach (var row in x.CsvContent)
+            foreach (var row in x.CsvContent.FilterByIndexes(filteredRowIds))
             {
                 var value = row[ColumnName]?.ToString();
                 if (!string.IsNullOrWhiteSpace(value) && referenceMap.TryGetValue(value!, out var referenceIds) &&

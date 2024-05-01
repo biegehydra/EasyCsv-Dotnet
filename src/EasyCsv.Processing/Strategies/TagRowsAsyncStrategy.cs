@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using EasyCsv.Core;
 using EasyCsv.Core.Enums;
+using EasyCsv.Core.Extensions;
 
 namespace EasyCsv.Processing.Strategies;
 public class TagRowsAsyncStrategy : ICsvProcessor
@@ -16,15 +17,14 @@ public class TagRowsAsyncStrategy : ICsvProcessor
 
     }
 
-    public async ValueTask<OperationResult> ProcessCsv(IEasyCsv csv)
+    public async ValueTask<OperationResult> ProcessCsv(IEasyCsv csv, ICollection<int>? filteredRowIndexes)
     {
         await csv.MutateAsync(async x =>
         {
             x.AddColumn(InternalColumnNames.Tags, null, ExistingColumnHandling.Keep);
-            foreach (var row in x.CsvContent)
+            foreach (var row in x.CsvContent.FilterByIndexes(filteredRowIndexes))
             {
-                var existingTags = row[InternalColumnNames.Tags]?.ToString()?.Split([','], StringSplitOptions.RemoveEmptyEntries).ToList();
-                existingTags ??= new List<string>();
+                var existingTags = row.Tags()?.ToList() ?? [];
                 await _addTagsFunc(row, existingTags);
                 row[InternalColumnNames.Tags] = string.Join(",", existingTags.Distinct());
             }

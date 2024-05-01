@@ -1,6 +1,9 @@
-﻿@using EasyCsv.Processing
+﻿@namespace EasyCsvInternal
+@using EasyCsv.Processing
 @using EasyCsv.Core.Extensions
+@using EasyCsv.Components
 @using System.Collections
+@using System.Diagnostics.Contracts
 <style>
     .mud-input-control-input-container:has(.mud-input-outlined) {
         margin-top: 0px !important;
@@ -66,7 +69,7 @@
         </MudPopover>
     }
 
-    <MudTable T="CsvRow" Class="csv-processing-table" FixedHeader="true" RowsPerPage="10" Items="GetFiltersRows()"
+    <MudTable T="CsvRow" Class="csv-processing-table" FixedHeader="true" RowsPerPage="10" Items="GetFilteredRows()"
               Striped Bordered Dense Hover Elevation="2" ToolBarContent="@ToolBarContent()">
         <HeaderContent>
             @if (Stepper.TagsAndReferencesLocation == ColumnLocation.Beginning)
@@ -210,16 +213,36 @@
     private IEasyCsv? _easyCsv;
     private string? _sq;
 
-    public IEnumerable<CsvRow> GetFiltersRows()
+    public IEnumerable<CsvRow> GetFilteredRows()
     {
-        if (_searchColumns.Count == 0 || string.IsNullOrWhiteSpace(_sq))
+        if (IsFiltered())
         {
-            return EasyCsv?.CsvContent ?? Enumerable.Empty<CsvRow>();
+            var columnsToSearch = _searchColumns.Where(x => x.Value).Select(x => x.Key).ToArray();
+            return EasyCsv?.CsvContent.Where(x => x.AnyColumnContainsValues(columnsToSearch, _sq)) ?? Enumerable.Empty<CsvRow>();
+        }
+        return EasyCsv?.CsvContent ?? Enumerable.Empty<CsvRow>();
+    }
+
+    [Pure]
+    internal HashSet<int> FilteredRowIndexes()
+    {
+        var columnsToSearch = _searchColumns.Where(x => x.Value).Select(x => x.Key).ToArray();
+        return EasyCsv?.CsvContent
+            .Select((row, index) => (row, index))
+            .Where(x => x.row.AnyColumnContainsValues(columnsToSearch, _sq))
+            .Select(x => x.index)
+            .ToHashSet() ?? new HashSet<int>();
+    }
+
+    public bool IsFiltered()
+    {
+        if (_searchColumns.Count(x => x.Value) > 0 && !string.IsNullOrWhiteSpace(_sq))
+        {
+            return true;
         }
         else
         {
-            var columnsToSearch = _searchColumns.Where(x => x.Value).Select(x => x.Key).ToArray();
-            return EasyCsv?.CsvContent.Where(x => x.AnyColumnMatchesValues(columnsToSearch, _sq)) ?? Enumerable.Empty<CsvRow>();
+            return false;
         }
     }
 
@@ -317,7 +340,7 @@
     {
         var count = grouping.Count();
         string rows = count == 1 ? "Row" : "Rows";
-        return $"Ref Csv: {grouping.Key + 1}, {rows}: {string.Join(',', grouping.Select(x => x.RowIndex + 1))}";
+        return $"Ref Csv: {grouping.Key + 1}, {rows}: {string.Join('|', grouping.Select(x => x.RowIndex + 1))}";
     }
 
     internal Task InvokeStateHasChanged()

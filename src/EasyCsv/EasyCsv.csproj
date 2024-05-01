@@ -3,7 +3,9 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netstandard2.1;net6.0;net7.0</TargetFrameworks>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Title>EasyCsv</Title>
+	  <RootNamespace>EasyCsv.NotRootNamespace</RootNamespace>
+
+	  <Title>EasyCsv</Title>
     <Authors>Connor Hallman</Authors>
     <Company>Connor Hallman</Company>
     <Product>EasyCsv</Product>

@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using EasyCsv.Core;
 using EasyCsv.Core.Enums;
+using EasyCsv.Core.Extensions;
 
 namespace EasyCsv.Processing.Strategies;
 
@@ -22,7 +24,7 @@ public class SplitColumnStrategy : ICsvProcessor
         _splitFunc = splitFunc ?? throw new ArgumentException("SplitFunc cannot be null");
     }
 
-    public async ValueTask<OperationResult> ProcessCsv(IEasyCsv csv)
+    public async ValueTask<OperationResult> ProcessCsv(IEasyCsv csv, ICollection<int>? filteredRowIndexes = null)
     {
         if (csv.ContainsColumn(_columnToSplit))
         {
@@ -30,7 +32,7 @@ public class SplitColumnStrategy : ICsvProcessor
             await csv.MutateAsync(x =>
             {
                 x.AddColumns(_newColumnNames.ToDictionary(y => y, value => (object?)null), existingColumnHandling: ExistingColumnHandling.Keep);
-                foreach (var row in x.CsvContent)
+                foreach (var row in x.CsvContent.FilterByIndexes(filteredRowIndexes))
                 {
                     object?[]? split = _splitFunc(row[_columnToSplit]);
                     if (split?.Length > 0)

@@ -1,10 +1,12 @@
 ﻿using EasyCsv.Components.Enums;
 using EasyCsv.Components.Internal;
 using EasyCsv.Core;
+using EasyCsv.Core.Extensions;
 using EasyCsvInternal;
 using EasyCsv.Processing;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
+using Microsoft.JSInterop;
 
 namespace EasyCsv.Components;
 
@@ -16,6 +18,7 @@ public partial class CsvProcessingStepper
     private static OperationResult _processingTableNull = new OperationResult(false, "Processing table was null");
 
     [Inject] public ISnackbar? Snackbar { get; set; }
+    [Inject] public IJSRuntime? Js { get; set; }
     [Parameter] public IEasyCsv? EasyCsv { get; set; }
     [Parameter] public bool UseSnackBar { get; set; } = true;
 
@@ -52,6 +55,24 @@ public partial class CsvProcessingStepper
         {
             Runner = new StrategyRunner(EasyCsv);
         }
+    }
+
+    internal HashSet<string> AllUniqueTags()
+    {
+        var uniqueTags = new HashSet<string>();
+        if (Runner?.CurrentCsv?.CsvContent == null) return uniqueTags;
+        foreach (var row in Runner.CurrentCsv.CsvContent)
+        {
+            var tags = row.Tags();
+            if (tags != null)
+            {
+                foreach (var tag in tags)
+                {
+                    uniqueTags.Add(tag);
+                }
+            }
+        }
+        return uniqueTags;
     }
 
     public void AddReferenceCsv(CsvUploadedArgs csvFileArgs, bool useSnackbar = true)
@@ -179,5 +200,34 @@ public partial class CsvProcessingStepper
     public bool GoForwardStep()
     {
         return Runner?.GoForwardStep() ?? false;
+    }
+
+    private async ValueTask DownloadSnapShot()
+    {
+        if (Js == null || Runner?.CurrentCsv == null) return;
+        var rowIndexes = GetFilteredRowIndexesForDownload();
+        if (!rowIndexes.Any()) return;
+        var clone = Runner.CurrentCsv.Clone();
+        var downloadModel = clone.CondenseTo(_columnsToDownload, rowIndexes);
+        if (downloadModel?.ContentBytes == null) return;
+        _isDownloadDialogVisible = false;
+        using var streamRef = new DotNetStreamReference(stream:
+            new MemoryStream(downloadModel.ContentBytes));
+        await Js.InvokeVoidAsync("downloadFileFromStreamEasyCsv", "UnmatchedAddresses.csv", streamRef);
+        if (UseSnackBar)
+        {
+            Snackbar?.Add($"Downloaded {downloadModel.CsvContent.Count} rows");
+        }
+    }
+
+    private HashSet<int> GetFilteredRowIndexesForDownload()
+    {
+        var tagsColumnIndex = Runner?.CurrentCsv?.ColumnNames()?.IndexOf(x => x == InternalColumnNames.Tags) ?? -1;
+        return Runner?.CurrentCsv?.CsvContent
+            .Select((row, index) => (row, index))
+            .Where(x => x.row.AnyColumnContainsValues(_searchColumns, _sq))
+            .Where(x => tagsColumnIndex < 0 || x.row.MatchesIncludeTagsAndExcludeTags(tagsColumnIndex, _includeTags, _excludeTags))
+            .Select(x => x.index)
+            .ToHashSet() ?? new HashSet<int>();
     }
 }

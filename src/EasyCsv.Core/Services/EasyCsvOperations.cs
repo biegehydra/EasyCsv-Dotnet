@@ -12,6 +12,44 @@ namespace EasyCsv.Core
 {
     internal partial class EasyCsv
     {
+        public IEasyCsv CondenseTo(ICollection<string>? columnNames, ICollection<int>? rowIndexes)
+        {
+            string[]? existingColumnNames = ColumnNames();
+            if (existingColumnNames is not {Length: > 0}) return this;
+            if (columnNames?.Count is not > 0)
+            {
+                columnNames = existingColumnNames;
+            }
+            if (existingColumnNames.Length == columnNames.Count && existingColumnNames.All(columnNames.Contains))
+            {
+                if (rowIndexes == null)
+                {
+                    // Column names the same and all rows
+                    return this;
+                }
+                var newCsvContent = new List<CsvRow>(rowIndexes?.Count ?? CsvContent.Count);
+                foreach (var row in CsvContent.FilterByIndexes(rowIndexes))
+                {
+                    newCsvContent.Add(row.Clone());
+                }
+                return new EasyCsv(newCsvContent, Config);
+            }
+            var newCsvContent2 = new List<CsvRow>(rowIndexes?.Count ?? CsvContent.Count);
+            foreach (var row in CsvContent.FilterByIndexes(rowIndexes))
+            {
+                var newRowDict = new Dictionary<string, object?>();
+                foreach (var kvp in row)
+                {
+                    if (columnNames.Contains(kvp.Key))
+                    {
+                        newRowDict.Add(kvp.Key, kvp.Value);
+                    }
+                }
+                newCsvContent2.Add(new CsvRow(newRowDict));
+            }
+            return new EasyCsv(newCsvContent2, Config);
+        }
+
         public IEasyCsv ReplaceHeaderRow(IReadOnlyList<string> newHeaderFields)
         {
             if (CsvContent == null) return this;

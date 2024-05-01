@@ -1,5 +1,14 @@
 ﻿@namespace EasyCsv.Components
 @using EasyCsvInternal
+
+<style>
+    .csv-processing-download-popup-container {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+</style>
+
 <ErrorBoundary >
     <ChildContent>
         @if (Runner?.CurrentCsv != null && ProcessingOptions != null)
@@ -29,6 +38,10 @@
                                                OnClick="() => TagsAndReferencesLocation = TagsAndReferencesLocation == ColumnLocation.End ? ColumnLocation.Beginning : ColumnLocation.End" />
                             </MudTooltip>
                         }
+                        <MudTooltip Text="Download Snapshot of Current Csv" Delay="600">
+                            <MudIconButton Variant="Variant.Filled" Color="Color.Info" Icon="@Icons.Material.Filled.Download"
+                                           OnClick="_ => OpenDownloadDialog()" />
+                        </MudTooltip>
                         <CsvFileInput InputVariant="@FileInputVariant.Button" ButtonText="Add Reference Csv" OnCsvUpload="x => AddReferenceCsv(x)"></CsvFileInput>
                     </div>
                 }
@@ -49,3 +62,62 @@
         }
     </ErrorContent>
 </ErrorBoundary>
+@{
+    string[]? columnNames;
+}
+@if (Runner?.CurrentCsv != null && (columnNames = Runner.CurrentCsv.ColumnNames()) != null)
+{
+    <MudDialog @bind-IsVisible="_isDownloadDialogVisible" >
+        <DialogContent >
+            <CascadingValue TValue="CsvProcessingStepper" Value="this" IsFixed="true">
+                <div class="csv-processing-download-popup-container">
+                    <MudText Typo="Typo.h5">Download Snapshot Options</MudText>
+                    <MultiColumnSelect @bind-ColumnNames="_columnsToDownload" Label="Columns To Download" SelectAll="true" SelectAllText="Download All Columns"></MultiColumnSelect>
+                    <MudTextField T="string" Class="csv-processing-toolbar-search-field" DebounceInterval="SearchDebounceInterval" Immediate="true" Label="Search Query"
+                                  HelperText="Value to search for" HelperTextOnFocus Variant="Variant.Outlined" @bind-Value="_sq"
+                                  Clearable OnClearButtonClick="x => _sq = null"/>
+                    <MultiColumnSelect @bind-ColumnNames="_searchColumns" Label="Columns To Search" SelectAll="true" SelectAllText="Search All Columns"></MultiColumnSelect>
+                    @if (columnNames.Contains(InternalColumnNames.Tags))
+                    {
+                        <MultiTagSelect @bind-Tags="_includeTags" DisabledTags="_excludeTags" Label="Include Tags"></MultiTagSelect>
+                        <MultiTagSelect @bind-Tags="_excludeTags" DisabledTags="_includeTags" Label="Exclude Tags"></MultiTagSelect>
+                    }
+                </div>
+            </CascadingValue>
+        </DialogContent>
+        <DialogActions>
+            <MudButton StartIcon="@Icons.Material.Filled.Close" Variant="Variant.Outlined" Color="Color.Default" OnClick="x => _isDownloadDialogVisible = false"  >Cancel</MudButton>
+            <MudButton StartIcon="@Icons.Material.Filled.Download" Variant="Variant.Filled" Color="Color.Info" OnClick="async _ => await DownloadSnapShot()">Download</MudButton>
+        </DialogActions>
+    </MudDialog>
+}
+@code {
+    private bool _isDownloadDialogVisible = false;
+    private string[] _columnsToDownload = [];
+    private string[] _searchColumns = [];
+    private string[] _includeTags = [];
+    private string[] _excludeTags = [];
+    private string? _sq;
+
+    private void OpenDownloadDialog()
+    {
+        if (_columnsToDownload.Length > 0)
+        {
+            _columnsToDownload = [];
+        }
+        if (_searchColumns.Length > 0)
+        {
+            _searchColumns = [];
+        }
+        if (_includeTags.Length > 0)
+        {
+            _includeTags = [];
+        }
+        if (_excludeTags.Length > 0)
+        {
+            _excludeTags = [];
+        }
+        _sq = null;
+        _isDownloadDialogVisible = true;
+    }
+}

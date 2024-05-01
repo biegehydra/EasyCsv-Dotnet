@@ -1,28 +1,51 @@
 ﻿@namespace EasyCsv.Components
 
-<ErrorBoundary>
-    @if (CurrentState != null && ProcessingOptions != null)
-    {
-        <MudText Typo="Typo.h5">Current Step: @(_currentIndex + 1)</MudText>
-        <br />
-        <div style="display: flex; flex-direction: row; justify-content: space-between;" >
-            <div style="display: flex; gap: 20px; flex-direction: row;">
-                @if (IsCacheIndexValid(_currentIndex - 1))
+<ErrorBoundary >
+    <ChildContent>
+        @if (CurrentState != null && ProcessingOptions != null)
+        {
+            <MudText Typo="Typo.h5">Current Step: @(_currentIndex + 1)</MudText>
+            <br />
+            <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: baseline;">
+                <div style="display: flex; gap: 20px; flex-direction: row;">
+                    @if (IsCacheIndexValid(_currentIndex - 1))
+                    {
+                        <MudButton OnClick="GoBackStep" Variant="Variant.Filled" Color="Color.Secondary">Go Back Step</MudButton>
+                    }
+                    @if (IsCacheIndexValid(_currentIndex + 1))
+                    {
+                        <MudButton OnClick="GoForwardStep" Variant="Variant.Filled" Color="Color.Secondary">Go Forward Step</MudButton>
+                    }
+                </div>
+                @if (ShowAddReferenceCsvs)
                 {
-                    <MudButton OnClick="GoBackStep" Variant="Variant.Filled" Color="Color.Secondary">Go Back Step</MudButton>
-                }
-                @if (IsCacheIndexValid(_currentIndex + 1))
-                {
-                    <MudButton OnClick="GoForwardStep" Variant="Variant.Filled" Color="Color.Secondary">Go Forward Step</MudButton>
+                    var columnsNames = CurrentState.ColumnNames();
+                    <div style="display: flex; flex-direction: row; justify-content: space-between; gap: 20px; align-items: baseline;">
+                        @if (columnsNames != null && (columnsNames.Contains(InternalColumnNames.References) || columnsNames.Contains(InternalColumnNames.Tags)))
+                        {
+                            string text = TagsAndReferencesLocation == ColumnLocation.Beginning ? "Move tags and references columns to end" : "Move tags and references columns to beginning";
+                            <MudTooltip Text="@text" Delay="600">
+                                <MudIconButton Variant="Variant.Filled" Color="Color.Tertiary" Icon="@Icons.Material.Filled.SwapHoriz"
+                                               OnClick="() => TagsAndReferencesLocation = TagsAndReferencesLocation == ColumnLocation.End ? ColumnLocation.Beginning : ColumnLocation.End" />
+                            </MudTooltip>
+                        }
+                        <CsvFileInput InputVariant="@FileInputVariant.Button" ButtonText="Add Reference Csv" OnCsvUpload="x => AddReferenceCsv(x)"></CsvFileInput>
+                    </div>
                 }
             </div>
-            @if (ShowAddReferenceCsvs)
-            {
-                <CsvFileInput InputVariant="@FileInputVariant.Button"  ButtonText="Add Reference Csv" OnCsvUpload="x => AddReferenceCsv(x)" ></CsvFileInput>
-            }
-        </div>
-        <br />
-        <br/>
-        <CsvProcessingTable ProcessingOptions="ProcessingOptions" Stepper="this" EasyCsv="CurrentState" CloseBehaviour="CloseBehaviour"/>
-    }
+            <br />
+            <br />
+            <CsvProcessingTable ProcessingOptions="ProcessingOptions" Stepper="this" EasyCsv="CurrentState" />
+        }
+    </ChildContent>
+    <ErrorContent>
+        @if (ErrorBoundaryContent == null)
+        {
+            <MudText Typo="Typo.h3" >Something went wrong</MudText>
+        }
+        else
+        {
+            @ErrorBoundaryContent
+        }
+    </ErrorContent>
 </ErrorBoundary>

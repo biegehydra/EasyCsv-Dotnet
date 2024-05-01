@@ -157,7 +157,7 @@ namespace EasyCsv.Core
         /// <param name="filePath">Path to csv file</param>
         /// <param name="maxFileSize">If file is larger an exception will be thrown</param>
         /// <param name="config">Determines whether to normalize fields. Default normalization makes them all lower, you can also define custom normalization methods</param>
-        public static IEasyCsv? FromFile(string filePath, int maxFileSize, EasyCsvConfiguration? config = null)
+        public static IEasyCsv? FromFile(string filePath, int maxFileSize = int.MaxValue, EasyCsvConfiguration? config = null)
         {
             var bytes = ReadFromFile(filePath, maxFileSize);
             var easyCsv = new EasyCsv(bytes, UserConfigOrGlobalConfig(config));
@@ -183,7 +183,7 @@ namespace EasyCsv.Core
         /// <param name="filePath">Path to csv file</param>
         /// <param name="maxFileSize">If file is larger an exception will be thrown</param>
         /// <param name="config">Determines whether to normalize fields. Default normalization makes them all lower, you can also define custom normalization methods</param>
-        public static async Task<IEasyCsv?> FromFileAsync(string filePath, int maxFileSize, EasyCsvConfiguration? config = null)
+        public static async Task<IEasyCsv?> FromFileAsync(string filePath, int maxFileSize = int.MaxValue, EasyCsvConfiguration? config = null)
         {
             var bytes = await ReadFromFileAsync(filePath, maxFileSize);
             var easyCsv = await FromBytesAsync(bytes, UserConfigOrGlobalConfig(config));

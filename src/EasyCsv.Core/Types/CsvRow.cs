@@ -155,7 +155,7 @@ namespace EasyCsv.Core
             var referenceIndex = parsedIntegers.IndexOf(x => x.Left == referenceCsvId && x.Right == referenceRowId);
             if (referenceIndex >= 0)
             {
-                string newReferencesStr = string.Join(',', parsedIntegers.Take(referenceIndex).Skip(1).Select(x => $"{referenceCsvId}-{x}"));
+                string newReferencesStr = string.Join(",", parsedIntegers.Take(referenceIndex).Skip(1).Select(x => $"{referenceCsvId}-{x}"));
                 SetValueAtIndex(referencesColumnIndex, newReferencesStr);
             }
             return false;
@@ -203,7 +203,7 @@ namespace EasyCsv.Core
             return Tags(tagsColumnIndex);
         }
 
-        public (int CsvId, int RowId)[]? References(int referencesColumnIndex)
+        public (int CsvIndex, int RowIndex)[]? References(int referencesColumnIndex)
         {
             if (!Utils.IsValidIndex(referencesColumnIndex, Count)) return null;
             string? value = ValueAt(referencesColumnIndex)?.ToString();
@@ -211,7 +211,7 @@ namespace EasyCsv.Core
             var split = value.Split([","], StringSplitOptions.RemoveEmptyEntries);
             return split.Select(ParseIntegers).ToArray();
         }
-        public (int CsvId, int RowId)[]? References()
+        public (int CsvIndex, int RowIndex)[]? References()
         {
             int referenceColumnIndex = Keys.IndexOf(InternalColumnNames.References);
             return References(referenceColumnIndex);
@@ -225,8 +225,13 @@ namespace EasyCsv.Core
                 throw new ArgumentException("Input must contain a dash.");
             }
 
+#if NETSTANDARD2_0
+            string leftSpan = input.Substring(0, dashIndex);
+            string rightSpan = input.Substring(dashIndex + 1);
+#else
             ReadOnlySpan<char> leftSpan = input.AsSpan(0, dashIndex);
             ReadOnlySpan<char> rightSpan = input.AsSpan(dashIndex + 1);
+#endif
 
             if (int.TryParse(leftSpan, out int left) && int.TryParse(rightSpan, out int right))
             {
@@ -241,6 +246,11 @@ namespace EasyCsv.Core
         public Dictionary<string, object?> ToDictionary()
         {
             return new Dictionary<string, object?>(_innerDictionary);
+        }
+
+        public Dictionary<string, string?> ToStringDictionary()
+        {
+            return _innerDictionary.ToDictionary(x => x.Key, x => x.Value?.ToString());
         }
 
         public CsvRow Clone()
@@ -259,7 +269,7 @@ namespace EasyCsv.Core
 
         public void AddProcessingReference(int referenceCsvId, int referenceRowId)
         {
-            var existingReferences = References()?.ToHashSet() ?? new HashSet<(int CsvId, int RowId)>();
+            var existingReferences = References()?.ToHashSet() ?? new HashSet<(int CsvIndex, int RowIndex)>();
             if (existingReferences.Add((referenceCsvId, referenceRowId)))
             {
                 this[InternalColumnNames.References] = string.Join(",", existingReferences);

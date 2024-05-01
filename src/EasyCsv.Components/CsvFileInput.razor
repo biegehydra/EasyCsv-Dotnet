@@ -75,6 +75,7 @@ else if (InputVariant == FileInputVariant.Button)
     [Parameter] public string ButtonIcon { get; set; } = Icons.Material.Filled.AttachFile;
     [Parameter] public string ButtonText { get; set; } = "Select A Csv";
     [Parameter] public string Accept { get; set; } = ".csv";
+    [Parameter] public int MaxFileSizeMbs { get; set; } = 30;
 
     [Parameter]
     public string? Style { get; set; }
@@ -170,7 +171,7 @@ else if (InputVariant == FileInputVariant.Button)
 
                 _fileName = file.Name;
                 await FileNameChanged.InvokeAsync(file.Name);
-                var easyCsv = await EasyCsvFileFactory.FromBrowserFileAsync(file, config: EasyCsvConfig);
+                var easyCsv = await EasyCsvFileFactory.FromBrowserFileAsync(file, MaxFileSizeMbs, config: EasyCsvConfig);
                 if (easyCsv == null)
                 {
                     SnackBar?.Add($"Failed to read csv file", Severity.Error, x => x.VisibleStateDuration = 300);

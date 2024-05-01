@@ -11,7 +11,7 @@
                   AfterCsvExample="_afterExample" AllowRun="AllowRun" StrategyPicked="RunCombineColumns">
         <Options>
             <MudListItem>
-                <MudCheckBox Disabled="@context" Label="Remove Joined Columns" @bind-Value="_removeJoinedColumns"></MudCheckBox>
+                <MultiColumnSelect InitializeWithStrategyBucketColumnName  Disabled="context" @bind-ColumnNames="_columnsToJoin"></MultiColumnSelect>
             </MudListItem>
             <MudListItem>
                 <MudTextField Disabled="@context" Immediate="Immediate" Required="true" Placeholder="Join Delimiter" Variant="Variant.Outlined" @bind-Value="_delimiter"></MudTextField>
@@ -20,7 +20,7 @@
                 <MudTextField Disabled="@context" Immediate="Immediate" Required="true" Placeholder="New Column Name" Variant="Variant.Outlined" @bind-Value="_newColumnName"></MudTextField>
             </MudListItem>
             <MudListItem>
-                <MultiColumnSelect InitializeWithStrategyBucketColumnName  Disabled="context" @bind-ColumnNames="_columnsToJoin"></MultiColumnSelect>
+                <MudCheckBox Disabled="@context" Label="Remove Joined Columns" @bind-Value="_removeJoinedColumns"></MudCheckBox>
             </MudListItem>
         </Options>
     </StrategyItem>

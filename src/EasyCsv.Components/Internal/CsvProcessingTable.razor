@@ -1,5 +1,6 @@
 ﻿@using EasyCsv.Processing
 @using EasyCsv.Core.Extensions
+@using System.Collections
 <style>
     .mud-input-control-input-container:has(.mud-input-outlined) {
         margin-top: 0px !important;
@@ -22,10 +23,10 @@
     }
     .easy-csv-fullscreen-backdrop {
         position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
         z-index: 1000; /* This should be lower than the popover's z-index but higher than most other elements on your page */
         background-color: rgba(0, 0, 0, 0); /* You can adjust the opacity as needed */
     }
@@ -36,142 +37,143 @@
     int tagsColumnIndex = EasyCsv.ColumnNames()?.IndexOf(InternalColumnNames.Tags) ?? -1;
     int referenceColumnIndex = EasyCsv.ColumnNames()?.IndexOf(InternalColumnNames.References) ?? -1;
     string[] columnNames = EasyCsv.ColumnNames()!;
-                           <CascadingValue TValue="CsvProcessingTable" Name="ProcessingTable" Value="this" >
-        <MudTable T="CsvRow" Class="csv-table-header-matcher" FixedHeader="true" RowsPerPage="10" Items="EasyCsv.CsvContent"
-                  Striped Bordered Dense Hover Elevation="2">
-            <HeaderContent>
-                @for (var i = 0; i < columnNames.Length; i++)
-                {
-                    int mid = columnNames.Length / 2;
-                    var anchorOrigin = i >= mid ? Origin.BottomLeft : Origin.BottomRight;
-                    var transformOrigin = i >= mid ? Origin.TopRight : Origin.TopLeft;
-                    var column = columnNames[i];
-                    if (i == tagsColumnIndex || i == referenceColumnIndex) continue;
-                    _popOverDict.TryAdd(column, false);
-                    if (!_strategyBuckets.ContainsKey(column))
+    @foreach (var test in _referencesBackDropsOpen)
+    {
+        <MudPopover @onclick="() => { _referencesBackDropsOpen[test.Key] = false; _referencesOpen[test.Key] = false; }" Class="easy-csv-fullscreen-backdrop" Open="_referencesOpen[test.Key]">
+            <ChildContent>
+                @{
+                    @if (_referencesBackDropsOpen[test.Key] != true)
                     {
-                        _strategyBuckets.Add(column, new StrategyBucket(column, InvokeStateHasChanged));
-                    }
-                    _strategyBuckets[column].SetOrigins(anchorOrigin, transformOrigin);
-                    <MudTh>
-                        <div style="display: flex; flex-direction: row; justify-content: space-between">
-                            @column
-                            <MudIconButton Icon="@Icons.Material.Filled.OpenInFull" OnClick="_ => TogglePopover(column)"></MudIconButton>
-                        </div>
-                        <MudPopover Open="_popOverDict[column]" Style="@($"max-height:{Stepper.MaxStrategySelectHeight}")" Class="csv-processing-popover" OverflowBehavior="OverflowBehavior.FlipAlways" AnchorOrigin="anchorOrigin" TransformOrigin="transformOrigin">
-                            <CascadingValue TValue="CsvProcessingStepper" Value="Stepper">
-                                <CascadingValue TValue="StrategyBucket" Value="_strategyBuckets[column]">
-                                    <MudList Clickable="true" Style="z-index: inherit">
-                                        <MudListSubheader>
-                                            <div style="display: flex; flex-direction: row; justify-content: space-between">
-                                                <MudText Class="mt-4" Typo="Typo.h5">
-                                                    Column Strategies&nbsp;
-                                                    @if (Stepper.ShowColumnNameInStrategySelect)
-                                                    {
-                                                        @:(@column)
-                                                    }
-                                                </MudText>
-                                                <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="x => TogglePopover(column, false)"></MudIconButton>
-                                            </div>
-                                        </MudListSubheader>
-                                        @if (Stepper.SearchBar)
-                                        {
-                                            <MudListItem>
-                                                <MudTextField T="string" Disabled="_strategyBuckets[column].IsAnySelected()" Immediate="true" Placeholder="Search strategies" Variant="Variant.Outlined" Value="_strategyBuckets[column].SearchQuery"
-                                                              ValueChanged="_strategyBuckets[column].SetSearchQuery" 
-                                                              Clearable="true" OnClearButtonClick="() => _strategyBuckets[column].SetSearchQuery(string.Empty)"></MudTextField>
-                                            </MudListItem>
-                                        }
-                                        @ProcessingOptions(column)
-                                        @if (_strategyBuckets[column].IsAnySelected() || Stepper.RunOperationNoneSelectedBehaviour == RunOperationNoneSelectedBehaviour.Disabled)
-                                        {
-                                            <MudListItem>
-                                                <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between;" >
-                                                    <div></div>
-                                                    <MudButton Disabled="!_strategyBuckets[column].StrategySelectedAndRunAllowed()" Variant="Variant.Filled" Color="Color.Info" OnClick="x => _strategyBuckets[column].StrategyPicked()">Run Operation</MudButton>
-                                                </div>
-                                            </MudListItem>
-                                        }
-                                    </MudList>
-                                    @if (_popOverDict[column] && CloseBehaviour is CloseBehaviour.ClickAway or CloseBehaviour.CloseButtonAndClickAway)
-                                    {
-                                        <div @onclick="() => TogglePopover(column, false)" class="easy-csv-fullscreen-backdrop"></div>
-                                    }
-                                </CascadingValue>
-                            </CascadingValue>
-                        </MudPopover>
-                    </MudTh>
-                }
-                @if (referenceColumnIndex >= 0)
-                {
-                    <MudTh>Tags</MudTh>
-                }
-                @if (tagsColumnIndex >= 0)
-                {
-                    <MudTh>Tags</MudTh>
-                }
-            </HeaderContent>
-            <RowTemplate Context="row">
-                @for (int i = 0; i < row.Count; i++)
-                {
-                    var value = row.ValueAt(i);
-                    if (i != tagsColumnIndex)
-                    {
-                        <MudTd Class="extra-dense">@value</MudTd>
+                        _referencesBackDropsOpen[test.Key] = true;
+                        StateHasChanged();
                     }
                 }
-                @if (referenceColumnIndex >= 0)
-                {
-                    var references = row.References();
-                    <MudTd Class="extra-dense">
-                        @if (references?.Any() == true)
-                        {
-                            int i = -1;
-                            <MudChipSet AllClosable="true">
-                                @foreach (var reference in references)
-                                {
-                                    i++;
-                                    string text = FormatReferenceText != null
-                                        ? FormatReferenceText(reference)
-                                        : DefaultFormatReferenceText(reference.CsvId, reference.RowId);
+            </ChildContent>
+        </MudPopover>
+    }
 
-                                    <MudChip Text="@text" Color="DefaultColors[i % DefaultColors.Length]" Size="Size.Small" OnClose="x => RemoveTag(row, tag, tagsColumnIndex)" />
-                                }
-                            </MudChipSet>
-                        }
-                    </MudTd>
-                }
+    <MudTable T="CsvRow" Class="csv-table-header-matcher" FixedHeader="true" RowsPerPage="10" Items="EasyCsv.CsvContent"
+              Striped Bordered Dense Hover Elevation="2">
+        <HeaderContent>
+            @if (Stepper.TagsAndReferencesLocation == ColumnLocation.Beginning)
+            {
                 @if (tagsColumnIndex >= 0)
                 {
-                    var tags = row.ValueAt(tagsColumnIndex)?.ToString()?.Split(",", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-                    <MudTd Class="extra-dense">
-                        @if (tags?.Any() == true)
-                        {
-                            <MudChipSet AllClosable="true">
-                                @foreach (var tag in tags)
-                                {
-                                    AddTag(tag);
-                                    <MudChip Text="@tag" Color="_tagColors[tag]" Size="Size.Small" OnClose="x => RemoveTag(row, tag, tagsColumnIndex)" />
-                                }
-                            </MudChipSet>
-                        }
-                    </MudTd>
+                    <MudTh>Tags</MudTh>
                 }
-            </RowTemplate>
-            <PagerContent>
-                <MudTablePager></MudTablePager>
-            </PagerContent>
-        </MudTable>
-    </CascadingValue>
+                @if (referenceColumnIndex >= 0)
+                {
+                    <MudTh>References</MudTh>
+                }
+            }
+            @for (var i = 0; i < columnNames.Length; i++)
+            {
+                int mid = columnNames.Length / 2;
+                var anchorOrigin = i >= mid ? Origin.BottomLeft : Origin.BottomRight;
+                var transformOrigin = i >= mid ? Origin.TopRight : Origin.TopLeft;
+                var column = columnNames[i];
+                if (i == tagsColumnIndex || i == referenceColumnIndex) continue;
+                _popOverDict.TryAdd(column, false);
+                if (!_strategyBuckets.ContainsKey(column))
+                {
+                    _strategyBuckets.Add(column, new StrategyBucket(column, InvokeStateHasChanged));
+                }
+
+                _strategyBuckets[column].SetOrigins(anchorOrigin, transformOrigin);
+                <MudTh>
+                    <div style="display: flex; flex-direction: row; justify-content: space-between">
+                        @column
+                        <MudIconButton Icon="@Icons.Material.Filled.OpenInFull" OnClick="_ => TogglePopover(column)"></MudIconButton>
+                    </div>
+                    <MudPopover Open="_popOverDict[column]" Style="@($"max-height:{Stepper.MaxStrategySelectHeight}")" Class="csv-processing-popover" OverflowBehavior="OverflowBehavior.FlipAlways" AnchorOrigin="anchorOrigin" TransformOrigin="transformOrigin">
+                        <CascadingValue TValue="CsvProcessingStepper" Value="Stepper" IsFixed="true">
+                            <CascadingValue TValue="StrategyBucket" Value="_strategyBuckets[column]" IsFixed="true">
+                                <MudList Clickable="true" Style="z-index: inherit">
+                                    <MudListSubheader>
+                                        <div style="display: flex; flex-direction: row; justify-content: space-between">
+                                            <MudText Class="mt-4" Typo="Typo.h5">
+                                                Column Strategies&nbsp;
+                                                @if (Stepper.ShowColumnNameInStrategySelect)
+                                                {
+                                                    @:(@column)
+                                                }
+                                            </MudText>
+                                            <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="x => TogglePopover(column, false)"></MudIconButton>
+                                        </div>
+                                    </MudListSubheader>
+                                    @if (Stepper.SearchBar)
+                                    {
+                                        <MudListItem>
+                                            <MudTextField T="string" Disabled="_strategyBuckets[column].IsAnySelected()" Immediate="true" Placeholder="Search strategies" Variant="Variant.Outlined" Value="_strategyBuckets[column].SearchQuery"
+                                                          ValueChanged="_strategyBuckets[column].SetSearchQuery"
+                                                          Clearable="true" OnClearButtonClick="() => _strategyBuckets[column].SetSearchQuery(string.Empty)"></MudTextField>
+                                        </MudListItem>
+                                    }
+                                    @ProcessingOptions(column)
+                                    @if (_strategyBuckets[column].IsAnySelected() || Stepper.RunOperationNoneSelectedBehaviour == RunOperationNoneSelectedBehaviour.Disabled)
+                                    {
+                                        <MudListItem>
+                                            <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between;">
+                                                <div></div>
+                                                <MudButton Disabled="!_strategyBuckets[column].StrategySelectedAndRunAllowed()" Variant="Variant.Filled" Color="Color.Info" OnClick="x => _strategyBuckets[column].StrategyPicked()">Run Operation</MudButton>
+                                            </div>
+                                        </MudListItem>
+                                    }
+                                </MudList>
+                                @if (_popOverDict[column] && Stepper.CloseBehaviour is CloseBehaviour.ClickAway or CloseBehaviour.CloseButtonAndClickAway)
+                                {
+                                    <div @onclick="() => TogglePopover(column, false)" class="easy-csv-fullscreen-backdrop"></div>
+                                }
+                            </CascadingValue>
+                        </CascadingValue>
+                    </MudPopover>
+                </MudTh>
+            }
+            @if (Stepper.TagsAndReferencesLocation == ColumnLocation.End)
+            {
+                @if (referenceColumnIndex >= 0)
+                {
+                    <MudTh>References</MudTh>
+                }
+
+                @if (tagsColumnIndex >= 0)
+                {
+                    <MudTh>Tags</MudTh>
+                }
+            }
+        </HeaderContent>
+        <RowTemplate Context="row">
+            @if (Stepper.TagsAndReferencesLocation == ColumnLocation.Beginning)
+            {
+                @TagDataCell(tagsColumnIndex, row)
+                @ReferencesDataCell(referenceColumnIndex, row)
+            }
+            @for (int i = 0; i < row.Count; i++)
+            {
+                var value = row.ValueAt(i);
+                if (i != tagsColumnIndex && i != referenceColumnIndex)
+                {
+                    <MudTd Class="extra-dense">@value</MudTd>
+                }
+            }
+            @if (Stepper.TagsAndReferencesLocation == ColumnLocation.End)
+            {
+                @ReferencesDataCell(referenceColumnIndex, row)
+                @TagDataCell(tagsColumnIndex, row)
+            }
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager></MudTablePager>
+        </PagerContent>
+    </MudTable>
 }
 
 @code {
     internal static Color[] DefaultColors = [Color.Primary, Color.Secondary, Color.Success, Color.Error, Color.Tertiary, Color.Dark, Color.Warning];
 
-    [Parameter] public Func<(int ReferenceCsvId, int ReferenceRowId), string>? FormatReferenceText { get; set; } 
+    [Parameter] public Func<IGrouping<int, (int ReferenceCsvId, int ReferenceRowId)>, string>? FormatReferenceText { get; set; } 
     [Parameter] public RenderFragment<string>? ProcessingOptions { get; set; }
     [Parameter] public CsvProcessingStepper Stepper { get; set; } = null!;
-    [Parameter] public CloseBehaviour CloseBehaviour { get; set; } = Enums.CloseBehaviour.CloseButtonAndClickAway;
     [Parameter] public IEasyCsv? EasyCsv
     {
         get => _easyCsv;
@@ -181,6 +183,11 @@
             OnEasyCsvChanged();
         }
     }
+
+    private readonly record struct ReferenceGroup(CsvRow Row, int ReferenceGroupIndex);
+
+    private Dictionary<ReferenceGroup, bool> _referencesOpen = new();
+    private Dictionary<ReferenceGroup, bool> _referencesBackDropsOpen = new();
     private Dictionary<string, bool> _popOverDict = new ();
     private Dictionary<string, StrategyBucket> _strategyBuckets = new();
     private Dictionary<string, Color> _tagColors = new();
@@ -200,6 +207,8 @@
     {
         _popOverDict.Clear();
         _strategyBuckets.Clear();
+        _referencesBackDropsOpen.Clear();
+        _referencesOpen.Clear();
     }
 
     internal void TogglePopover(string column)
@@ -217,9 +226,14 @@
         else if (!_popOverDict.Values.Any(x => x)) _popOverDict[column] = true;
     }
 
-    private void RemoveTag(CsvRow row, string tag, int tagsIndex)
+    private void RemoveTag(CsvRow row, int tagsColumnIndex, string tag)
     {
-        row.RemoveTag(tagsIndex, tag);
+        row.RemoveTag(tagsColumnIndex, tag);
+    }
+
+    private void RemoveReference(CsvRow row, int referencesColumnIndex, int referenceCsvId, int referenceRowId)
+    {
+        row.RemoveReference(referencesColumnIndex, referenceCsvId, referenceRowId);
     }
 
     private void RemoveReference(CsvRow row, string tag, int tagsIndex)
@@ -233,13 +247,83 @@
         }
     }
 
-    private string DefaultFormatReferenceText(int referenceCsvId, int referenceRowId)
+    private string DefaultFormatReferenceText(IGrouping<int, (int CsvIndex, int RowIndex)> grouping)
     {
-        return $"Csv: {referenceCsvId}, Row: {referenceRowId}";
+        var count = grouping.Count();
+        string rows = count == 1 ? "Row" : "Rows";
+        return $"Ref Csv: {grouping.Key + 1}, {rows}: {string.Join(',', grouping.Select(x => x.RowIndex + 1))}";
     }
 
     internal Task InvokeStateHasChanged()
     {
         return InvokeAsync(StateHasChanged);
+    }
+
+    private RenderFragment? TagDataCell(int tagsColumnIndex, CsvRow row)
+    {
+        if (tagsColumnIndex >= 0)
+        {
+            var tags = row.ValueAt(tagsColumnIndex)?.ToString()?.Split(",", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            return @<MudTd Class="extra-dense">
+                       @if (tags?.Any() == true)
+                       {
+                           <MudChipSet AllClosable="true">
+                               @foreach (var tag in tags)
+                               {
+                                   AddTag(tag);
+                                   <MudChip Text="@tag" Color="_tagColors[tag]" Size="Size.Small" OnClose="x => RemoveTag(row, tagsColumnIndex, tag)"/>
+                               }
+                           </MudChipSet>
+                       }
+                   </MudTd>;
+        }
+        return null;
+    }
+
+    private RenderFragment? ReferencesDataCell(int referenceColumnIndex, CsvRow row)
+    {
+        if (referenceColumnIndex >= 0)
+        {
+            var anchorOrigin = Stepper.TagsAndReferencesLocation == ColumnLocation.Beginning ? Origin.BottomRight : Origin.BottomLeft;
+            var transformOrigin = Stepper.TagsAndReferencesLocation == ColumnLocation.Beginning ? Origin.TopLeft : Origin.TopRight;
+            var references = row.References(referenceColumnIndex);
+            return @<MudTd Class="extra-dense">
+                       @if (references?.Any() == true)
+                       {
+                           int i = -1;
+                           <MudChipSet>
+                               @foreach (IGrouping<int, (int CsvIndex, int RowIndex)> group in references.GroupBy(x => x.CsvIndex))
+                               {
+                                   i++;
+                                   int groupIndex = i;
+                                   var referenceGroup = new ReferenceGroup(row, groupIndex);
+                                   _referencesOpen.TryAdd(referenceGroup, false);
+                                   _referencesBackDropsOpen.TryAdd(referenceGroup, false); 
+                                   string text = FormatReferenceText != null
+                                       ? FormatReferenceText(group)
+                                       : DefaultFormatReferenceText(group);
+                                   <MudChip Text="@text" Color="@Stepper.ReferenceChipColor" Size="Size.Small" OnClick="x => _referencesOpen[referenceGroup] = true"/>
+                                   <MudPopover AnchorOrigin="anchorOrigin" TransformOrigin="transformOrigin" Style="color: var(--mud-palette-dark-text); background-color: var(--mud-palette-grey-darker); padding: 10px; max-width: 600px;" Open="_referencesOpen[referenceGroup]">
+                                       <ChildContent>
+                                           @{
+                                               string referencesStr = references.Length == 1 ? "reference" : "references";
+                                               var dictionaryArray = new Dictionary<string, string?>[references.Length];
+                                               int j = 0;
+                                               foreach (var reference in references)
+                                               {
+                                                   dictionaryArray[j] = Stepper.ReferenceCsvs[reference.CsvIndex].Csv.CsvContent[reference.RowIndex].ToStringDictionary();
+                                                   j++;
+                                               }
+                                           }
+                                           @ExampleCsv(dictionaryArray, $"{references.Length} {referencesStr} in {Stepper.ReferenceCsvs[group.Key].FileName}", false)
+                                       </ChildContent>
+                                   </MudPopover>
+
+                               }
+                           </MudChipSet>
+                       }
+                   </MudTd>;
+        }
+        return null;
     }
 }

@@ -14,7 +14,7 @@ public class MergeCsvsStrategy : ICsvMerger
     {
         _mergeConfig = mergeConfig ?? throw new ArgumentException("Merge config cannot be null", nameof(mergeConfig));
     }
-    public async Task<IEasyCsv> Merge(IEasyCsv baseCsv, IEasyCsv additionalCsv)
+    public async ValueTask<IEasyCsv> Merge(IEasyCsv baseCsv, IEasyCsv additionalCsv)
     {
         var columnNames = baseCsv.ColumnNames();
         if (columnNames == null) return baseCsv;

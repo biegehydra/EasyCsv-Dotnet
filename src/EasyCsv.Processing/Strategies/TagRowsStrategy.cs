@@ -14,7 +14,7 @@ public class TagRowsStrategy : ICsvProcessor
         _addTagsFunc = addTagsFunc;
     }
 
-    public async Task<OperationResult> ProcessCsv(IEasyCsv csv)
+    public async ValueTask<OperationResult> ProcessCsv(IEasyCsv csv)
     {
         await csv.MutateAsync(x =>
         {

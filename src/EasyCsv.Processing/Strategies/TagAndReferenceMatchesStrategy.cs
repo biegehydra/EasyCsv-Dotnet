@@ -27,7 +27,7 @@ public class TagAndReferenceMatchesStrategy : ICsvReferenceProcessor
         TagToAdd = tagToAdd;
     }
 
-    public async Task<OperationResult> ProcessCsv(IEasyCsv csv, IEasyCsv referenceCsv)
+    public async ValueTask<OperationResult> ProcessCsv(IEasyCsv csv, IEasyCsv referenceCsv)
     {
         if (!csv.ContainsColumn(ColumnName))
         {

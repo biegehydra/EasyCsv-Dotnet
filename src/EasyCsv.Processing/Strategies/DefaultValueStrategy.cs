@@ -13,12 +13,12 @@ public class DefaultValueStrategy : ICsvColumnProcessor
         _shouldOverride = shouldOverride ?? (x => true);
     }
 
-    public Task<OperationResult> ProcessCell<TCell>(TCell cell) where TCell : ICell
+    public ValueTask<OperationResult> ProcessCell<TCell>(TCell cell) where TCell : ICell
     {
         if (_shouldOverride(cell.Value))
         {
             cell.Value = _defaultValue;
         }
-        return Task.FromResult(new OperationResult(true));
+        return new ValueTask<OperationResult>(new OperationResult(true));
     }
 }

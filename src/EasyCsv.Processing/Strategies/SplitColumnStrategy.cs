@@ -22,7 +22,7 @@ public class SplitColumnStrategy : ICsvProcessor
         _splitFunc = splitFunc ?? throw new ArgumentException("SplitFunc cannot be null");
     }
 
-    public async Task<OperationResult> ProcessCsv(IEasyCsv csv)
+    public async ValueTask<OperationResult> ProcessCsv(IEasyCsv csv)
     {
         if (csv.ContainsColumn(_columnToSplit))
         {

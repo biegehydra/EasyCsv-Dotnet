@@ -25,7 +25,7 @@ public class JoinColumnsStrategy : ICsvProcessor
         _newColumnName = newColumnName;
     }
 
-    public async Task<OperationResult> ProcessCsv(IEasyCsv csv)
+    public async ValueTask<OperationResult> ProcessCsv(IEasyCsv csv)
     {
         var toJoin = _columnsToJoin.Where(x => csv.ContainsColumn(x)).ToArray();
         if (toJoin.Length == _columnsToJoin.Length || (_joinIfNotAllPresent && toJoin.Length > 0))

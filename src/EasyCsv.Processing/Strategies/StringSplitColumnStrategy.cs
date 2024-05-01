@@ -16,7 +16,7 @@ public class StringSplitColumnStrategy : ICsvProcessor
             x => x?.ToString()?.Split([delimiter], stringSplitOptions)?.Cast<object?>().ToArray());
     }
 
-    public async Task<OperationResult> ProcessCsv(IEasyCsv csv)
+    public async ValueTask<OperationResult> ProcessCsv(IEasyCsv csv)
     {
         return await _splitColumnStrategy.ProcessCsv(csv);
     }

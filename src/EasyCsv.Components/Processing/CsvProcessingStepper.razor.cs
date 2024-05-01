@@ -3,7 +3,6 @@ using EasyCsv.Core;
 using EasyCsv.Processing;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
-using System.Diagnostics.CodeAnalysis;
 
 namespace EasyCsv.Components;
 
@@ -30,246 +29,108 @@ public partial class CsvProcessingStepper
     [Parameter] public bool AllowControlTagsAndReferencesLocation { get; set; } = true;
     [Parameter] public Color ReferenceChipColor { get; set; } = Color.Primary;
     [Parameter] public string MaxStrategySelectHeight { get; set; } = "600px";
-
-    private int _currentIndex = -1;
-    internal IEasyCsv? CurrentState => IsCacheIndexValid(_currentIndex) ? _cachedStates[_currentIndex] : null;
+    public StrategyRunner? Runner { get; private set; }
     protected override void OnParametersSet()
     {
-        if (EasyCsv != null && CurrentState == null)
+        if (EasyCsv != null && Runner == null)
         {
-            _cachedStates.Add(EasyCsv.Clone());
-            SetCurrentIndexSafe(0);
+            Runner = new StrategyRunner(EasyCsv);
         }
     }
 
-    internal readonly List<(IEasyCsv Csv, string FileName)> ReferenceCsvs = new();
-    private readonly List<IEasyCsv> _cachedStates = new();
-
     public void AddReferenceCsv(CsvUploadedArgs csvFileArgs, bool useSnackbar = true)
     {
+        if (Runner == null) return;
         if (csvFileArgs.Csv == null!) return;
         string fileName = !string.IsNullOrWhiteSpace(csvFileArgs.FileName)
             ? csvFileArgs.FileName
-            : $"Unnamed Csv{ReferenceCsvs.Count + 1}";
-        ReferenceCsvs.Add((csvFileArgs.Csv, fileName));
+            : $"Unnamed Csv{Runner.ReferenceCsvs.Count + 1}";
+        Runner.AddReference(csvFileArgs.Csv, fileName);
         if (useSnackbar)
         {
             Snackbar?.Add($"Added '{fileName}' to references");
         }
     }
-
+    private static AggregateOperationDeleteResult _runnerNullAggregateDelete = new AggregateOperationDeleteResult(false, 0, "Runner was null");
+    private static OperationResult _runnerNull = new OperationResult(false, "Runner was null");
     public async Task<AggregateOperationDeleteResult> PerformColumnEvaluateDelete(ICsvColumnDeleteEvaluator evaluateDelete)
     {
-        if (CurrentState == null) return new AggregateOperationDeleteResult(false, 0, "Component not initialized yet.");
-        if (evaluateDelete == null!) return new AggregateOperationDeleteResult(false, 0, "CsvColumnDeleteEvaluator was null");
-        var clone = CurrentState.Clone();
-        List<int> rowsToDelete = new List<int>();
-        int i = -1;
-        foreach (var row in clone.CsvContent)
-        {
-            i++;
-            var operationResult = await evaluateDelete.EvaluateDelete(new RowCell(row, evaluateDelete.ColumnName));
-            if (operationResult.Delete)
-            {
-                rowsToDelete.Add(i);
-            }
-            if (operationResult.Success == false)
-            {
-                if (UseSnackBar)
-                {
-                    Snackbar?.Add($"Error Performing Strategy: {operationResult.Message}", Severity.Warning);
-                }
-                await InvokeAsync(StateHasChanged);
-                return new AggregateOperationDeleteResult(false, 0, operationResult.Message);
-            }
-        }
-        await clone.MutateAsync(x => x.DeleteRows(rowsToDelete));
-        string message = $"Deleted {rowsToDelete.Count} rows";
-        if (UseSnackBar)
-        {
-            Snackbar?.Add(message);
-        }
-
-        AddToTimeline(clone);
+        if (Runner == null) return _runnerNullAggregateDelete;
+        var aggregateOperationDeleteResult = await Runner.PerformColumnEvaluateDelete(evaluateDelete);
+        AddAggregateDeleteOperationResultSnackbar(aggregateOperationDeleteResult);
         await InvokeAsync(StateHasChanged);
-        return new AggregateOperationDeleteResult(true, rowsToDelete.Count, message);
+        return aggregateOperationDeleteResult;
     }
 
     public async Task<AggregateOperationDeleteResult> PerformRowEvaluateDelete(ICsvRowDeleteEvaluator evaluateDelete)
     {
-        if (CurrentState == null) return new AggregateOperationDeleteResult(false, 0, "Component not initialized yet.");
-        if (evaluateDelete == null!) return new AggregateOperationDeleteResult(false, 0, "CsvRowDeleteEvaluator was null");
-
-        var clone = CurrentState.Clone();
-        List<int> rowsToDelete = new List<int>();
-        int i = -1;
-        foreach (var row in clone.CsvContent)
-        {
-            i++;
-            var operationResult = await evaluateDelete.EvaluateDelete(row);
-            if (operationResult.Delete)
-            {
-                rowsToDelete.Add(i);
-            }
-            if (operationResult.Success == false)
-            {
-                if (UseSnackBar)
-                {
-                    Snackbar?.Add($"Error Performing Strategy: {operationResult.Message}", Severity.Warning);
-                }
-                await InvokeAsync(StateHasChanged);
-                return new AggregateOperationDeleteResult(false, 0, operationResult.Message);
-            }
-        }
-        await clone.MutateAsync(x => x.DeleteRows(rowsToDelete));
-        string message = $"Deleted {rowsToDelete.Count} rows";
-        if (UseSnackBar)
-        {
-            Snackbar?.Add(message);
-        }
-
-        AddToTimeline(clone);
+        if (Runner == null) return _runnerNullAggregateDelete;
+        var aggregateOperationDeleteResult = await Runner.RunRowEvaluateDelete(evaluateDelete);
+        AddAggregateDeleteOperationResultSnackbar(aggregateOperationDeleteResult);
         await InvokeAsync(StateHasChanged);
-        return new AggregateOperationDeleteResult(true, rowsToDelete.Count, message);
+        return aggregateOperationDeleteResult;
     }
 
     public async Task<OperationResult> PerformReferenceStrategy(ICsvReferenceProcessor csvReferenceProcessor)
     {
-        if (csvReferenceProcessor == null!) return new OperationResult(false, "CsvReferenceProcessor was null");
-        int referenceId = csvReferenceProcessor.ReferenceCsvId;
-        if (referenceId < 0 || referenceId >= ReferenceCsvs.Count)
-        {
-            return new OperationResult(false, "Invalid reference id");
-        }
-        if (CurrentState == null) return new OperationResult(false, "Component not initialized yet.");
-        var clone = CurrentState.Clone();
-        var operationResult = await csvReferenceProcessor.ProcessCsv(clone, ReferenceCsvs[referenceId].Csv);
-        if (operationResult.Success)
-        {
-            if (UseSnackBar && !string.IsNullOrWhiteSpace(operationResult.Message))
-            {
-                Snackbar?.Add(operationResult.Message, Severity.Success);
-            }
-            AddToTimeline(clone);
-        }
-        else if (UseSnackBar && !string.IsNullOrWhiteSpace(operationResult.Message))
-        {
-            Snackbar?.Add($"Error Performing Strategy: {operationResult.Message}", Severity.Warning);
-        }
-
+        if (Runner == null) return _runnerNull;
+        var operationResult = await Runner.RunReferenceStrategy(csvReferenceProcessor);
+        AddOperationResultSnackbar(operationResult);
         await InvokeAsync(StateHasChanged);
         return operationResult;
     }
 
     public async Task<OperationResult> PerformColumnStrategy(ICsvColumnProcessor columnProcessor)
     {
-        if (CurrentState == null) return new OperationResult(false, "Component not initialized yet.");
-        var clone = CurrentState.Clone();
-        foreach (var row in clone.CsvContent)
-        {
-            var operationResult = await columnProcessor.ProcessCell(new RowCell(row, columnProcessor.ColumnName));
-            if (operationResult.Success == false)
-            {
-                if (UseSnackBar)
-                {
-                    Snackbar?.Add($"Error Performing Strategy: {operationResult.Message}", Severity.Warning);
-                }
-                await InvokeAsync(StateHasChanged);
-                return operationResult;
-            }
-        }
-
-        AddToTimeline(clone);
+        if (Runner == null) return _runnerNull;
+        var operationResult = await Runner.RunColumnStrategy(columnProcessor);
+        AddOperationResultSnackbar(operationResult, skipSuccess: true);
         await InvokeAsync(StateHasChanged);
-        return new OperationResult(true);
+        return operationResult;
     }
 
     public async Task<OperationResult> PerformCsvStrategy(ICsvProcessor csvProcessor)
     {
-        if (CurrentState == null) return new OperationResult(false, "Component not initialized yet.");
-        var clone = CurrentState.Clone();
-        var operationResult = await csvProcessor.ProcessCsv(clone);
-        if (operationResult.Success)
+        if (Runner == null) return _runnerNull;
+        var operationResult = await Runner.RunCsvStrategy(csvProcessor);
+        AddOperationResultSnackbar(operationResult);
+        await InvokeAsync(StateHasChanged);
+        return operationResult;
+    }
+
+    private void AddOperationResultSnackbar(OperationResult operationResult, bool skipSuccess = false)
+    {
+        if (operationResult.Success && UseSnackBar && !string.IsNullOrWhiteSpace(operationResult.Message) && !skipSuccess)
         {
-            if (UseSnackBar && !string.IsNullOrWhiteSpace(operationResult.Message))
-            {
-                Snackbar?.Add(operationResult.Message, Severity.Success);
-            }
-            AddToTimeline(clone);
+            Snackbar?.Add(operationResult.Message, Severity.Success);
         }
         else if (UseSnackBar && !string.IsNullOrWhiteSpace(operationResult.Message))
         {
             Snackbar?.Add($"Error Performing Strategy: {operationResult.Message}", Severity.Warning);
         }
-
-        await InvokeAsync(StateHasChanged);
-        return operationResult;
     }
 
-    private void AddToTimeline(IEasyCsv csv)
+    private void AddAggregateDeleteOperationResultSnackbar(AggregateOperationDeleteResult operationResult)
     {
-        // If the timeline looks like this,
-        // and we want to add to the timeline
-        // with the ^ representing _currentIndex
-        // 1->2->3->4->5
-        //       ^
-        // Then we want to remove 4 and 5, like so
-        // 1->2->3->6
-        while (_currentIndex != _cachedStates.Count - 1)
+        if (operationResult.Success == false && UseSnackBar)
         {
-            _cachedStates.Remove(_cachedStates[^1]);
+            Snackbar?.Add($"Error Performing Strategy: {operationResult.Message}", Severity.Warning);
         }
-        _cachedStates.Add(csv);
-        SetCurrentIndexSafe(_cachedStates.Count - 1);
-    }
-
-    private void GoBackStep()
-    {
-       SetCurrentIndexSafe(_currentIndex -1);
-    }
-
-    private void GoForwardStep()
-    {
-        SetCurrentIndexSafe(_currentIndex + 1);
-    }
-
-    private void SetCurrentIndexSafe(int index)
-    {
-        if (IsCacheIndexValid(index))
+        else if (UseSnackBar)
         {
-            _currentIndex = index;
+            string message = $"Deleted {operationResult.Deleted} rows";
+            Snackbar?.Add(message);
+
         }
     }
 
-    public bool IsCacheIndexValid([NotNullWhen(true)] int? index)
+    public bool GoBackStep()
     {
-        return Utils.IsValidIndex(index, _cachedStates.Count);
+        return Runner?.GoBackStep() ?? false;
     }
 
-    public bool IsReferenceIndexValid([NotNullWhen(true)] int? index)
+    public bool GoForwardStep()
     {
-        return Utils.IsValidIndex(index, ReferenceCsvs.Count);
-    }
-
-    private readonly struct RowCell : ICell
-    {
-        private CsvRow CsvRow { get; }
-        public string ColumnName { get; }
-
-        public RowCell(CsvRow csvRow, string columnName)
-        {
-            CsvRow = csvRow;
-            ColumnName = columnName;
-        }
-
-        public object? Value
-        {
-            get
-            {
-                CsvRow.TryGetValue(ColumnName, out object? value);
-                return value;
-            }
-            set => CsvRow[ColumnName] = value;
-        }
+        return Runner?.GoForwardStep() ?? false;
     }
 }

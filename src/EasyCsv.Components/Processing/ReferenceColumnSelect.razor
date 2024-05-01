@@ -1,13 +1,13 @@
 ﻿@namespace EasyCsv.Components
 @inherits StrategyBucketItemBase
-@if (CsvProcessor?.CurrentState != null)
+@if (CsvProcessor?.Runner?.CurrentCsv != null)
 {
-    <MudSelect T="string" @bind-Value="ReferenceColumnName" Immediate="Immediate" Disabled="Disabled || !CsvProcessor.IsReferenceIndexValid(ReferenceCsvId)"
+    <MudSelect T="string" @bind-Value="ReferenceColumnName" Immediate="Immediate" Disabled="Disabled || !CsvProcessor.Runner.IsReferenceIndexValid(ReferenceCsvId)"
                Label="@Label" Clearable="true" OnClearButtonClick="x => ReferenceColumnName = null">
         @{
             string[]? referenceColumnNames;
         }
-        @if (CsvProcessor.IsReferenceIndexValid(ReferenceCsvId) && (referenceColumnNames = CsvProcessor.ReferenceCsvs[ReferenceCsvId.Value].Csv.ColumnNames()) != null)
+        @if (CsvProcessor.Runner.IsReferenceIndexValid(ReferenceCsvId) && (referenceColumnNames = CsvProcessor.Runner.ReferenceCsvs[ReferenceCsvId.Value].Csv.ColumnNames()) != null)
         {
             @foreach (var referenceColumnName in referenceColumnNames)
             {

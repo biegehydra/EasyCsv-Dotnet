@@ -1,10 +1,10 @@
 ﻿@namespace EasyCsv.Components
 @inherits StrategyBucketItemBase
 
-@if (CsvProcessor?.CurrentState != null)
+@if (CsvProcessor?.Runner?.CurrentCsv != null)
 {
     <MudSelect Immediate="Immediate" Disabled="Disabled" Label="@Label" T="int?" @bind-Value="ReferenceCsvId">
-        @foreach (var (referenceCsv, index) in CsvProcessor.ReferenceCsvs.Select((x, i) => (x, i)))
+        @foreach (var (referenceCsv, index) in CsvProcessor.Runner.ReferenceCsvs.Select((x, i) => (x, i)))
         {
             <MudSelectItem T="int?" Value="index">@referenceCsv.FileName</MudSelectItem>
         }

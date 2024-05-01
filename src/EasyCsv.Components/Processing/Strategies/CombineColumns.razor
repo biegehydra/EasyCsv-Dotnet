@@ -5,7 +5,7 @@
 {
     throw new ArgumentException("EasyCsv: Attempted to render strategy options not within CsvProcessingStepper", nameof(CsvProcessingStepper));
 }
-@if (CsvProcessor.CurrentState != null)
+@if (CsvProcessor.Runner?.CurrentCsv != null)
 {
     <StrategyItem DisplayName="@DisplayName" Description="@Description" ExampleOptions="_exampleOptions" BeforeCsvExample="_beforeExample"
                   AfterCsvExample="_afterExample" AllowRun="AllowRun" StrategyPicked="RunCombineColumns">

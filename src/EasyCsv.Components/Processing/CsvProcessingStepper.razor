@@ -2,24 +2,24 @@
 
 <ErrorBoundary >
     <ChildContent>
-        @if (CurrentState != null && ProcessingOptions != null)
+        @if (Runner?.CurrentCsv != null && ProcessingOptions != null)
         {
-            <MudText Typo="Typo.h5">Current Step: @(_currentIndex + 1)</MudText>
+            <MudText Typo="Typo.h5">Current Step: @(Runner.CurrentIndex + 1)</MudText>
             <br />
             <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: baseline;">
                 <div style="display: flex; gap: 20px; flex-direction: row;">
-                    @if (IsCacheIndexValid(_currentIndex - 1))
+                    @if (Runner.IsCacheIndexValid(Runner.CurrentIndex - 1))
                     {
-                        <MudButton OnClick="GoBackStep" Variant="Variant.Filled" Color="Color.Secondary">Go Back Step</MudButton>
+                        <MudButton OnClick="_ => GoBackStep()" Variant="Variant.Filled" Color="Color.Secondary">Go Back Step</MudButton>
                     }
-                    @if (IsCacheIndexValid(_currentIndex + 1))
+                    @if (Runner.IsCacheIndexValid(Runner.CurrentIndex + 1))
                     {
-                        <MudButton OnClick="GoForwardStep" Variant="Variant.Filled" Color="Color.Secondary">Go Forward Step</MudButton>
+                        <MudButton OnClick="_ => GoForwardStep()" Variant="Variant.Filled" Color="Color.Secondary">Go Forward Step</MudButton>
                     }
                 </div>
                 @if (ShowAddReferenceCsvs)
                 {
-                    var columnsNames = CurrentState.ColumnNames();
+                    var columnsNames = Runner.CurrentCsv.ColumnNames();
                     <div style="display: flex; flex-direction: row; justify-content: space-between; gap: 20px; align-items: baseline;">
                         @if (columnsNames != null && (columnsNames.Contains(InternalColumnNames.References) || columnsNames.Contains(InternalColumnNames.Tags)))
                         {
@@ -35,7 +35,7 @@
             </div>
             <br />
             <br />
-            <CsvProcessingTable ProcessingOptions="ProcessingOptions" Stepper="this" EasyCsv="CurrentState" />
+            <CsvProcessingTable ProcessingOptions="ProcessingOptions" Stepper="this" EasyCsv="Runner.CurrentCsv" />
         }
     </ChildContent>
     <ErrorContent>

@@ -288,11 +288,11 @@
             var transformOrigin = Stepper.TagsAndReferencesLocation == ColumnLocation.Beginning ? Origin.TopLeft : Origin.TopRight;
             var references = row.References(referenceColumnIndex);
             return @<MudTd Class="extra-dense">
-                       @if (references?.Any() == true)
+                       @if (references?.Any() == true && Stepper.Runner?.ReferenceCsvs.Count > 0)
                        {
                            int i = -1;
                            <MudChipSet>
-                               @foreach (IGrouping<int, (int CsvIndex, int RowIndex)> group in references.GroupBy(x => x.CsvIndex))
+                               @foreach (IGrouping<int, (int CsvIndex, int RowIndex)> group in references.Where(x => Utils.IsValidIndex(x.CsvIndex, Stepper.Runner?.ReferenceCsvs.Count ?? -1)).GroupBy(x => x.CsvIndex))
                                {
                                    i++;
                                    int groupIndex = i;
@@ -311,11 +311,11 @@
                                                int j = 0;
                                                foreach (var reference in references)
                                                {
-                                                   dictionaryArray[j] = Stepper.ReferenceCsvs[reference.CsvIndex].Csv.CsvContent[reference.RowIndex].ToStringDictionary();
+                                                   dictionaryArray[j] = Stepper.Runner.ReferenceCsvs[reference.CsvIndex].Csv.CsvContent[reference.RowIndex].ToStringDictionary();
                                                    j++;
                                                }
                                            }
-                                           @ExampleCsv(dictionaryArray, $"{references.Length} {referencesStr} in {Stepper.ReferenceCsvs[group.Key].FileName}", false)
+                                           @ExampleCsv(dictionaryArray, $"{references.Length} {referencesStr} in {Stepper.Runner.ReferenceCsvs[group.Key].FileName}", false)
                                        </ChildContent>
                                    </MudPopover>
 

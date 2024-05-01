@@ -18,6 +18,20 @@
         width: 500px;
     }
 
+    .csv-processing-table .mud-toolbar {
+        --mud-internal-toolbar-height: 120px !important;
+    }
+
+    .csv-processing-toolbar {
+        display: flex;
+        flex-direction: row;
+        gap: 16px;
+    }
+
+    .csv-processing-toolbar-search-field {
+        width: 350px;
+    }
+
     .csv-processing-popover .mud-nested-list > .mud-list-item {
         padding-right: 25px;
     }
@@ -52,8 +66,8 @@
         </MudPopover>
     }
 
-    <MudTable T="CsvRow" Class="csv-table-header-matcher" FixedHeader="true" RowsPerPage="10" Items="EasyCsv.CsvContent"
-              Striped Bordered Dense Hover Elevation="2">
+    <MudTable T="CsvRow" Class="csv-processing-table" FixedHeader="true" RowsPerPage="10" Items="GetFiltersRows()"
+              Striped Bordered Dense Hover Elevation="2" ToolBarContent="@ToolBarContent()">
         <HeaderContent>
             @if (Stepper.TagsAndReferencesLocation == ColumnLocation.Beginning)
             {
@@ -61,6 +75,7 @@
                 {
                     <MudTh>Tags</MudTh>
                 }
+
                 @if (referenceColumnIndex >= 0)
                 {
                     <MudTh>References</MudTh>
@@ -189,9 +204,24 @@
     private Dictionary<ReferenceGroup, bool> _referencesOpen = new();
     private Dictionary<ReferenceGroup, bool> _referencesBackDropsOpen = new();
     private Dictionary<string, bool> _popOverDict = new ();
+    private Dictionary<string, bool> _searchColumns = new();
     private Dictionary<string, StrategyBucket> _strategyBuckets = new();
     private Dictionary<string, Color> _tagColors = new();
     private IEasyCsv? _easyCsv;
+    private string? _sq;
+
+    public IEnumerable<CsvRow> GetFiltersRows()
+    {
+        if (_searchColumns.Count == 0 || string.IsNullOrWhiteSpace(_sq))
+        {
+            return EasyCsv?.CsvContent ?? Enumerable.Empty<CsvRow>();
+        }
+        else
+        {
+            var columnsToSearch = _searchColumns.Where(x => x.Value).Select(x => x.Key).ToArray();
+            return EasyCsv?.CsvContent.Where(x => x.AnyColumnMatchesValues(columnsToSearch, _sq)) ?? Enumerable.Empty<CsvRow>();
+        }
+    }
 
     private void AddTag(string tag)
     {
@@ -209,6 +239,42 @@
         _strategyBuckets.Clear();
         _referencesBackDropsOpen.Clear();
         _referencesOpen.Clear();
+        var columnNames = EasyCsv?.ColumnNames();
+        if (columnNames != null)
+        {
+            var except = _searchColumns.Keys.Except(columnNames);
+            foreach (var toRemove in except)
+            {
+                _searchColumns.Remove(toRemove);
+            }
+        }
+        else
+        {
+            _searchColumns.Clear();
+        }
+    }
+
+    public Task SetSearchQuery(string? searchQuery)
+    {
+        if ((string.IsNullOrWhiteSpace(searchQuery) && string.IsNullOrWhiteSpace(_sq)) || _sq?.Equals(searchQuery) == true) return Task.CompletedTask;
+        _sq = searchQuery;
+        return InvokeStateHasChanged();
+    }
+
+    public Task SetColumnsToSearch(IEnumerable<string>? columnsToSearch)
+    {
+        string[] currentColumns = _searchColumns.Keys.ToArray();
+        foreach (var column in currentColumns)
+        {
+            _searchColumns[column] = false;
+        }
+
+        if (columnsToSearch == null) return Task.CompletedTask;
+        foreach (var column in columnsToSearch)
+        {
+            _searchColumns[column] = true;
+        }
+        return InvokeStateHasChanged();
     }
 
     internal void TogglePopover(string column)
@@ -278,6 +344,26 @@
                    </MudTd>;
         }
         return null;
+    }
+
+    private RenderFragment? ToolBarContent()
+    {
+        if (!Stepper.UseToolbar) return null;
+        var columnNames = EasyCsv?.ColumnNames();
+        if (columnNames == null) return null;
+        return @<div class="csv-processing-toolbar">
+                   <MudTextField T="string" Class="csv-processing-toolbar-search-field" DebounceInterval="Stepper.SearchDebounceInterval" Immediate="true" Label="Search Csv"
+                                 HelperText="Value to search for" HelperTextOnFocus Variant="Variant.Outlined" Value="_sq" ValueChanged="x => SetSearchQuery(x)" 
+                                 Clearable OnClearButtonClick="x => SetSearchQuery(null)"/>
+                   <MudSelect T="string" Class="csv-processing-toolbar-search-field" Immediate="true" Label="Columns To Search" 
+                              Variant="Variant.Outlined" MultiSelection="true"  SelectedValues="_searchColumns.Where(x => x.Value).Select(x => x.Key).ToArray()"
+                              SelectedValuesChanged="x => SetColumnsToSearch(x)" Clearable OnClearButtonClick="() => SetColumnsToSearch(null)" >
+                              @foreach (var columnName in columnNames)
+                              {
+                                  <MudSelectItem T="string" Value="columnName" >@columnName</MudSelectItem>
+                              }
+                   </MudSelect>
+               </div>;
     }
 
     private RenderFragment? ReferencesDataCell(int referenceColumnIndex, CsvRow row)

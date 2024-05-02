@@ -16,4 +16,18 @@ public static class CsvExtensions
             i++;
         }
     }
+
+    public static IEnumerable<(T, int)> FilterByIndexesWithOriginalIndex<T>(this IEnumerable<T>? enumerable, ICollection<int>? indexes)
+    {
+        if (enumerable == null) yield break;
+        int i = 0;
+        foreach (var item in enumerable)
+        {
+            if (indexes == null || indexes.Contains(i))
+            {
+                yield return (item, i);
+            }
+            i++;
+        }
+    }
 }

@@ -1,8 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using EasyCsv.Core;
 using System.Threading.Tasks;
 
 namespace EasyCsv.Processing;
+
+public interface IFindDedupesOperation
+{
+    public IAsyncEnumerable<DuplicateGrouping> YieldReturnDupes(IEasyCsv csv, ICollection<int>? filteredRowIndexes = null, params (IEasyCsv Csv, int ReferenceCsvId)[] referenceCsvs);
+}
 
 public interface ICsvColumnProcessor : IColumnOperation
 {
@@ -72,6 +79,16 @@ public interface IColumnOperation
 public interface IReferenceOperation
 {
     public int ReferenceCsvId { get; }
+}
+
+public readonly struct DuplicateGrouping
+{
+    public (int?, (int, CsvRow)[])[] Duplicates { get; }
+    public DuplicateGrouping(IEnumerable<(int?, IEnumerable<(int, CsvRow)>)> duplicatesGroupedByReferenceCsvId)
+    {
+        if (duplicatesGroupedByReferenceCsvId == null!)  throw new ArgumentException("duplicatesGroupedByReferenceCsvId cannot be null");
+        Duplicates = duplicatesGroupedByReferenceCsvId.Select(x => (x.Item1, x.Item2.ToArray())).ToArray();
+    }
 }
 
 public readonly struct OperationResult

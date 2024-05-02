@@ -1,0 +1,113 @@
+﻿<MudDialog Style="min-width: 1000px;">
+    <TitleContent>
+        <MudText Class="mb-2" Typo="Typo.h5"><b>Pick Duplicate To Keep</b></MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (DuplicateGroup?.Duplicates.Any() == true && Stepper.Runner?.ReferenceCsvs.Count > 0)
+        {
+            foreach (var duplicateGroup in DuplicateGroup?.Duplicates!)
+            {
+                var dictionaryArray = duplicateGroup.Item2.Select(x => x.Item2).ToArray();
+                string fileNameStr = duplicateGroup.Item1 is > 0 ? Stepper.Runner.ReferenceCsvs[duplicateGroup.Item1.Value].FileName : "Working Csv";
+                string duplicatesStr = duplicateGroup.Item2.Length == 1 ? "duplicate" : "duplicates";
+                @ExampleCsvInternal(dictionaryArray, $"{duplicateGroup.Item1} {duplicatesStr} in {fileNameStr}", duplicateGroup.Item1)
+            }
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Disabled="_selectedCsvRow == null" StartIcon="@Icons.Material.Filled.Download" Variant="Variant.Filled" Color="Color.Info" OnClick="Submit">Add Data</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public DuplicateGrouping? DuplicateGroup { get; set; }
+    [Parameter] public CsvProcessingStepper Stepper { get; set; } = null!;
+    private CsvRow? _selectedCsvRow;
+    private int? _selectedCsvRowReferenceCsvId;
+
+    private void SelectRow(CsvRow row, int? referenceCsvId)
+    {
+        if (_selectedCsvRow == null || _selectedCsvRow != row)
+        {
+            _selectedCsvRow = row;
+            _selectedCsvRowReferenceCsvId = referenceCsvId;
+        }
+        else if (_selectedCsvRow == row)
+        {
+            _selectedCsvRow = null;
+            _selectedCsvRowReferenceCsvId = null;
+        }
+    }
+
+    void Submit() => MudDialog.Close(DialogResult.Ok(new DuplicateRootPickerResult(_selectedCsvRow!, _selectedCsvRowReferenceCsvId)));
+    void Cancel() => MudDialog.Cancel();
+
+
+    private RenderFragment? ExampleCsvInternal(CsvRow[] exampleCsv, string text, int? referenceCsvId)
+    {
+        if (exampleCsv?.Length > 0 != true) return null;
+        int tagsColumnIndex = exampleCsv[0].Keys.IndexOf(InternalColumnNames.Tags);
+        int referencesColumnIndex = exampleCsv[0].Keys.IndexOf(InternalColumnNames.References);
+        var tagColors = new Dictionary<string, Color>();
+
+        void AddTag(string tag)
+        {
+            if (!tagColors.ContainsKey(tag))
+            {
+                int colorIndex = tagColors.Count % CsvProcessingTable.DefaultColors.Length;
+                Color color = CsvProcessingTable.DefaultColors[colorIndex];
+                tagColors.Add(tag, color);
+            }
+        }
+
+        return @<text>
+                    <MudText Class="mb-3" Typo="Typo.h5">@text</MudText>
+                    <MudTable Items="exampleCsv" Hover Striped Bordered Elevation="0">
+                        <HeaderContent>
+                            <MudTh>Selected</MudTh>
+                            @foreach (var key in exampleCsv[0].Keys.Where(x => x != InternalColumnNames.Tags && x != InternalColumnNames.References))
+                            {
+                                <MudTh>@key</MudTh>
+                            }
+                            @if (tagsColumnIndex >= 0)
+                            {
+                                <MudTh>Tags</MudTh>
+                            }
+                        </HeaderContent>
+                        <RowTemplate Context="row">
+                            @{
+                                int i = -1;
+                            }
+                            <MudTd>
+                                <MudCheckBox T="bool" Disabled="_selectedCsvRow != null && _selectedCsvRow != row" Value="_selectedCsvRow == row" ValueChanged="x => SelectRow(row, referenceCsvId)" ></MudCheckBox>
+                            </MudTd>
+                            @foreach (var (_, value) in row)
+                            {
+                                i++;
+                                if (i != tagsColumnIndex && i != referencesColumnIndex)
+                                {
+                                    <MudTd>@value</MudTd>
+                                }
+                            }
+                            @if (tagsColumnIndex >= 0)
+                            {
+                                var tags = row.ValueAt(tagsColumnIndex)?.ToString()?.Split(",", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                                <MudTd Class="extra-dense">
+                                    @if (tags?.Any() == true)
+                                    {
+                                        <MudChipSet>
+                                            @foreach (var tag in tags)
+                                            {
+                                                AddTag(tag);
+                                                <MudChip Text="@tag" Color="tagColors[tag]" Size="Size.Small"/>
+                                            }
+                                        </MudChipSet>
+                                    }
+                                </MudTd>
+                            }
+                        </RowTemplate>
+                    </MudTable>
+                </text>;
+    }
+}

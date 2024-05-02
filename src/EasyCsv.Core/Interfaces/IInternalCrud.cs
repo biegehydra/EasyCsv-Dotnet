@@ -9,6 +9,7 @@ namespace EasyCsv.Core
         internal IEasyCsv UpsertRows(IEnumerable<CsvRow> rows);
         internal IEasyCsv UpdateRow(int index, CsvRow newRow);
         internal IEasyCsv DeleteRow(int index);
+        internal IEasyCsv DeleteRow(CsvRow row);
         internal IEasyCsv DeleteRows(IEnumerable<int> index);
     }
 }

@@ -14,7 +14,7 @@ public class TagAndReferenceMatchesStrategy : ICsvReferenceProcessor
     public int ReferenceCsvId { get; }
     public string? TagToAdd { get; }
 
-    private readonly IEqualityComparer<string> _comparer;
+    public IEqualityComparer<string> Comparer { get; }
     public TagAndReferenceMatchesStrategy(int referenceCsvId, string columnName, string referenceColumnName, string? tagToAdd, IEqualityComparer<string>? comparer = null)
     {
         if (string.IsNullOrWhiteSpace(columnName)) throw new ArgumentException("Column name cannot be null");
@@ -23,7 +23,7 @@ public class TagAndReferenceMatchesStrategy : ICsvReferenceProcessor
         comparer ??= EqualityComparer<string>.Default;
         ColumnName = columnName;
         ReferenceColumnName = referenceColumnName;
-        _comparer = comparer;
+        Comparer = comparer;
         ReferenceCsvId = referenceCsvId;
         TagToAdd = tagToAdd;
     }
@@ -40,7 +40,7 @@ public class TagAndReferenceMatchesStrategy : ICsvReferenceProcessor
             return new OperationResult(false, $"Reference csv missing column. {ColumnName}");
         }
         var referenceCsvValues = referenceCsv.CsvContent.Select(x => x[ReferenceColumnName]?.ToString()).ToArray();
-        var referenceMap = MapArray(referenceCsvValues, _comparer);
+        var referenceMap = StrategyHelpers.MapArray(referenceCsvValues, Comparer);
         int matched = 0;
         await csv.MutateAsync(x =>
         {
@@ -62,21 +62,5 @@ public class TagAndReferenceMatchesStrategy : ICsvReferenceProcessor
             }
         });
         return new OperationResult(true, $"{matched} records matched and tagged.");
-    }
-
-    private static Dictionary<string, List<int>> MapArray(string?[] array, IEqualityComparer<string> comparer)
-    {
-        var map = new Dictionary<string, List<int>>(comparer);
-        for (int i = 0; i < array.Length; i++)
-        {
-            if (string.IsNullOrWhiteSpace(array[i])) continue;
-            if (map.TryGetValue(array[i]!, out var list))
-            {
-                list.Add(i);
-                continue;
-            }
-            map[array[i]!] = [i];
-        }
-        return map;
     }
 }

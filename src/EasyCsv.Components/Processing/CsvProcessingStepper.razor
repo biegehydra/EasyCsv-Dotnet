@@ -67,24 +67,24 @@
 }
 @if (Runner?.CurrentCsv != null && (columnNames = Runner.CurrentCsv.ColumnNames()) != null)
 {
-    <MudDialog @bind-IsVisible="_isDownloadDialogVisible" >
+    <MudDialog @bind-IsVisible="_isDownloadDialogVisible" Style="min-width: 600px;" >
         <DialogContent >
             <CascadingValue TValue="CsvProcessingStepper" Value="this" IsFixed="true">
                 <div class="csv-processing-download-popup-container">
                     <MudText Class="mb-2" Typo="Typo.h5"><b>Download Snapshot Options</b></MudText>
-                    <MudTextField T="string" DebounceInterval="SearchDebounceInterval" Immediate="true" Label="File Name"
+                    <MudTextField T="string" DebounceInterval="SearchDebounceInterval" Immediate="true" Required="true" Label="File Name"
                                   HelperText="Name given to downloaded file" HelperTextOnFocus Variant="Variant.Outlined" @bind-Value="_fileName"
                                   Clearable OnClearButtonClick="x => _sq = null"/>
-                    <MudText Typo="Typo.h6">Column Filter</MudText>
+                    <MudText Typo="Typo.h6">Column Filter (Required)</MudText>
                     <MultiColumnSelect @bind-ColumnNames="_columnsToDownload" Label="Columns To Download" SelectAll="true" SelectAllText="Download All Columns"></MultiColumnSelect>
-                    <MudText Typo="Typo.h6">Search Filter</MudText>
+                    <MudText Typo="Typo.h6">Search Filter (Optional)</MudText>
                     <MudTextField T="string" DebounceInterval="SearchDebounceInterval" Immediate="true" Label="Search Query"
                                   HelperText="Value to search for" HelperTextOnFocus Variant="Variant.Outlined" @bind-Value="_sq"
                                   Clearable OnClearButtonClick="x => _sq = null"/>
                     <MultiColumnSelect @bind-ColumnNames="_searchColumns" Label="Columns To Search" SelectAll="true" SelectAllText="Search All Columns"></MultiColumnSelect>
                     @if (columnNames.Contains(InternalColumnNames.Tags))
                     {
-                        <MudText Typo="Typo.h6">Tags Filter</MudText>
+                        <MudText Typo="Typo.h6">Tags Filter (Optional)</MudText>
                         <MultiTagSelect @bind-Tags="_includeTags" DisabledTags="_excludeTags" Label="Include Tags"></MultiTagSelect>
                         <MultiTagSelect @bind-Tags="_excludeTags" DisabledTags="_includeTags" Label="Exclude Tags"></MultiTagSelect>
                     }

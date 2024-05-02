@@ -126,7 +126,7 @@ else if (InputVariant == FileInputVariant.Button)
         {
             HeaderValidated = null,
             MissingFieldFound = null,
-            PrepareHeaderForMatch = new PrepareHeaderForMatch(x => Regex.Replace(x.Header, @"\W", "").ToLower(CultureInfo.CurrentCulture)),
+            PrepareHeaderForMatch = new PrepareHeaderForMatch(x => Regex.Replace(x.Header, @"\W", "")),
             ShouldUseConstructorParameters = x => true,
             GetConstructor = x => x.ClassType.GetConstructors().FirstOrDefault(c => c.GetParameters().Length == 0)
         },

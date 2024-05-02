@@ -49,5 +49,17 @@
     [Parameter] public Variant Variant { get; set; } = Variant.Outlined;
     [Parameter] public string? SelectAllText { get; set; }
     [Parameter] public bool HideNoTags { get; set; }
+    [Parameter] public Func<ICollection<string>, string?>? AutoMatchTag { get; set; }
+    protected override void OnInitialized()
+    {
+        if (AutoMatchTag != null)
+        {
+            var tags = CsvProcessor.Runner?.CurrentTags;
+            if (tags?.Count > 0 && AutoMatchTag(tags) is { } matchedTag && tags.Contains(matchedTag))
+            {
+                Tag = matchedTag;
+            }
+        }
+    }
 }
 

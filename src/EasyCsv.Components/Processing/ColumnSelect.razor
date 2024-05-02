@@ -41,4 +41,17 @@
     [Parameter] public bool Disabled { get; set; }
     [Parameter] public string Label { get; set; } = "Column Name";
     [Parameter] public Variant Variant { get; set; } = Variant.Outlined;
+    [Parameter] public Func<ICollection<string>, string?>? AutoMatchColumn { get; set; }
+    protected override void OnInitialized()
+    {
+        if (AutoMatchColumn != null)
+        {
+            var columnNames = CsvProcessor?.Runner?.CurrentCsv?.ColumnNames();
+            if (columnNames?.Length > 0 && AutoMatchColumn(columnNames) is { } matchedColumn && columnNames.Contains(matchedColumn))
+            {
+                ColumnName = matchedColumn;
+            }
+        }
+    }
+
 }

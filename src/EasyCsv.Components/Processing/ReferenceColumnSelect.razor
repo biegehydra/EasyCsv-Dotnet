@@ -47,4 +47,19 @@
     [Parameter] public bool Disabled { get; set; }
     [Parameter] public string Label { get; set; } = "Reference Column Name";
     [Parameter] public Variant Variant { get; set; } = Variant.Outlined;
+    [Parameter] public Func<ICollection<string>, string?>? AutoMatchColumn { get; set; }
+
+    private bool _initialized = false;
+    protected override void OnParametersSet()
+    {
+        if (!_initialized && AutoMatchColumn != null && CsvProcessor.Runner?.IsReferenceIndexValid(ReferenceCsvId) == true)
+        {
+            _initialized = true;
+            var referenceColumnNames = CsvProcessor.Runner.ReferenceCsvs[ReferenceCsvId.Value].Csv.ColumnNames();
+            if (referenceColumnNames?.Length > 0 && AutoMatchColumn(referenceColumnNames) is { } matchedColumn && referenceColumnNames.Contains(matchedColumn))
+            {
+                ReferenceColumnName = matchedColumn;
+            }
+        }
+    }
 }

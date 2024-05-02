@@ -50,5 +50,26 @@
     [Parameter] public Variant Variant { get; set; } = Variant.Outlined;
     [Parameter] public string? SelectAllText { get; set; }
     [Parameter] public bool HideNoTags { get; set; }
+    [Parameter] public Func<ICollection<string>, string[]?>? AutoMatchTags { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (AutoMatchTags != null)
+        {
+            var tags = CsvProcessor.Runner?.CurrentTags;
+            if (tags?.Count > 0 && AutoMatchTags(tags) is { Length: > 0 } matchedTags)
+            {
+                List<string> toSet = new();
+                foreach (var matchedTag in matchedTags)
+                {
+                    if (tags.Contains(matchedTag))
+                    {
+                        toSet.Add(matchedTag);
+                    }
+                }
+                Tags = toSet.Distinct().ToArray();
+            }
+        }
+    }
 }
 

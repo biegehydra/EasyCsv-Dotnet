@@ -45,14 +45,29 @@
     [Parameter] public bool InitializeWithStrategyBucketColumnName { get; set; }
     [Parameter] public bool SelectAll { get; set; }
     [Parameter] public string? SelectAllText { get; set; }
+    [Parameter] public Func<ICollection<string>, string[]?>? AutoMatchColumns { get; set; }
 
-    private bool _initialized = false;
-    protected override void OnParametersSet()
+    protected override void OnInitialized()
     {
-        if (StrategyBucket != null! && !_initialized && InitializeWithStrategyBucketColumnName)
+        if (InitializeWithStrategyBucketColumnName && !string.IsNullOrWhiteSpace(StrategyBucket?.ColumnName))
         {
-            _initialized = true;
             ColumnNames = [StrategyBucket.ColumnName];
+        }
+        else if (AutoMatchColumns != null)
+        {
+            var columnNames = CsvProcessor?.Runner?.CurrentCsv?.ColumnNames();
+            if (columnNames?.Length > 0 && AutoMatchColumns(columnNames) is {Length: > 0} matchedColumns)
+            {
+                List<string> toSet = new();
+                foreach (var matchedColumn in matchedColumns)
+                {
+                    if (columnNames.Contains(matchedColumn))
+                    {
+                        toSet.Add(matchedColumn);
+                    }
+                }
+                ColumnNames = toSet.Distinct().ToArray();
+            }
         }
     }
 }

@@ -348,23 +348,38 @@ public partial class CsvTableHeaderMatcher
     private async Task MatchFileHeadersWithExpectedHeaders()
     {
         var headers = Csv!.ColumnNames();
-        if (headers == null) return;
-        List<ExpectedHeader> matchedHeaders = new ();
-        foreach (var header in headers)
+        if (headers == null || ExpectedHeaders == null) return;
+        List<string> matchedHeaders = new();
+        List<ExpectedHeader> matchedExpectedHeaders = new();
+        var matching = AutoMatching.Exact;
+        do
         {
-            if (DoMatching(header, matchedHeaders, out var matchedHeader))
+            var filteredExpectedHeaders = ExpectedHeaders.Except(matchedExpectedHeaders);
+            foreach (var expectedHeader in filteredExpectedHeaders)
             {
-                matchedHeaders.Add(matchedHeader!);
-                await ReplaceColumn(header, matchedHeader!);
+                var filteredHeaders = headers.Except(matchedHeaders).ToArray();
+                if (DoMatching(expectedHeader, filteredHeaders, matching, out var matchedHeader))
+                {
+                    matchedHeaders.Add(matchedHeader);
+                    matchedExpectedHeaders.Add(expectedHeader);
+                    await ReplaceColumn(matchedHeader, expectedHeader);
+                }
             }
-        }
+            matching += 1;
+        } while (matching <= AutoMatch);
         AllHeadersValid = ValidateRequiredHeaders();
     }
 
-    public async Task ReplaceColumn(string originalHeaderName, ExpectedHeader expectedHeader)
+    private async Task ReplaceColumn(string originalHeaderName, ExpectedHeader expectedHeader)
     {
         if (Csv == null) return;
         var currentHeaderName = _originalHeaderCurrentHeaderDict[originalHeaderName];
+        // Collision, move to temp row
+        if (Csv.ColumnNames()?.Any(x => x.Equals(expectedHeader.CSharpPropertyName)) == true && currentHeaderName.Equals(expectedHeader.CSharpPropertyName) != true)
+        {
+            await Csv.MutateAsync(x => x.ReplaceColumn(expectedHeader.CSharpPropertyName, expectedHeader.CSharpPropertyName + "temp"));
+            _originalHeaderCurrentHeaderDict[expectedHeader.CSharpPropertyName] = expectedHeader.CSharpPropertyName + "temp";
+        }
         await Csv.MutateAsync(x => x.ReplaceColumn(currentHeaderName, expectedHeader.CSharpPropertyName));
         _originalHeaderCurrentHeaderDict[originalHeaderName] = expectedHeader.CSharpPropertyName;
         _mappedDict[originalHeaderName] = expectedHeader;
@@ -381,59 +396,49 @@ public partial class CsvTableHeaderMatcher
         _mappedDict[originalHeaderName] = null;
         AllHeadersValid = ValidateRequiredHeaders();
     }
-
-    private bool DoMatching(string header, List<ExpectedHeader> ignore, out ExpectedHeader? matchedExpectedHeader)
+    private bool DoMatching(ExpectedHeader expectedHeader, string[] filteredHeaders, AutoMatching autoMatching, out string? matchedHeader)
     {
-        matchedExpectedHeader = null;
-        var matching = AutoMatching.Exact;
-        do
+        matchedHeader = null;
+        return autoMatching switch
         {
-            var result = matching switch
-            {
-                AutoMatching.Exact => TryExactMatch(header, ignore, out matchedExpectedHeader),
-                AutoMatching.Strict => TryFuzzyMatch(header, ignore, matching, out matchedExpectedHeader),
-                AutoMatching.Lenient => TryFuzzyMatch(header, ignore, matching, out matchedExpectedHeader),
-                _ => throw new NotImplementedException("AutMatching case not implemented")
-            };
-            if (result) return true;
-            matching += 1;
-        } while (matching <= AutoMatch);
-        return false;
+            AutoMatching.Exact => TryExactMatch(expectedHeader, filteredHeaders, out matchedHeader),
+            AutoMatching.Strict => (expectedHeader.Config.AutoMatching == null || expectedHeader.Config.AutoMatching >= autoMatching)
+                                   && TryFuzzyMatch(expectedHeader, filteredHeaders, autoMatching, out matchedHeader),
+            AutoMatching.Lenient => (expectedHeader.Config.AutoMatching == null || expectedHeader.Config.AutoMatching >= autoMatching)
+                                    && TryFuzzyMatch(expectedHeader, filteredHeaders, autoMatching, out matchedHeader),
+            _ => throw new NotImplementedException("AutMatching case not implemented")
+        };
     }
-    private bool TryExactMatch(string header, List<ExpectedHeader> ignore, out ExpectedHeader? matchedExpectedHeader)
+    private bool TryExactMatch(ExpectedHeader expectedHeader, string[] filteredHeaders, out string? matchedHeader)
     {
-        var filteredHeaders = ExpectedHeaders?.Except(ignore);
-        foreach (var expectedHeader in filteredHeaders ?? Enumerable.Empty<ExpectedHeader>())
+        foreach (var possibleExpectedHeader in expectedHeader.ValuesToMatch)
         {
-            foreach (var possibleExpectedHeader in expectedHeader.ValuesToMatch)
+            foreach (var header in filteredHeaders)
             {
                 if (string.Compare(possibleExpectedHeader, header, StringComparison.CurrentCultureIgnoreCase) != 0) continue;
-                matchedExpectedHeader = expectedHeader;
+                matchedHeader = header;
                 return true;
             }
         }
-        matchedExpectedHeader = null;
+        matchedHeader = null;
         return false;
     }
-    private bool TryFuzzyMatch(string header, List<ExpectedHeader> ignore, AutoMatching matching, out ExpectedHeader? matchedExpectedHeader)
+    private bool TryFuzzyMatch(ExpectedHeader expectedHeader, string[] filteredHeaders, AutoMatching matching, out string? matchedHeader)
     {
-        matchedExpectedHeader = null;
-        var filteredHeaders = ExpectedHeaders?.Except(ignore).Where(x => x.Config.AutoMatching == null || x.Config.AutoMatching >= matching);
-        if (filteredHeaders == null) return false;
-        foreach (var expectedHeader in filteredHeaders)
+        foreach (var possibleExpectedHeader in expectedHeader.ValuesToMatch)
         {
-            foreach (var possibleExpectedHeader in expectedHeader.ValuesToMatch)
+            foreach (var header in filteredHeaders)
             {
                 var ratio = Fuzz.Ratio(possibleExpectedHeader.ToLower(), header.ToLower());
                 var partialRatio = Fuzz.PartialRatio(possibleExpectedHeader.ToLower(), header.ToLower());
-                if (ratio > 90 || (matching == AutoMatching.Lenient && ratio > 60 && partialRatio > 90))
+                if (ratio > 90 || (ratio > 60 && partialRatio > 90 && matching == AutoMatching.Lenient))
                 {
-                    matchedExpectedHeader = expectedHeader;
+                    matchedHeader = header;
                     return true;
                 }
             }
         }
-
+        matchedHeader = null;
         return false;
     }
 

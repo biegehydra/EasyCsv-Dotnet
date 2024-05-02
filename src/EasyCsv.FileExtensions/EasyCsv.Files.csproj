@@ -25,7 +25,7 @@
 	  <SymbolPackageFormat>snupkg</SymbolPackageFormat>
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
 	  <DocumentationFile>$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
-	  <Version>1.0.23</Version>
+	  <Version>2.0.0-beta3</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0|AnyCPU'">

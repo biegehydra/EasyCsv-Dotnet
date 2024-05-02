@@ -17,11 +17,11 @@
                 <div style="display: flex; gap: 20px; flex-direction: row;">
                     @if (Runner.IsCacheIndexValid(Runner.CurrentIndex - 1))
                     {
-                        <MudButton OnClick="_ => GoBackStep()" Variant="Variant.Filled" Color="Color.Secondary">Go Back Step</MudButton>
+                        <MudButton Disabled="@Busy" OnClick="_ => GoBackStep()" Variant="Variant.Filled" Color="Color.Secondary">Go Back Step</MudButton>
                     }
                     @if (Runner.IsCacheIndexValid(Runner.CurrentIndex + 1))
                     {
-                        <MudButton OnClick="_ => GoForwardStep()" Variant="Variant.Filled" Color="Color.Secondary">Go Forward Step</MudButton>
+                        <MudButton Disabled="@Busy" OnClick="_ => GoForwardStep()" Variant="Variant.Filled" Color="Color.Secondary">Go Forward Step</MudButton>
                     }
                 </div>
                 @if (ShowAddReferenceCsvs)
@@ -32,21 +32,25 @@
                         {
                             string text = TagsAndReferencesLocation == ColumnLocation.Beginning ? "Move tags and references columns to end" : "Move tags and references columns to beginning";
                             <MudTooltip Text="@text" Delay="600">
-                                <MudIconButton Variant="Variant.Filled" Color="Color.Tertiary" Icon="@Icons.Material.Filled.SwapHoriz"
+                                <MudIconButton Disabled="@Busy" Variant="Variant.Filled" Color="Color.Tertiary" Icon="@Icons.Material.Filled.SwapHoriz"
                                                OnClick="() => TagsAndReferencesLocation = TagsAndReferencesLocation == ColumnLocation.End ? ColumnLocation.Beginning : ColumnLocation.End" />
                             </MudTooltip>
                         }
                         <MudTooltip Text="Download Snapshot of Current Csv" Delay="600">
                             <MudIconButton Variant="Variant.Filled" Color="Color.Info" Icon="@Icons.Material.Filled.Download"
-                                           OnClick="_ => OpenDownloadDialog()" />
+                                           Disabled="@Busy" OnClick="_ => OpenDownloadDialog()" />
                         </MudTooltip>
-                        <CsvFileInput InputVariant="@FileInputVariant.Button" ButtonText="Add Reference Csv" OnCsvUpload="x => AddReferenceCsv(x)"></CsvFileInput>
+                        <CsvFileInput Disabled="@Busy" InputVariant="@FileInputVariant.Button" ButtonText="Add Reference Csv" OnCsvUpload="x => AddReferenceCsv(x)"></CsvFileInput>
+                        @if (ShowAddCsv)
+                        {
+                            <CsvFileInput Disabled="@Busy" InputVariant="@FileInputVariant.Button" ButtonText="Add Csv" OnCsvUpload="x => BeginAddCsv(x.Csv)"></CsvFileInput>
+                        }
                     </div>
                 }
             </div>
             <br />
             <br />
-            <CsvProcessingTable @ref="_csvProcessingTable" ProcessingOptions="ProcessingOptions" Stepper="this" EasyCsv="Runner.CurrentCsv" />
+            <CsvProcessingTable @ref="_csvProcessingTable" Busy="@Busy" ProcessingOptions="ProcessingOptions" Stepper="this" EasyCsv="Runner.CurrentCsv" />
         }
     </ChildContent>
     <ErrorContent>
@@ -65,11 +69,13 @@
 }
 @if (Runner?.CurrentCsv != null && (columnNames = Runner.CurrentCsv.ColumnNames()) != null)
 {
-    <MudDialog @bind-IsVisible="_isDownloadDialogVisible" Style="min-width: 600px;" >
+    <MudDialog @bind-IsVisible="_isDownloadDialogVisible" Style="min-width: 600px;">
+        <TitleContent>
+            <MudText Class="mb-2" Typo="Typo.h5"><b>Download Snapshot Options</b></MudText>
+        </TitleContent>
         <DialogContent >
             <CascadingValue TValue="CsvProcessingStepper" Value="this" IsFixed="true">
                 <div class="csv-processing-download-popup-container">
-                    <MudText Class="mb-2" Typo="Typo.h5"><b>Download Snapshot Options</b></MudText>
                     <MudTextField T="string" DebounceInterval="SearchDebounceInterval" Immediate="true" Required="true" Label="File Name"
                                   HelperText="Name given to downloaded file" HelperTextOnFocus Variant="Variant.Outlined" @bind-Value="_fileName"
                                   Clearable OnClearButtonClick="x => _sq = null"/>
@@ -90,24 +96,28 @@
             </CascadingValue>
         </DialogContent>
         <DialogActions>
-            <MudButton StartIcon="@Icons.Material.Filled.Close" Variant="Variant.Outlined" Color="Color.Default" OnClick="x => _isDownloadDialogVisible = false"  >Cancel</MudButton>
+            <MudButton StartIcon="@Icons.Material.Filled.Close" Variant="Variant.Outlined" Color="Color.Default" OnClick="x => _isDownloadDialogVisible = false">Cancel</MudButton>
             <MudButton Disabled="string.IsNullOrWhiteSpace(_fileName)" StartIcon="@Icons.Material.Filled.Download" Variant="Variant.Filled" Color="Color.Info" OnClick="async _ => await DownloadSnapShot()">Download</MudButton>
         </DialogActions>
     </MudDialog>
     @if (_csvToAdd != null)
     {
-        <MudDialog @bind-IsVisible="_isAddDataDialogVisible" Style="min-width: 750px;">
+        <MudDialog @bind-IsVisible="_isAddDataDialogVisible" Style="min-width: 1000px;">
+            <TitleContent>
+                <MudText Class="mb-2" Typo="Typo.h5"><b>Map Columns To Current State</b></MudText>
+            </TitleContent>
             <DialogContent>
-                <CsvTableHeaderMatcher AutoMatch="AutoMatching.Lenient" ExpectedHeaders="_expectedHeaders" Frozen="false" Csv="_csvToAdd" />
+                <CsvTableHeaderMatcher @ref="_tableHeaderMatcher" ExpectedHeaderThStr="Current Header" FinishedAutoMatching="x => Busy = false" AutoMatch="AutoMatching.Lenient" ExpectedHeaders="_expectedHeaders" Frozen="_busyAddCsv" Csv="_csvToAdd"/>
             </DialogContent>
             <DialogActions>
-                <MudButton StartIcon="@Icons.Material.Filled.Close" Variant="Variant.Outlined" Color="Color.Default" OnClick="x => _isDownloadDialogVisible = false">Cancel</MudButton>
-                <MudButton Disabled="string.IsNullOrWhiteSpace(_fileName)" StartIcon="@Icons.Material.Filled.Download" Variant="Variant.Filled" Color="Color.Info" >Add Data</MudButton>
+                <MudButton Disabled="_busyAddCsv" StartIcon="@Icons.Material.Filled.Close" Variant="Variant.Outlined" Color="Color.Default" OnClick="x => _isAddDataDialogVisible = false">Cancel</MudButton>
+                <MudButton Disabled="_busyAddCsv" StartIcon="@Icons.Material.Filled.Download" Variant="Variant.Filled" Color="Color.Info" OnClick="AddCsv">Add Data</MudButton>
             </DialogActions>
         </MudDialog>
     }
 }
 @code {
+    private CsvTableHeaderMatcher? _tableHeaderMatcher;
     private bool _isAddDataDialogVisible;
     private IEasyCsv? _csvToAdd;
     private ICollection<ExpectedHeader>? _expectedHeaders;
@@ -119,6 +129,48 @@
     private string[] _excludeTags = [];
     private string? _sq;
     private string? _fileName;
+
+    private void BeginAddCsv(IEasyCsv csv)
+    {
+        var columnNames = Runner?.CurrentCsv?.ColumnNames();
+        if (columnNames?.Length > 0)
+        {
+            _csvToAdd = csv;
+            _isAddDataDialogVisible = true;
+            _expectedHeaders = columnNames.Select(x => new ExpectedHeader(x, ExpectedHeaderConfig)).ToArray();
+            Busy = true;
+            StateHasChanged();
+        }
+    }
+
+    private bool _busyAddCsv;
+    private async Task AddCsv()
+    {
+        if (_tableHeaderMatcher == null || Runner == null) return;
+        var mappedCsv = await _tableHeaderMatcher.GetMappedCsv();
+        var mappedColumnsNames = mappedCsv?.ColumnNames();
+        if (mappedColumnsNames?.Length is not > 0)
+        {
+            if (UseSnackBar)
+            {
+                Snackbar?.Add("Couldn't add csv, something went wrong matching columns");
+            }
+            return;
+        }
+        try
+        {
+            _busyAddCsv = true;
+            StateHasChanged();
+            await Task.Delay(1);
+            var addCsvStrategy = new AddCsvStrategy(mappedCsv!);
+            await PerformCsvStrategy(addCsvStrategy);
+        }
+        finally
+        {
+            _busyAddCsv = false;
+            _isAddDataDialogVisible = false;
+        }
+    }
 
     private void OpenDownloadDialog()
     {

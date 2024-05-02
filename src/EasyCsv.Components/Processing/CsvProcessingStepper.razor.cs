@@ -15,6 +15,7 @@ public partial class CsvProcessingStepper
     private static AggregateOperationDeleteResult _processingTableNullAggregateDelete = new AggregateOperationDeleteResult(false, 0, "Processing table was null");
     private static OperationResult _runnerNull = new OperationResult(false, "Runner was null");
     private static OperationResult _processingTableNull = new OperationResult(false, "Processing table was null");
+    public bool Busy { get; private set; }
 
     [Inject] public ISnackbar? Snackbar { get; set; }
     [Inject] public IJSRuntime? Js { get; set; }
@@ -47,6 +48,8 @@ public partial class CsvProcessingStepper
     [Parameter] public string MaxStrategySelectHeight { get; set; } = "600px";
     [Parameter] public string DefaultDownloadFileName { get; set; } = "CsvSnapshot";
     [Parameter] public bool AutoControlExpandOptionsOnSelect { get; set; } = true;
+    [Parameter] public bool ShowAddCsv { get; set; } 
+    [Parameter] public ExpectedHeaderConfig ExpectedHeaderConfig { get; set; } = new (DefaultValueType.Text, false, null, AutoMatching.Lenient);
     public StrategyRunner? Runner { get; private set; }
     private CsvProcessingTable? _csvProcessingTable { get; set; }
 

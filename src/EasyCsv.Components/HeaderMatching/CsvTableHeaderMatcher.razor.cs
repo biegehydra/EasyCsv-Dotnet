@@ -209,6 +209,8 @@ public partial class CsvTableHeaderMatcher
     /// </summary>
     [Parameter] public AutoMatching AutoMatch { get; set; } = AutoMatching.Strict;
 
+    [Parameter] public string ExpectedHeaderThStr { get; set; } = "Expected Header";
+
     /// <summary>
     /// The EasyCsvConfiguration to use when <see cref="GetRecords"/> is called
     /// </summary>
@@ -267,6 +269,7 @@ public partial class CsvTableHeaderMatcher
         }
     }
     [Parameter] public EventCallback<bool> AllHeadersValidChanged { get; set; }
+    [Parameter] public EventCallback FinishedAutoMatching { get; set; }
 
     /// <summary>
     /// Controls whether users can continue editing mappings
@@ -319,9 +322,13 @@ public partial class CsvTableHeaderMatcher
     private IEasyCsv? _cachedCsv;
     protected override async Task OnParametersSetAsync()
     {
-        if (_expectedHeaders == null) return;
+        if (_expectedHeaders == null) { return; }
         if (Csv == null || (_cachedCsv != null && _cachedCsv == Csv)) return;
-        if (Csv?.ColumnNames() == null) return;
+        if (Csv?.ColumnNames() == null)
+        {
+            await FinishedAutoMatching.InvokeAsync();
+            return;
+        }
         Reset();
         _cachedCsv = Csv;
         foreach (var header in Csv.ColumnNames()!)
@@ -334,6 +341,7 @@ public partial class CsvTableHeaderMatcher
             .OrderByDescending(x => x.Config.IsRequired)
             .ThenByDescending(x => _mappedDict.ContainsValue(x)).ToHashSet();
         StateHasChanged();
+        await FinishedAutoMatching.InvokeAsync();
     }
 
     public void Reset()
@@ -454,6 +462,50 @@ public partial class CsvTableHeaderMatcher
     /// <returns>A list containing the </returns>
     public async Task<List<T>?> GetRecords<T>()
     {
+        var csv = await GetMappedCsv(clone: false);
+        if (csv == null) return null;
+        var csvContextProfile = new CsvContextProfile();
+        if (ClassMaps != null)
+        {
+            csvContextProfile.ClassMaps = ClassMaps;
+        }
+
+        if (UseSafeNumericalConverters)
+        {
+            csvContextProfile.TypeConverters = new Dictionary<Type, ITypeConverter>() {
+                {typeof(short), new SafeShortConverter()},
+                {typeof(int), new SafeIntConverter()},
+                {typeof(long), new SafeLongConverter()},
+                {typeof(float), new SafeFloatConverter()},
+                {typeof(double), new SafeDoubleConverter()},
+                {typeof(decimal), new SafeDecimalConverter()},
+                {typeof(short?), new SafeNullableShortConverter()},
+                {typeof(int?), new SafeNullableIntConverter()},
+                {typeof(long?), new SafeNullableLongConverter()},
+                {typeof(float?), new SafeNullableFloatConverter()},
+                {typeof(double?), new SafeNullableDoubleConverter()},
+                {typeof(decimal?), new SafeNullableDecimalConverter()},
+            };
+        }
+
+        try
+        {
+            return await csv.GetRecordsAsync<T>(EasyCsvConfig.CsvHelperConfig, csvContextProfile);
+        }
+        catch (Exception ex)
+        {
+            Logger?.LogError(ex, "Error getting records. CsvTableHeaderMatcher");
+            return null;
+        }
+    }
+
+    public Task<IEasyCsv?> GetMappedCsv()
+    {
+        return GetMappedCsv(clone: true);
+    }
+
+    private async Task<IEasyCsv?> GetMappedCsv(bool clone)
+    {
         if (!ValidateRequiredHeaders() || Csv == null)
         {
             return null;
@@ -461,52 +513,20 @@ public partial class CsvTableHeaderMatcher
         try
         {
             await AddDefaultValues();
-
-            if (typeof(T) != typeof(object))
+            if (clone)
             {
-                var csvContextProfile = new CsvContextProfile();
-                if (ClassMaps != null)
-                {
-                    csvContextProfile.ClassMaps = ClassMaps;
-                }
-
-                if (UseSafeNumericalConverters)
-                {
-                    csvContextProfile.TypeConverters = new Dictionary<Type, ITypeConverter>() {
-                        {typeof(short), new SafeShortConverter()},
-                        {typeof(int), new SafeIntConverter()},
-                        {typeof(long), new SafeLongConverter()},
-                        {typeof(float), new SafeFloatConverter()},
-                        {typeof(double), new SafeDoubleConverter()},
-                        {typeof(decimal), new SafeDecimalConverter()},
-                        {typeof(short?), new SafeNullableShortConverter()},
-                        {typeof(int?), new SafeNullableIntConverter()},
-                        {typeof(long?), new SafeNullableLongConverter()},
-                        {typeof(float?), new SafeNullableFloatConverter()},
-                        {typeof(double?), new SafeNullableDoubleConverter()},
-                        {typeof(decimal?), new SafeNullableDecimalConverter()},
-                    };
-                }
-
-                try
-                {
-                    return await Csv.GetRecordsAsync<T>(EasyCsvConfig.CsvHelperConfig, csvContextProfile);
-                }
-                catch (Exception ex)
-                {
-                    Logger?.LogError(ex, "Error getting records. CsvTableHeaderMatcher");
-                    return null;
-                }
+                return Csv.Clone();
             }
-            return null;
+            return Csv;
         }
         catch (Exception ex)
         {
             Snackbar?.Add("Something went wrong reading the CSV. Reset and try again.", Severity.Warning);
-            Logger?.LogError(ex, "CsvTableHeaderMatcher of type {Type}, exception will getting records.", typeof(T).Name);
+            Logger?.LogError(ex, "CsvTableHeaderMatcher exception will getting records.");
             return null;
         }
     }
+
     private Task AddDefaultValues()
     {
         if (ExpectedHeaders == null || Csv == null)

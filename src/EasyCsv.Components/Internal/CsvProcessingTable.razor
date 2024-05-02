@@ -97,7 +97,7 @@
                 <MudTh>
                     <div style="display: flex; flex-direction: row; justify-content: space-between">
                         @column
-                        <MudIconButton Icon="@Icons.Material.Filled.OpenInFull" OnClick="_ => TogglePopover(column)"></MudIconButton>
+                        <MudIconButton Disabled="Busy" Icon="@Icons.Material.Filled.OpenInFull" OnClick="_ => TogglePopover(column)"></MudIconButton>
                     </div>
                     <MudPopover Open="_popOverDict[column]" Style="@($"max-height:{Stepper.MaxStrategySelectHeight}")" Class="csv-processing-popover" OverflowBehavior="OverflowBehavior.FlipAlways" AnchorOrigin="anchorOrigin" TransformOrigin="transformOrigin">
                         <CascadingValue TValue="CsvProcessingStepper" Value="Stepper" IsFixed="true">
@@ -188,6 +188,7 @@
     [Parameter] public Func<IGrouping<int, (int ReferenceCsvId, int ReferenceRowId)>, string>? FormatReferenceText { get; set; } 
     [Parameter] public RenderFragment<string>? ProcessingOptions { get; set; }
     [Parameter] public CsvProcessingStepper Stepper { get; set; } = null!;
+    [Parameter] public bool Busy { get; set; } 
     [Parameter] public IEasyCsv? EasyCsv
     {
         get => _easyCsv;
@@ -353,12 +354,12 @@
         var columnNames = EasyCsv?.ColumnNames();
         if (columnNames == null) return null;
         return @<div class="csv-processing-toolbar">
-                   <MudTextField T="string" Class="csv-processing-toolbar-search-field" DebounceInterval="Stepper.SearchDebounceInterval" Immediate="true" Label="Search Csv"
+                   <MudTextField Disabled="Busy" T="string" Class="csv-processing-toolbar-search-field" DebounceInterval="Stepper.SearchDebounceInterval" Immediate="true" Label="Search Csv"
                                  HelperText="Value to search for" HelperTextOnFocus Variant="Variant.Outlined" Value="_sq" ValueChanged="x => SetSearchQuery(x)" 
                                  Clearable OnClearButtonClick="x => SetSearchQuery(null)"/>
                    <CascadingValue TValue="CsvProcessingStepper" Value="@Stepper" IsFixed="true"  >
-                       <MultiColumnSelect InitializeWithStrategyBucketColumnName="false" Label="Columns To Search" @bind-ColumnNames="_searchColumns" SelectAll="true" SelectAllText="Search All Columns" ></MultiColumnSelect>
-                       <MultiTagSelect Label="Tag Filter" @bind-Tags="_searchTags" HideNoTags="true" ></MultiTagSelect>
+                       <MultiColumnSelect Disabled="Busy" InitializeWithStrategyBucketColumnName="false" Label="Columns To Search" @bind-ColumnNames="_searchColumns" SelectAll="true" SelectAllText="Search All Columns" ></MultiColumnSelect>
+                       <MultiTagSelect Disabled="Busy" Label="Tag Filter" @bind-Tags="_searchTags" HideNoTags="true" ></MultiTagSelect>
                    </CascadingValue>
                </div>;
     }

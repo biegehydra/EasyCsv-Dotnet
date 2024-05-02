@@ -8,7 +8,7 @@ using EasyCsv.Core.Extensions;
 
 namespace EasyCsv.Processing.Strategies;
 
-public abstract class CombineColumnsStrategy : ICsvProcessor
+public class CombineColumnsStrategy : ICsvProcessor
 {
     private readonly Func<string?[], string?> _combineValuesFunc;
     private readonly string[] _columnsToJoin;

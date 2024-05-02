@@ -94,7 +94,7 @@ namespace EasyCsv.Core
         public MemberTypes MemberTypes => _config.MemberTypes;
     }
 
-    internal partial class EasyCsv
+    internal partial class EasyCsvInternal
     {
         private void CreateCsvContent(Stream stream)
         {
@@ -149,7 +149,7 @@ namespace EasyCsv.Core
             using var streamReader = new StreamReader(memoryStream2);
             var csvContent = streamReader.ReadToEnd();
 
-            return new EasyCsv(csvContent, config);
+            return new EasyCsvInternal(csvContent, config);
         }
         internal static async Task<IEasyCsv> FromObjectsAsync<T>(IEnumerable<T> objects, EasyCsvConfiguration config, CsvContextProfile? csvContextProfile = null)
         {
@@ -172,7 +172,7 @@ namespace EasyCsv.Core
             using var streamReader = new StreamReader(memoryStream2);
             var csvContent = await streamReader.ReadToEndAsync();
 
-            return new EasyCsv(csvContent, config);
+            return new EasyCsvInternal(csvContent, config);
         }
 
         private async Task CalculateContentBytesAndStrAsync()

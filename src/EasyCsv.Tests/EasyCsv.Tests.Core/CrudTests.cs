@@ -95,6 +95,6 @@ public class CrudTests
             new (new Dictionary < string, object > { { "Header1", "Value3" }, { "Header2", "Value4" } })
         };
 
-        return new EasyCsv.Core.EasyCsv(data, DefaultConfig);
+        return new EasyCsv.Core.EasyCsvInternal(data, DefaultConfig);
     }
 }

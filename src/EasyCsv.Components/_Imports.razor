@@ -1,17 +1,19 @@
 ﻿@using Microsoft.AspNetCore.Components.Web
-@using EasyCsv.Core
-@using FuzzySharp
-@using MudBlazor;
 @using Microsoft.AspNetCore.Components.Forms
-@using EasyCsv.Files
-@using EasyCsv.Core.Configuration
 @using System.Globalization
 @using System.Text.RegularExpressions
-@using CsvHelper
+@using System.Diagnostics.Contracts
+@using FuzzySharp
+@using MudBlazor;
 @using MudBlazor.Utilities
+@using CsvHelper
+@using static Internal.Fragments
+@using EasyCsv.Core
+@using EasyCsv.Core.Configuration
+@using EasyCsv.Files
+@using EasyCsv.Components
 @using EasyCsv.Processing
 @using EasyCsv.Components.Enums
 @using EasyCsv.Components.Internal
 @using EasyCsv.Processing.Strategies
 @using EasyCsv.Core.Extensions
-@using static EasyCsv.Components.Internal.Fragments

@@ -5,14 +5,14 @@ using EasyCsv.Core.Configuration;
 
 namespace EasyCsv.Core
 {
-    internal partial class EasyCsv
+    internal partial class EasyCsvInternal
     {
-        internal EasyCsv(EasyCsvConfiguration config)
+        internal EasyCsvInternal(EasyCsvConfiguration config)
         {
             Config = config;
         }
 
-        internal EasyCsv(byte[] fileContent, EasyCsvConfiguration config)
+        internal EasyCsvInternal(byte[] fileContent, EasyCsvConfiguration config)
         {
             ContentBytes = fileContent;
             ContentStr = Encoding.UTF8.GetString(ContentBytes);
@@ -20,13 +20,13 @@ namespace EasyCsv.Core
             CreateCsvContent();
         }
 
-        internal EasyCsv(string fileContent, EasyCsvConfiguration config)
+        internal EasyCsvInternal(string fileContent, EasyCsvConfiguration config)
             : this(Encoding.UTF8.GetBytes(fileContent), config)
         {
 
         }
 
-        internal EasyCsv(Stream fileContentStream, EasyCsvConfiguration config, bool calculateContentByteAndStr = true)
+        internal EasyCsvInternal(Stream fileContentStream, EasyCsvConfiguration config, bool calculateContentByteAndStr = true)
         {
             Config = config;
             CreateCsvContent(fileContentStream);
@@ -36,13 +36,13 @@ namespace EasyCsv.Core
             }
         }
 
-        internal EasyCsv(TextReader fileContentReader, EasyCsvConfiguration config)
+        internal EasyCsvInternal(TextReader fileContentReader, EasyCsvConfiguration config)
             : this(fileContentReader.ReadToEnd(), config)
         {
 
         }
 
-        internal EasyCsv(List<CsvRow> csvContent, EasyCsvConfiguration config)
+        internal EasyCsvInternal(List<CsvRow> csvContent, EasyCsvConfiguration config)
         {
             CsvContent = CloneContent(csvContent);
             Config = config;

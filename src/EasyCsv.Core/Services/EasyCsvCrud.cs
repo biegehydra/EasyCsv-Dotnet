@@ -6,7 +6,7 @@ using System.Text;
 
 namespace EasyCsv.Core
 {
-    internal partial class EasyCsv
+    internal partial class EasyCsvInternal
     {
         public IEasyCsv InsertRow(List<object?> rowValues, int index = -1)
         {
@@ -104,7 +104,7 @@ namespace EasyCsv.Core
             var row = GetRow(index);
             if (row == null) return null;
             var content = new List<CsvRow>() { row };
-            var easyCsv = new EasyCsv(content, Config);
+            var easyCsv = new EasyCsvInternal(content, Config);
             if(easyCsv.ContentBytes == null) return null;
             using var reader = new StreamReader(new MemoryStream(easyCsv.ContentBytes), Encoding.UTF8);
             using var csvReader = new CsvReader(reader, Config.CsvHelperConfig);

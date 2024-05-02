@@ -26,7 +26,7 @@ namespace EasyCsv.Core
         /// <returns>IEasyCsv</returns>
         public static IEasyCsv? FromBytes(byte[] fileContentBytes, EasyCsvConfiguration? config = null)
         {
-            var easyCsv = new EasyCsv(fileContentBytes, UserConfigOrGlobalConfig(config));
+            var easyCsv = new EasyCsvInternal(fileContentBytes, UserConfigOrGlobalConfig(config));
             return NullOrEasyCsv(easyCsv);
         }
 
@@ -54,7 +54,7 @@ namespace EasyCsv.Core
         /// <returns>IEasyCsv</returns>
         public static IEasyCsv? FromString(string fileContentStr, EasyCsvConfiguration? config = null)
         {
-            var easyCsv = new EasyCsv(fileContentStr, UserConfigOrGlobalConfig(config));
+            var easyCsv = new EasyCsvInternal(fileContentStr, UserConfigOrGlobalConfig(config));
             return NullOrEasyCsv(easyCsv);
         }
 
@@ -75,7 +75,7 @@ namespace EasyCsv.Core
 
         private static async Task<IEasyCsv?> CreateCsvServiceInBackground(byte[] fileContentByte, string fileContentStr, EasyCsvConfiguration? config)
         {
-            var easyCsv = new EasyCsv(UserConfigOrGlobalConfig(config))
+            var easyCsv = new EasyCsvInternal(UserConfigOrGlobalConfig(config))
             {
                 ContentBytes = fileContentByte,
                 ContentStr = fileContentStr,
@@ -94,7 +94,7 @@ namespace EasyCsv.Core
         /// <returns>IEasyCsv</returns>
         public static IEasyCsv? FromStream(Stream fileStream, EasyCsvConfiguration? config = null)
         {
-            var easyCsv = new EasyCsv(fileStream, UserConfigOrGlobalConfig(config));
+            var easyCsv = new EasyCsvInternal(fileStream, UserConfigOrGlobalConfig(config));
             return NullOrEasyCsv(easyCsv);
         }
 
@@ -109,7 +109,7 @@ namespace EasyCsv.Core
         private static async Task<IEasyCsv?> FromStreamAsync(Stream fileStream, int maxFileSize, EasyCsvConfiguration? config = null)
         {
             var fileContent = await ReadStreamToEndAsync(fileStream, maxFileSize);
-            var easyCsv = new EasyCsv(fileContent, UserConfigOrGlobalConfig(config));
+            var easyCsv = new EasyCsvInternal(fileContent, UserConfigOrGlobalConfig(config));
             return NullOrEasyCsv(easyCsv);
         }
 
@@ -130,7 +130,7 @@ namespace EasyCsv.Core
         /// </remarks>
         public static IEasyCsv? FromTextReader(TextReader textReader, EasyCsvConfiguration? config = null)
         {
-            var easyCsv = new EasyCsv(textReader, UserConfigOrGlobalConfig(config));
+            var easyCsv = new EasyCsvInternal(textReader, UserConfigOrGlobalConfig(config));
             return NullOrEasyCsv(easyCsv);
         }
 
@@ -160,7 +160,7 @@ namespace EasyCsv.Core
         public static IEasyCsv? FromFile(string filePath, int maxFileSize = int.MaxValue, EasyCsvConfiguration? config = null)
         {
             var bytes = ReadFromFile(filePath, maxFileSize);
-            var easyCsv = new EasyCsv(bytes, UserConfigOrGlobalConfig(config));
+            var easyCsv = new EasyCsvInternal(bytes, UserConfigOrGlobalConfig(config));
             return NullOrEasyCsv(easyCsv);
         }
 
@@ -230,7 +230,7 @@ namespace EasyCsv.Core
         {
             using var httpClient = new HttpClient();
             using var responseStream = httpClient.GetStreamAsync(url).GetAwaiter().GetResult();
-            var easyCsv = new EasyCsv(responseStream, UserConfigOrGlobalConfig(config));
+            var easyCsv = new EasyCsvInternal(responseStream, UserConfigOrGlobalConfig(config));
             return NullOrEasyCsv(easyCsv);
         }
 
@@ -256,7 +256,7 @@ namespace EasyCsv.Core
         /// <param name="config">Determines whether to normalize fields. Default normalization makes them all lower, you can also define custom normalization methods</param>
         public static async Task<IEasyCsv?> FromObjectsAsync<T>(List<T> objects, EasyCsvConfiguration? config = null, CsvContextProfile? csvContextProfile = null)
         {
-            var easyCsv = await EasyCsv.FromObjectsAsync(objects, UserConfigOrGlobalConfig(config), csvContextProfile);
+            var easyCsv = await EasyCsvInternal.FromObjectsAsync(objects, UserConfigOrGlobalConfig(config), csvContextProfile);
             return NullOrEasyCsv(easyCsv);
         }
 
@@ -268,7 +268,7 @@ namespace EasyCsv.Core
         /// <param name="config">Determines whether to normalize fields. Default normalization makes them all lower, you can also define custom normalization methods</param>
         public static IEasyCsv? FromObjects<T>(List<T> objects, EasyCsvConfiguration? config = null, CsvContextProfile? csvContextProfile = null)
         {
-            var easyCsv = EasyCsv.FromObjects(objects, UserConfigOrGlobalConfig(config), csvContextProfile);
+            var easyCsv = EasyCsvInternal.FromObjects(objects, UserConfigOrGlobalConfig(config), csvContextProfile);
             return NullOrEasyCsv(easyCsv);
         }
     }

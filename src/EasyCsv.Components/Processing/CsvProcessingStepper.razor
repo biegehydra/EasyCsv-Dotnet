@@ -1,6 +1,4 @@
 ﻿@namespace EasyCsv.Components
-@using EasyCsvInternal
-
 <style>
     .csv-processing-download-popup-container {
         display: flex;
@@ -96,8 +94,24 @@
             <MudButton Disabled="string.IsNullOrWhiteSpace(_fileName)" StartIcon="@Icons.Material.Filled.Download" Variant="Variant.Filled" Color="Color.Info" OnClick="async _ => await DownloadSnapShot()">Download</MudButton>
         </DialogActions>
     </MudDialog>
+    @if (_csvToAdd != null)
+    {
+        <MudDialog @bind-IsVisible="_isAddDataDialogVisible" Style="min-width: 750px;">
+            <DialogContent>
+                <CsvTableHeaderMatcher AutoMatch="AutoMatching.Lenient" ExpectedHeaders="_expectedHeaders" Frozen="false" Csv="_csvToAdd" />
+            </DialogContent>
+            <DialogActions>
+                <MudButton StartIcon="@Icons.Material.Filled.Close" Variant="Variant.Outlined" Color="Color.Default" OnClick="x => _isDownloadDialogVisible = false">Cancel</MudButton>
+                <MudButton Disabled="string.IsNullOrWhiteSpace(_fileName)" StartIcon="@Icons.Material.Filled.Download" Variant="Variant.Filled" Color="Color.Info" >Add Data</MudButton>
+            </DialogActions>
+        </MudDialog>
+    }
 }
 @code {
+    private bool _isAddDataDialogVisible;
+    private IEasyCsv? _csvToAdd;
+    private ICollection<ExpectedHeader>? _expectedHeaders;
+
     private bool _isDownloadDialogVisible = false;
     private string[] _columnsToDownload = [];
     private string[] _searchColumns = [];

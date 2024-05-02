@@ -21,7 +21,7 @@ namespace EasyCsv.Tests.Core
         public void GetHeaders_ReturnsCorrectHeaders()
         {
             // Arrange
-            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(SingleRecordCsv, DefaultConfig);
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsvInternal(SingleRecordCsv, DefaultConfig);
 
             // Act
             var headers = easyCsv.ColumnNames();
@@ -37,7 +37,7 @@ namespace EasyCsv.Tests.Core
         public void ReplaceHeaderRow_ReplacesHeaderSuccessfully()
         {
             // Arrange
-            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(SingleRecordCsv, DefaultConfig);
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsvInternal(SingleRecordCsv, DefaultConfig);
             var newHeaders = new List<string> {"newHeader1", "newHeader2"};
 
             // Act
@@ -55,7 +55,7 @@ namespace EasyCsv.Tests.Core
         {
             // Arrange
             var fileContent = "header1,header2\nvalue1,value2";
-            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsvInternal(fileContent, DefaultConfig);
 
             // Act
             easyCsv.ReplaceColumn("header1", "newHeader1");
@@ -74,12 +74,12 @@ namespace EasyCsv.Tests.Core
         {
             // Arrange
             var fileContent = "header1,header2\nvalue1,value2";
-            var firstEasyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+            var firstEasyCsv = new EasyCsv.Core.EasyCsvInternal(fileContent, DefaultConfig);
 
             // Act
             firstEasyCsv.Mutate(x => x.ReplaceColumn("header1", "newHeader1"));
 
-            var newCsv = new EasyCsv.Core.EasyCsv(firstEasyCsv.ContentBytes!, DefaultConfig);
+            var newCsv = new EasyCsv.Core.EasyCsvInternal(firstEasyCsv.ContentBytes!, DefaultConfig);
 
             // Assert
             var updatedHeaders = newCsv.ColumnNames();
@@ -95,7 +95,7 @@ namespace EasyCsv.Tests.Core
         {
             // Arrange
             var fileContent = "header1,header2\nvalue1,value2";
-            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsvInternal(fileContent, DefaultConfig);
             var defaultValues = new Dictionary<string, object> {{"header3", "defaultValue"}};
 
             // Act
@@ -112,7 +112,7 @@ namespace EasyCsv.Tests.Core
         {
             // Arrange
             var fileContent = "header1,header2\nvalue1,value2";
-            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsvInternal(fileContent, DefaultConfig);
 
             // Act
             easyCsv.AddColumn("header3", "defaultValue");
@@ -129,7 +129,7 @@ namespace EasyCsv.Tests.Core
         {
             // Arrange
             var fileContent = "header1,header2,header3\nvalue1,value2,value3";
-            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsvInternal(fileContent, DefaultConfig);
 
             // Act
             easyCsv.RemoveColumn("header2");
@@ -146,7 +146,7 @@ namespace EasyCsv.Tests.Core
         {
             // Arrange
             var fileContent = "header1,header2,header3\nvalue1,value2,value3";
-            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsvInternal(fileContent, DefaultConfig);
 
             // Act
             easyCsv.RemoveColumns(new List<string> { "header2", "header3" });
@@ -165,7 +165,7 @@ namespace EasyCsv.Tests.Core
         {
             // Arrange
             var fileContent = "header1,header2,header3\nvalue1,value2,";
-            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsvInternal(fileContent, DefaultConfig);
 
             // Act
             easyCsv.RemoveUnusedHeaders();
@@ -180,7 +180,7 @@ namespace EasyCsv.Tests.Core
         public void SwapColumnsThrowsBoundsException()
         {
             var fileContent = "header1,header2,header3\nvalue1,value2,value3";
-            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsvInternal(fileContent, DefaultConfig);
 
             Assert.Throws<ArgumentException>(() => easyCsv.Mutate(x => x.SwapColumns(1, 3)));
         }
@@ -189,7 +189,7 @@ namespace EasyCsv.Tests.Core
         public void SwapColumnsIndex()
         {
             var fileContent = "header1,header2,header3\nvalue1,value2,value3";
-            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsvInternal(fileContent, DefaultConfig);
 
             easyCsv.Mutate(x => x.SwapColumns(0, 2));
             var after = $"header3,header2,header1{Environment.NewLine}value3,value2,value1{Environment.NewLine}";
@@ -200,7 +200,7 @@ namespace EasyCsv.Tests.Core
         public void SwapColumnsName()
         {
             var fileContent = "header1,header2,header3\nvalue1,value2,value3";
-            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsvInternal(fileContent, DefaultConfig);
 
             easyCsv.Mutate(x => x.SwapColumns("header1", "header3"));
             var after = $"header3,header2,header1{Environment.NewLine}value3,value2,value1{Environment.NewLine}";
@@ -211,7 +211,7 @@ namespace EasyCsv.Tests.Core
         public void SwapColumnsNameComparer()
         {
             var fileContent = "header1,header2,header3\nvalue1,value2,value3";
-            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsvInternal(fileContent, DefaultConfig);
 
             easyCsv.Mutate(x => x.SwapColumns("HEADER1", "HEADER3", StringComparer.CurrentCultureIgnoreCase));
             var after = $"header3,header2,header1{Environment.NewLine}value3,value2,value1{Environment.NewLine}";
@@ -222,7 +222,7 @@ namespace EasyCsv.Tests.Core
         public void SwapColumnsNameNoComparer()
         {
             var fileContent = "header1,header2,header3\nvalue1,value2,value3";
-            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsvInternal(fileContent, DefaultConfig);
 
             Assert.Throws<ArgumentException>(() => easyCsv.Mutate(x => x.SwapColumns("HEADER1", "HEADER3")));
         }
@@ -232,7 +232,7 @@ namespace EasyCsv.Tests.Core
         public void InsertColumn()
         {
             var fileContent = "header1,header2,header3\nvalue1,value2,value3";
-            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsvInternal(fileContent, DefaultConfig);
 
             easyCsv.Mutate(x => x.InsertColumn(1, "header4", "value4"));
 
@@ -244,7 +244,7 @@ namespace EasyCsv.Tests.Core
         public void MoveColumnIndex()
         {
             var fileContent = "header1,header2,header3\nvalue1,value2,value3";
-            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsvInternal(fileContent, DefaultConfig);
 
             easyCsv.Mutate(x => x.MoveColumn(0, 2));
 
@@ -252,7 +252,7 @@ namespace EasyCsv.Tests.Core
             Assert.Equal(after, easyCsv.ContentStr);
 
             fileContent = "header1,header2,header3\nvalue1,value2,value3";
-            easyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+            easyCsv = new EasyCsv.Core.EasyCsvInternal(fileContent, DefaultConfig);
 
             easyCsv.Mutate(x => x.MoveColumn(2, 0));
 
@@ -264,7 +264,7 @@ namespace EasyCsv.Tests.Core
         public void MoveColumnName()
         {
             var fileContent = "header1,header2,header3\nvalue1,value2,value3";
-            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsvInternal(fileContent, DefaultConfig);
 
             easyCsv.Mutate(x => x.MoveColumn("header1", 2));
 
@@ -272,7 +272,7 @@ namespace EasyCsv.Tests.Core
             Assert.Equal(after, easyCsv.ContentStr);
 
             fileContent = "header1,header2,header3\nvalue1,value2,value3";
-            easyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+            easyCsv = new EasyCsv.Core.EasyCsvInternal(fileContent, DefaultConfig);
 
             easyCsv.Mutate(x => x.MoveColumn("header3", 0));
 
@@ -284,7 +284,7 @@ namespace EasyCsv.Tests.Core
         public async Task ToList_GeneratesListSuccessfully()
         {
             var fileContent = "header1,header2,header3\nvalue1,value2,value3";
-            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(fileContent, DefaultConfig);
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsvInternal(fileContent, DefaultConfig);
 
             var list = await easyCsv.GetRecordsAsync<CsvData>();
 
@@ -314,7 +314,7 @@ namespace EasyCsv.Tests.Core
         {
             var data = "Header1,Header2\nValue1,Value2\nValue3,Value4";
 
-            return new EasyCsv.Core.EasyCsv(data, DefaultConfig);
+            return new EasyCsv.Core.EasyCsvInternal(data, DefaultConfig);
         }
 
         [Fact]
@@ -341,7 +341,7 @@ namespace EasyCsv.Tests.Core
             // Arrange
             var csv1 = CreateCsvWithSampleData();
             var data = "Header3,Header4\nValue5,Value6";
-            var csv2 = new EasyCsv.Core.EasyCsv(data, DefaultConfig);
+            var csv2 = new EasyCsv.Core.EasyCsvInternal(data, DefaultConfig);
 
             // Act
             var result = csv1.Combine(csv2);

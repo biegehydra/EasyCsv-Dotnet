@@ -12,7 +12,7 @@ using EasyCsv.Core.Configuration;
 [assembly: InternalsVisibleTo("EasyCsv.Tests.Processing")]
 namespace EasyCsv.Core
 {
-    internal partial class EasyCsv : IEasyCsv
+    internal partial class EasyCsvInternal : IEasyCsv
     {
         private EasyCsvConfiguration Config { get; }
         public byte[]? ContentBytes { get; internal set; }
@@ -91,7 +91,7 @@ namespace EasyCsv.Core
 
         public IEasyCsv Clone()
         {
-            return new EasyCsv(CloneContent(CsvContent), Config);
+            return new EasyCsvInternal(CloneContent(CsvContent), Config);
         }
     }
 }

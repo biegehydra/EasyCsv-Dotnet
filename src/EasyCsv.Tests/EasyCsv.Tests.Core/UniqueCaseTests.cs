@@ -23,6 +23,21 @@ public class UniqueCaseTests
         Assert.NotEmpty(records);
     }
 
+
+    [Fact]
+    public async Task DuplicateHeadersDoesNotThrow()
+    {
+        try
+        {
+            await EasyCsvFactory.FromStringAsync("header,header\nvalue1,value2");
+        }
+        catch (Exception ex)
+        {
+            Assert.Fail(ex.ToString());
+        }
+    }
+
+
     [Fact]
     public async Task EmptyHeadersDoesNotThrowException()
     {

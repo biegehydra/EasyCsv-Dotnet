@@ -29,7 +29,8 @@ public class UniqueCaseTests
     {
         try
         {
-            await EasyCsvFactory.FromStringAsync("header,header\nvalue1,value2");
+            var easyCsv = await EasyCsvFactory.FromStringAsync("header,header,header,header\nvalue1,value2");
+            Assert.True(easyCsv!.ColumnNames()!.SequenceEqual(["header","header2","header3","header4"]));
         }
         catch (Exception ex)
         {

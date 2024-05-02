@@ -14,10 +14,10 @@ namespace EasyCsv.Core
 {
     internal record CsvConfigurationWrapper : CsvConfiguration, IReaderConfiguration
     {
-        internal readonly Dictionary<string, int> HeaderNameCounts = new();
+        internal readonly Dictionary<(string, int), string> AssignedHeaders = new();
         private readonly CsvConfiguration _config;
         private int _i;
-        private bool _giveEmptyHeadersNames;
+        private readonly bool _giveEmptyHeadersNames;
 
         public CsvConfigurationWrapper(CsvConfiguration config, bool giveEmptyHeadersNames) : base(config.CultureInfo)
         {
@@ -76,11 +76,31 @@ namespace EasyCsv.Core
         {
             if (args.Context.Reader.HeaderRecord != null)
             {
-                var header = args.Context.Reader.HeaderRecord[args.FieldIndex];
-                var prepareHeaderForMatchArgs = new PrepareHeaderForMatchArgs(header, args.FieldIndex);
-                header = args.Context.Reader.Configuration.PrepareHeaderForMatch(prepareHeaderForMatchArgs);
-                var name = HeaderNameCounts[header] > 1 ? $"{header}{args.FieldIndex}" : header;
-                return name;
+                var origHeader = args.Context.Reader.HeaderRecord[args.FieldIndex];
+                var prepareHeaderForMatchArgs = new PrepareHeaderForMatchArgs(origHeader, args.FieldIndex);
+                origHeader = args.Context.Reader.Configuration.PrepareHeaderForMatch(prepareHeaderForMatchArgs);
+
+                // All rows after first
+                // O(1)
+                if (AssignedHeaders.TryGetValue((origHeader, args.FieldIndex), out var assignedHeader))
+                {
+                    // all headers should be assigned after first row
+                    return assignedHeader;
+                }
+
+                assignedHeader = origHeader;
+                // First row only
+                // O(N)
+                for (int i = 2; AssignedHeaders.Values.Contains(assignedHeader); i++)
+                {
+                    assignedHeader = $"{origHeader}{i}";
+                }
+                AssignedHeaders.Add((origHeader, args.FieldIndex), assignedHeader);
+
+                // In  "header,header,header,header"
+                // Out "header,header2,header3,header4"
+                // Why? Because it feels right
+                return assignedHeader;
             }
 
             return $"Empty_Header{++_i}";
@@ -103,20 +123,6 @@ namespace EasyCsv.Core
             using var csv = new CsvReader(reader, wrapper);
             csv.Read();
             csv.ReadHeader();
-            if (csv.Context.Reader.HeaderRecord != null)
-            {
-                var counts = (from header in csv.Context.Reader.HeaderRecord.Select((h, j) => csv.Configuration.PrepareHeaderForMatch(new PrepareHeaderForMatchArgs(h, j)))
-                        group header by header into g
-                        select new
-                        {
-                            Header = g.Key,
-                            Count = g.Count()
-                        }).ToDictionary(x => x.Header, x => x.Count);
-                foreach (var count in counts)
-                {
-                    wrapper.HeaderNameCounts.Add(count.Key, count.Value);
-                }
-            }
             CsvContent = csv.GetRecords<dynamic>().Select(x => new CsvRow((IDictionary<string, object?>)x)).ToList();
         }
 
@@ -136,17 +142,18 @@ namespace EasyCsv.Core
         internal static IEasyCsv FromObjects<T>(IEnumerable<T> objects, EasyCsvConfiguration config, CsvContextProfile? csvContextProfile = null)
         {
             using var memoryStream = new MemoryStream();
-            using (var streamWriter = new StreamWriter(memoryStream, Encoding.UTF8))
+            using (var streamWriter = new StreamWriter(memoryStream, Encoding.UTF8, 1024, leaveOpen: true))
             using (var csvWriter = new CsvWriter(streamWriter, config.CsvHelperConfig))
             {
                 AddSettingsToCsvContext<T>(csvWriter.Context, csvContextProfile);
 
                 csvWriter.WriteRecords(objects);
-                csvWriter.Flush();
+                streamWriter.Flush(); 
+
+                memoryStream.Position = 0; 
             }
 
-            using var memoryStream2 = new MemoryStream(memoryStream.ToArray());
-            using var streamReader = new StreamReader(memoryStream2);
+            using var streamReader = new StreamReader(memoryStream);
             var csvContent = streamReader.ReadToEnd();
 
             return new EasyCsvInternal(csvContent, config);
@@ -155,21 +162,23 @@ namespace EasyCsv.Core
         {
             using var memoryStream = new MemoryStream();
 #if NETSTANDARD2_1_OR_GREATER
-            await using (var streamWriter = new StreamWriter(memoryStream, Encoding.UTF8))
+            await using (var streamWriter = new StreamWriter(memoryStream, Encoding.UTF8, 1024, leaveOpen: true))
             await using (var csvWriter = new CsvWriter(streamWriter, config.CsvHelperConfig))
 #else
-            using var streamWriter = new StreamWriter(memoryStream, Encoding.UTF8);
+            using var streamWriter = new StreamWriter(memoryStream, Encoding.UTF8, 1024, leaveOpen: true);
             using var csvWriter = new CsvWriter(streamWriter, config.CsvHelperConfig);
 #endif
             {
                 AddSettingsToCsvContext<T>(csvWriter.Context, csvContextProfile);
 
                 await csvWriter.WriteRecordsAsync(objects);
-                await csvWriter.FlushAsync();
+                await streamWriter.FlushAsync(); // Ensure all data is written to the underlying MemoryStream
+
+                memoryStream.Position = 0; // Reset the position of the MemoryStream to the beginning for reading
             }
 
-            using var memoryStream2 = new MemoryStream(memoryStream.ToArray());
-            using var streamReader = new StreamReader(memoryStream2);
+            // Read directly from the original MemoryStream
+            using var streamReader = new StreamReader(memoryStream);
             var csvContent = await streamReader.ReadToEndAsync();
 
             return new EasyCsvInternal(csvContent, config);
@@ -186,9 +195,8 @@ namespace EasyCsv.Core
 #endif
             var dynamicContent = CsvContent?.Cast<dynamic>();
             await csvWriter.WriteRecordsAsync(dynamicContent);
-            var str = writer.ToString();
-            ContentBytes = Encoding.UTF8.GetBytes(str);
-            ContentStr = str;
+            ContentStr = writer.ToString();
+            ContentBytes = Encoding.UTF8.GetBytes(ContentStr);
         }
 
         private void CalculateContentBytesAndStr()
@@ -197,15 +205,14 @@ namespace EasyCsv.Core
             using var csv = new CsvWriter(writer, Config.CsvHelperConfig);
             var dynamicContent = CsvContent?.Cast<dynamic>();
             csv.WriteRecords(dynamicContent);
-            var str = writer.ToString();
-            ContentBytes = Encoding.UTF8.GetBytes(str);
-            ContentStr = str;
+            ContentStr = writer.ToString();
+            ContentBytes = Encoding.UTF8.GetBytes(ContentStr);
         }
 
         public async Task<List<T>> GetRecordsAsync<T>(bool strict = false, CsvContextProfile? csvContextProfile = null)
         {
             var records = new List<T>();
-            if (CsvContent == null) return records;
+            if (CsvContent == null!) return records;
 
             await CalculateContentBytesAndStrAsync();
             if (string.IsNullOrEmpty(ContentStr)) return records;
@@ -222,14 +229,14 @@ namespace EasyCsv.Core
 
             async Task ReadRecordsStrict()
             {
-                using var reader = new StreamReader(new MemoryStream(ContentBytes!), Encoding.UTF8);
-                using var csvReader = new CsvReader(reader, Config.CsvHelperConfig);
+            using var reader = new StreamReader(new MemoryStream(ContentBytes!), Encoding.UTF8);
+            using var csvReader = new CsvReader(reader, Config.CsvHelperConfig);
 
-                AddSettingsToCsvContext<T>(csvReader.Context, csvContextProfile);
+            AddSettingsToCsvContext<T>(csvReader.Context, csvContextProfile);
 
-                await foreach (var record in csvReader.GetRecordsAsync<T>())
-                {
-                    records.Add(record);
+            await foreach (var record in csvReader.GetRecordsAsync<T>())
+            {
+                records.Add(record);
                 }
             }
             async Task ReadRecordsNotStrict()
@@ -246,7 +253,7 @@ namespace EasyCsv.Core
                 await foreach (var record in csvReader.GetRecordsAsync<T>())
                 {
                     records.Add(record);
-                }
+            }
             }
         }
 

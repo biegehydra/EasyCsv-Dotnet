@@ -17,10 +17,12 @@ namespace EasyCsv.Core
         internal readonly Dictionary<string, int> HeaderNameCounts = new();
         private readonly CsvConfiguration _config;
         private int _i;
+        private bool _giveEmptyHeadersNames;
 
-        public CsvConfigurationWrapper(CsvConfiguration config) : base(config.CultureInfo)
+        public CsvConfigurationWrapper(CsvConfiguration config, bool giveEmptyHeadersNames) : base(config.CultureInfo)
         {
             _config = config;
+            _giveEmptyHeadersNames = giveEmptyHeadersNames;
         }
 
         public void Validate()
@@ -55,7 +57,18 @@ namespace EasyCsv.Core
         public HeaderValidated HeaderValidated => _config.HeaderValidated;
         public MissingFieldFound MissingFieldFound => _config.MissingFieldFound;
         public ReadingExceptionOccurred ReadingExceptionOccurred => _config.ReadingExceptionOccurred;
-        public PrepareHeaderForMatch PrepareHeaderForMatch => _config.PrepareHeaderForMatch;
+        public PrepareHeaderForMatch PrepareHeaderForMatch
+        {
+            get
+            {
+                if (_giveEmptyHeadersNames)
+                {
+                    return x => string.IsNullOrWhiteSpace(x.Header) ? $"EmptyHeader{x.FieldIndex}" : _config.PrepareHeaderForMatch(x);
+                }
+                return _config.PrepareHeaderForMatch;
+            }
+        }
+
         public ShouldUseConstructorParameters ShouldUseConstructorParameters => _config.ShouldUseConstructorParameters;
         public GetConstructor GetConstructor => _config.GetConstructor;
 
@@ -85,14 +98,7 @@ namespace EasyCsv.Core
     {
         private void CreateCsvContent(Stream stream)
         {
-            PrepareHeaderForMatch? temp = null;
-            if (Config.GiveEmptyHeadersNames)
-            {
-                temp = Config.CsvHelperConfig.PrepareHeaderForMatch;
-                Config.CsvHelperConfig.PrepareHeaderForMatch = x => string.IsNullOrWhiteSpace(x.Header) ? $"EmptyHeader{x.FieldIndex}" : x.Header;
-            }
-
-            var wrapper = new CsvConfigurationWrapper(Config.CsvHelperConfig);
+            var wrapper = new CsvConfigurationWrapper(Config.CsvHelperConfig, Config.GiveEmptyHeadersNames);
             using var reader = new StreamReader(stream, Encoding.Default);
             using var csv = new CsvReader(reader, wrapper);
             csv.Read();
@@ -112,11 +118,6 @@ namespace EasyCsv.Core
                 }
             }
             CsvContent = csv.GetRecords<dynamic>().Select(x => new CsvRow((IDictionary<string, object?>)x)).ToList();
-            if (Config.GiveEmptyHeadersNames)
-            {
-                Config.CsvHelperConfig.PrepareHeaderForMatch = temp;
-            }
-
         }
 
         private void CreateCsvContent()

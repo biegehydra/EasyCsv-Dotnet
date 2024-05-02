@@ -14,7 +14,7 @@ namespace EasyCsv.Core.Configuration
         /// will set empty headers to "EmptyHeaders{FieldIndex}".
         /// Without this setting, multiple empty headers will throw an exception
         /// </summary>
-        public bool GiveEmptyHeadersNames { get; set; }
+        public bool GiveEmptyHeadersNames { get; set; } = true;
 
         /// <summary>
         /// CsvHelper configuration that will be used through EasyCsv to read and write csv data when not explicitly given.

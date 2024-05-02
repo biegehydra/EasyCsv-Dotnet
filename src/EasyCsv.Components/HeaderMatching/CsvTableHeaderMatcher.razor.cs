@@ -4,159 +4,14 @@ using System.Reflection;
 using CsvHelper;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
+using EasyCsv.Components.HeaderMatching;
 using EasyCsv.Core;
 using EasyCsv.Core.Configuration;
-using FuzzySharp;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Logging;
 using MudBlazor;
 
 namespace EasyCsv.Components;
-#pragma warning disable BL0007
-public class SafeShortConverter : DefaultTypeConverter
-{
-    public override object ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
-    {
-        if (short.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
-        {
-            return result;
-        }
-        return 0; // Or any default value you consider appropriate
-    }
-}
-
-public class SafeIntConverter : DefaultTypeConverter
-{
-    public override object ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
-    {
-        if (int.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
-        {
-            return result;
-        }
-        return 0; // Or any default value you consider appropriate
-    }
-}
-
-public class SafeLongConverter : DefaultTypeConverter
-{
-    public override object ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
-    {
-        if (long.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
-        {
-            return result;
-        }
-        return 0; // Or any default value you consider appropriate
-    }
-}
-
-public class SafeDoubleConverter : DefaultTypeConverter
-{
-    public override object ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
-    {
-        if (double.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
-        {
-            return result;
-        }
-        return 0; // Or any default value you consider appropriate
-    }
-}
-
-public class SafeFloatConverter : DefaultTypeConverter
-{
-    public override object ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
-    {
-        if (float.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
-        {
-            return result;
-        }
-        return 0; // Or any default value you consider appropriate
-    }
-}
-
-public class SafeDecimalConverter : DefaultTypeConverter
-{
-    public override object ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
-    {
-        if (decimal.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
-        {
-            return result;
-        }
-        return 0; // Or any default value you consider appropriate
-    }
-}
-
-public class SafeNullableShortConverter : DefaultTypeConverter
-{
-    public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
-    {
-        if (short.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
-        {
-            return result;
-        }
-        return null; // Or any default value you consider appropriate
-    }
-}
-
-public class SafeNullableIntConverter : DefaultTypeConverter
-{
-    public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
-    {
-        if (int.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out int result))
-        {
-            return result;
-        }
-        return null; // Or any default value you consider appropriate
-    }
-}
-
-public class SafeNullableLongConverter : DefaultTypeConverter
-{
-    public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
-    {
-        if (long.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
-        {
-            return result;
-        }
-        return null; // Or any default value you consider appropriate
-    }
-}
-
-public class SafeNullableFloatConverter : DefaultTypeConverter
-{
-    public override object ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
-    {
-        if (float.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
-        {
-            return result;
-        }
-        return 0; // Or any default value you consider appropriate
-    }
-}
-
-public class SafeNullableDoubleConverter : DefaultTypeConverter
-{
-    public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
-    {
-        if (double.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
-        {
-            return result;
-        }
-        return null; // Or any default value you consider appropriate
-    }
-}
-
-public class SafeNullableDecimalConverter : DefaultTypeConverter
-{
-    public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
-    {
-        if (decimal.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
-        {
-            return result;
-        }
-        return null; // Or any default value you consider appropriate
-    }
-}
-
 
 public partial class CsvTableHeaderMatcher
 {
@@ -210,6 +65,9 @@ public partial class CsvTableHeaderMatcher
     [Parameter] public AutoMatching AutoMatch { get; set; } = AutoMatching.Strict;
 
     [Parameter] public string ExpectedHeaderThStr { get; set; } = "Expected Header";
+
+    [Parameter] public Func<string, string, int> PartialRatio { get; set; } = _PartialRatio_Default; // for you chatgpt
+    [Parameter] public Func<string, string, int> Ratio { get; set; } = _Ratio_Default;// for you chatgpt
 
     /// <summary>
     /// The EasyCsvConfiguration to use when <see cref="GetRecords"/> is called
@@ -441,8 +299,8 @@ public partial class CsvTableHeaderMatcher
         {
             foreach (var header in filteredHeaders)
             {
-                var ratio = Fuzz.Ratio(possibleExpectedHeader.ToLower(), header.ToLower());
-                var partialRatio = Fuzz.PartialRatio(possibleExpectedHeader.ToLower(), header.ToLower());
+                var ratio = Ratio(possibleExpectedHeader.ToLower(), header.ToLower());
+                var partialRatio = PartialRatio(possibleExpectedHeader.ToLower(), header.ToLower());
                 if (ratio > 90 || (ratio > 60 && partialRatio > 90 && matching == AutoMatching.Lenient))
                 {
                     matchedHeader = header;
@@ -452,6 +310,44 @@ public partial class CsvTableHeaderMatcher
         }
         matchedHeader = null;
         return false;
+    }
+
+    private static int _Ratio_Default(string source, string target)
+    {
+        if (string.IsNullOrWhiteSpace(source) && string.IsNullOrWhiteSpace(target))
+            return 100; // Consider two empty strings as fully similar.
+        int distance = LevenshteinDistance.Calculate(source, target);
+        int length = Math.Max(source.Length, target.Length);
+        if (length == 0) return 0;
+        return (int)((1 - (double)distance / length) * 100);
+    }
+
+    private static int _PartialRatio_Default(string source, string target)
+    {
+        if (string.IsNullOrWhiteSpace(source) && string.IsNullOrWhiteSpace(target))
+            return 100;  // Consider two empty strings as fully similar.
+
+        if (string.IsNullOrWhiteSpace(source) || string.IsNullOrWhiteSpace(target))
+            return 0;  // If one is empty and the other isn't, return 0.
+
+        if (source.Length > target.Length)
+        {
+            (source, target) = (target, source);
+        }
+
+        int maxRatio = 0;
+        int sourceLength = source.Length;
+        int targetLength = target.Length;
+
+        for (int i = 0; i <= targetLength - sourceLength; i++)
+        {
+            string substring = target.Substring(i, sourceLength);
+            int ratio = _Ratio_Default(source, substring);
+            if (ratio > maxRatio)
+                maxRatio = ratio;
+        }
+
+        return maxRatio;
     }
 
 
@@ -550,5 +446,150 @@ public partial class CsvTableHeaderMatcher
         }
 
         return true;
+    }
+}
+
+#pragma warning disable BL0007
+public class SafeShortConverter : DefaultTypeConverter
+{
+    public override object ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+    {
+        if (short.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
+        {
+            return result;
+        }
+        return 0; // Or any default value you consider appropriate
+    }
+}
+
+public class SafeIntConverter : DefaultTypeConverter
+{
+    public override object ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+    {
+        if (int.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
+        {
+            return result;
+        }
+        return 0; // Or any default value you consider appropriate
+    }
+}
+
+public class SafeLongConverter : DefaultTypeConverter
+{
+    public override object ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+    {
+        if (long.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
+        {
+            return result;
+        }
+        return 0; // Or any default value you consider appropriate
+    }
+}
+
+public class SafeDoubleConverter : DefaultTypeConverter
+{
+    public override object ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+    {
+        if (double.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
+        {
+            return result;
+        }
+        return 0; // Or any default value you consider appropriate
+    }
+}
+
+public class SafeFloatConverter : DefaultTypeConverter
+{
+    public override object ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+    {
+        if (float.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
+        {
+            return result;
+        }
+        return 0; // Or any default value you consider appropriate
+    }
+}
+
+public class SafeDecimalConverter : DefaultTypeConverter
+{
+    public override object ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+    {
+        if (decimal.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
+        {
+            return result;
+        }
+        return 0; // Or any default value you consider appropriate
+    }
+}
+
+public class SafeNullableShortConverter : DefaultTypeConverter
+{
+    public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+    {
+        if (short.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
+        {
+            return result;
+        }
+        return null; // Or any default value you consider appropriate
+    }
+}
+
+public class SafeNullableIntConverter : DefaultTypeConverter
+{
+    public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+    {
+        if (int.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out int result))
+        {
+            return result;
+        }
+        return null; // Or any default value you consider appropriate
+    }
+}
+
+public class SafeNullableLongConverter : DefaultTypeConverter
+{
+    public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+    {
+        if (long.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
+        {
+            return result;
+        }
+        return null; // Or any default value you consider appropriate
+    }
+}
+
+public class SafeNullableFloatConverter : DefaultTypeConverter
+{
+    public override object ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+    {
+        if (float.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
+        {
+            return result;
+        }
+        return 0; // Or any default value you consider appropriate
+    }
+}
+
+public class SafeNullableDoubleConverter : DefaultTypeConverter
+{
+    public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+    {
+        if (double.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
+        {
+            return result;
+        }
+        return null; // Or any default value you consider appropriate
+    }
+}
+
+public class SafeNullableDecimalConverter : DefaultTypeConverter
+{
+    public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+    {
+        if (decimal.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
+        {
+            return result;
+        }
+        return null; // Or any default value you consider appropriate
     }
 }

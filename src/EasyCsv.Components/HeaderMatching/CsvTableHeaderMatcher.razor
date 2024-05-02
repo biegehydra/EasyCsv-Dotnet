@@ -168,7 +168,7 @@
         {
             // If not input order most similar to expected header
             return Task.FromResult(OriginalHeaders.Where(x => !OriginalHeaderMatched(x))
-                .OrderByDescending(x => Fuzz.PartialRatio(expectedHeader.CSharpPropertyName, x)).AsEnumerable());
+                .OrderByDescending(x => PartialRatio(expectedHeader.CSharpPropertyName, x)).AsEnumerable());
         }
         return Task.FromResult(OriginalHeaders.Where(x => !OriginalHeaderMatched(x) && x.Contains(str, StringComparison.InvariantCultureIgnoreCase)));
     }

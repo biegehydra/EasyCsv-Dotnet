@@ -70,7 +70,7 @@
     }
 
     <MudTable T="CsvRow" Class="csv-processing-table" FixedHeader="true" RowsPerPage="10" Items="GetFilteredRows()"
-              Striped Bordered Dense Hover Elevation="2" ToolBarContent="@ToolBarContent()">
+              Striped Bordered Dense Hover Elevation="2" ToolBarContent="@ToolBarContent()" >
         <HeaderContent>
             @if (Stepper.TagsAndReferencesLocation == ColumnLocation.Beginning)
             {

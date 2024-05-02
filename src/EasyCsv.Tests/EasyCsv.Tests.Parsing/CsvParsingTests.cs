@@ -13,7 +13,7 @@ namespace EasyCsv.Tests.Processing
         {
             // Arrange
             var fileContent = "header1,header2\nvalue1,value2-value3";
-            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(fileContent, EasyCsvConfiguration.Instance);
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsvInternal(fileContent, EasyCsvConfiguration.Instance);
             var parsingStrategy = new StringSplitColumnStrategy("header2", ["header2", "header3"], "-", false);
 
             await parsingStrategy.ProcessCsv(easyCsv);
@@ -30,7 +30,7 @@ namespace EasyCsv.Tests.Processing
         {
             // Arrange
             var fileContent = "header1,header2\nvalue1,value2";
-            IEasyCsv easyCsv = new Core.EasyCsv(fileContent, EasyCsvConfiguration.Instance);
+            IEasyCsv easyCsv = new Core.EasyCsvInternal(fileContent, EasyCsvConfiguration.Instance);
             var parsingStrategy = new JoinColumnsStrategy(["header1", "header2"], "header1", "-", true);
 
             await parsingStrategy.ProcessCsv(easyCsv);
@@ -46,7 +46,7 @@ namespace EasyCsv.Tests.Processing
         {
             // Arrange
             var fileContent = "Name,Email\nJohn,\"jane.smith@gmail.com,joe.smith@gmail.com\"";
-            IEasyCsv easyCsv = new Core.EasyCsv(fileContent, EasyCsvConfiguration.Instance);
+            IEasyCsv easyCsv = new Core.EasyCsvInternal(fileContent, EasyCsvConfiguration.Instance);
             var parsingStrategy = new DivideAndReplicateStrategy("Email", x => x?.ToString()?.Split(',')?.Cast<object>().ToArray());
 
             await parsingStrategy.ProcessCsv(easyCsv);

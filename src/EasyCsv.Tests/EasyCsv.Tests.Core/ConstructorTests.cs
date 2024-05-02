@@ -12,7 +12,7 @@ namespace EasyCsv.Tests.Core
         public void StringConstructor_CreatesValidInstance()
         {
             // Act
-            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(SingleRecordCsv, DefaultConfig);
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsvInternal(SingleRecordCsv, DefaultConfig);
 
             // Assert
             Assert.NotNull(easyCsv);
@@ -26,7 +26,7 @@ namespace EasyCsv.Tests.Core
             var fileContentBytes = Encoding.UTF8.GetBytes(SingleRecordCsv);
 
             // Act
-            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(fileContentBytes, DefaultConfig);
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsvInternal(fileContentBytes, DefaultConfig);
 
             // Assert
             Assert.NotNull(easyCsv);
@@ -40,7 +40,7 @@ namespace EasyCsv.Tests.Core
             var textReader = new StringReader(SingleRecordCsv);
 
             // Act
-            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(textReader, DefaultConfig);
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsvInternal(textReader, DefaultConfig);
 
             // Assert
             Assert.NotNull(easyCsv);
@@ -54,7 +54,7 @@ namespace EasyCsv.Tests.Core
             var stream = new MemoryStream(Encoding.UTF8.GetBytes(SingleRecordCsv));
 
             // Act
-            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsv(stream, DefaultConfig);
+            IEasyCsv easyCsv = new EasyCsv.Core.EasyCsvInternal(stream, DefaultConfig);
 
             // Assert
             Assert.NotNull(easyCsv);

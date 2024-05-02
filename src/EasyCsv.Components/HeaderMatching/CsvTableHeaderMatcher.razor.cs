@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 using CsvHelper;
@@ -11,7 +12,6 @@ using Microsoft.Extensions.Logging;
 using MudBlazor;
 
 namespace EasyCsv.Components;
-
 #pragma warning disable BL0007
 public class SafeShortConverter : DefaultTypeConverter
 {
@@ -163,19 +163,19 @@ public partial class CsvTableHeaderMatcher
     [Inject] private ISnackbar? Snackbar { get; set; }
     [Inject] private ILogger<CsvTableHeaderMatcher>? Logger { get; set; }
 
-    private List<ExpectedHeader>? _expectedHeaders;
+    private HashSet<ExpectedHeader>? _expectedHeaders;
     /// <summary>
     /// These headers that users match their csv headers to.
     /// </summary>
     [Parameter]
-    public List<ExpectedHeader>? ExpectedHeaders
+    public ICollection<global::EasyCsv.Components.ExpectedHeader>? ExpectedHeaders
     {
         get => _expectedHeaders;
         set
         {
             if (_expectedHeaders == null)
             {
-                _expectedHeaders = value;
+                _expectedHeaders = value?.ToHashSet();
                 return;
             }
 
@@ -185,7 +185,7 @@ public partial class CsvTableHeaderMatcher
             if (value != null && (value.Count != _expectedHeaders.Count || _expectedHeaders.Any(x => value.All(y => y.Equals(x) == false))))
             {
                 Reset();
-                _expectedHeaders = value.Select(x => x.DeepClone()).ToList();
+                _expectedHeaders = value.Select(x => x.DeepClone()).ToHashSet();
             }
         }
     }
@@ -197,12 +197,12 @@ public partial class CsvTableHeaderMatcher
     /// <summary>
     /// CsvHelper class maps to control how properties and fields in a class get converted from the csv.
     /// </summary>
-    [Parameter] public List<ClassMap>? ClassMaps { get; set; }
+    [Parameter] public IReadOnlyCollection<ClassMap>? ClassMaps { get; set; }
 
     /// <summary>
     /// CsvHelper class maps to control how properties and fields in a class get converted from the csv.
     /// </summary>
-    [Parameter] public List<ClassMap>? TypeConverters { get; set; }
+    [Parameter] public IReadOnlyCollection<ClassMap>? TypeConverters { get; set; }
 
     /// <summary>
     /// Controls how csv headers are automatically mapped to expected headers.
@@ -213,7 +213,7 @@ public partial class CsvTableHeaderMatcher
     /// The EasyCsvConfiguration to use when <see cref="GetRecords"/> is called
     /// </summary>
     [Parameter]
-    public EasyCsvConfiguration EasyCsvConfig { get; set; } = new ()
+    public EasyCsvConfiguration EasyCsvConfig { get; set; } = new()
     {
         CsvHelperConfig = new(CultureInfo.CurrentCulture)
         {
@@ -246,7 +246,7 @@ public partial class CsvTableHeaderMatcher
     /// If not null, expected headers will be automatically generated in OnInitialized from
     /// the public instance properties on this type
     /// </summary>
-    [Parameter] 
+    [Parameter]
     public Type? AutoGenerateExpectedHeadersType { get; set; } = null;
 
     private bool _allHeadersValid;
@@ -332,19 +332,23 @@ public partial class CsvTableHeaderMatcher
         await MatchFileHeadersWithExpectedHeaders();
         _expectedHeaders = _expectedHeaders
             .OrderByDescending(x => x.Config.IsRequired)
-            .ThenByDescending(x => _mappedDict.ContainsValue(x)).ToList();
+            .ThenByDescending(x => _mappedDict.ContainsValue(x)).ToHashSet();
         StateHasChanged();
     }
 
     public void Reset()
     {
-        ExpectedHeaders?.ForEach(x =>
+        if (ExpectedHeaders != null)
         {
-            x.Value = null;
-        });
+            foreach (var expectedHeader in ExpectedHeaders)
+            {
+                expectedHeader.Value = null;
+            }
+        }
         _mappedDict = new();
         _originalHeaderCurrentHeaderDict = new();
     }
+
     private async Task MatchFileHeadersWithExpectedHeaders()
     {
         var headers = Csv!.ColumnNames();
@@ -396,7 +400,7 @@ public partial class CsvTableHeaderMatcher
         _mappedDict[originalHeaderName] = null;
         AllHeadersValid = ValidateRequiredHeaders();
     }
-    private bool DoMatching(ExpectedHeader expectedHeader, string[] filteredHeaders, AutoMatching autoMatching, out string? matchedHeader)
+    private bool DoMatching(ExpectedHeader expectedHeader, string[] filteredHeaders, AutoMatching autoMatching, [NotNullWhen(true)] out string? matchedHeader)
     {
         matchedHeader = null;
         return autoMatching switch
@@ -509,7 +513,7 @@ public partial class CsvTableHeaderMatcher
         {
             return Task.CompletedTask;
         }
-        var defaultValueKvps = ExpectedHeaders.Where(x => x is {Config.DefaultValueType: not DefaultValueType.None, HasValue: true} or { Config.DefaultValueRenderFragment: not null, HasValue: true })
+        var defaultValueKvps = ExpectedHeaders.Where(x => x is { Config.DefaultValueType: not DefaultValueType.None, HasValue: true } or { Config.DefaultValueRenderFragment: not null, HasValue: true })
             .ToDictionary(x => x.CSharpPropertyName, x => x.Value);
         return Csv.MutateAsync(x => x.AddColumns(defaultValueKvps));
     }

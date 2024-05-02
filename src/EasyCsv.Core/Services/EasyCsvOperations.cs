@@ -10,7 +10,7 @@ using EasyCsv.Core.Extensions;
 
 namespace EasyCsv.Core
 {
-    internal partial class EasyCsv
+    internal partial class EasyCsvInternal
     {
         public IEasyCsv CondenseTo(ICollection<string>? columnNames, ICollection<int>? rowIndexes)
         {
@@ -32,7 +32,7 @@ namespace EasyCsv.Core
                 {
                     newCsvContent.Add(row.Clone());
                 }
-                return new EasyCsv(newCsvContent, Config);
+                return new EasyCsvInternal(newCsvContent, Config);
             }
             var newCsvContent2 = new List<CsvRow>(rowIndexes?.Count ?? CsvContent.Count);
             foreach (var row in CsvContent.FilterByIndexes(rowIndexes))
@@ -47,7 +47,7 @@ namespace EasyCsv.Core
                 }
                 newCsvContent2.Add(new CsvRow(newRowDict));
             }
-            return new EasyCsv(newCsvContent2, Config);
+            return new EasyCsvInternal(newCsvContent2, Config);
         }
 
         public IEasyCsv ReplaceHeaderRow(IReadOnlyList<string> newHeaderFields)

@@ -1,5 +1,7 @@
 ﻿using EasyCsv.Components.Enums;
 using EasyCsv.Components.Internal;
+using EasyCsv.Components.Processing;
+using EasyCsv.Components.Processing.Dialogs;
 using EasyCsv.Core;
 using EasyCsv.Core.Extensions;
 using EasyCsv.Processing;
@@ -18,6 +20,7 @@ public partial class CsvProcessingStepper
     public bool Busy { get; private set; }
 
     [Inject] public ISnackbar? Snackbar { get; set; }
+    [Inject] public IDialogService? DialogService { get; set; }
     [Inject] public IJSRuntime? Js { get; set; }
     [Parameter] public IEasyCsv? EasyCsv { get; set; }
     [Parameter] public bool UseSnackBar { get; set; } = true;
@@ -95,6 +98,47 @@ public partial class CsvProcessingStepper
         AddAggregateDeleteOperationResultSnackbar(aggregateOperationDeleteResult);
         await InvokeAsync(StateHasChanged);
         return aggregateOperationDeleteResult;
+    }
+
+    public async Task<OperationResult> PerformDedupe(IFindDedupesOperation findDedupesOperation, int[] referenceCsvIds)
+    {
+        if (Runner?.CurrentCsv == null || DialogService == null) return _runnerNull;
+        if (_csvProcessingTable == null) return _processingTableNull;
+        var filteredRowIds = FilteredRowIds();
+        var referenceCsvs = Runner.ReferenceCsvs.Select((x, i) => (x.Csv, i)).Where(x => referenceCsvIds.Contains(x.i)).ToArray();
+        int resolved = 0;
+        var clone = Runner.CurrentCsv.Clone();
+        await foreach (var duplicateGroup in findDedupesOperation.YieldReturnDupes(Runner.CurrentCsv, filteredRowIds, referenceCsvs))
+        {
+            var dialogParameters = new DialogParameters<DuplicateRootPicker>()
+            {
+                {x => x.Stepper, this},
+                {x => x.DuplicateGroup, duplicateGroup},
+            };
+            var dialog = await DialogService.ShowAsync<DuplicateRootPicker>(null, dialogParameters, new DialogOptions()
+            {
+                CloseButton = false,
+                CloseOnEscapeKey = false,
+                DisableBackdropClick = true
+            });
+            var dialogResult = await dialog.Result;
+            if (dialogResult?.Data is DuplicateRootPickerResult rootPickerResult)
+            {
+                if (rootPickerResult.ReferenceCsvId.HasValue) throw new Exception();
+                foreach (var duplicate in duplicateGroup.Duplicates.First(x => x.Item1 == null).Item2)
+                {
+                    if (duplicate.Item2 != rootPickerResult.SelectedRow)
+                    {
+                        await clone.MutateAsync(x => x.DeleteRow(duplicate.Item2));
+                    }
+                }
+            }
+            resolved++;
+        }
+        var operationResult = new OperationResult(true, $"Resolved {resolved} duplicate groups.");
+        AddOperationResultSnackbar(operationResult);
+        await InvokeAsync(StateHasChanged);
+        return operationResult;
     }
 
     public async Task<OperationResult> PerformReferenceStrategy(ICsvReferenceProcessor csvReferenceProcessor)

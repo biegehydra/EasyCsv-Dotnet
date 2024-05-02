@@ -250,6 +250,11 @@ namespace EasyCsv.Core
             _csv.DeleteRow(index);
             return this;
         }
+        public IEasyMutations DeleteRow(CsvRow row)
+        {
+            _csv.DeleteRow(row);
+            return this;
+        }
         public IEasyMutations DeleteRows(IEnumerable<int> indexes)
         {
             _csv.DeleteRows(indexes);

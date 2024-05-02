@@ -124,12 +124,22 @@ namespace EasyCsv.Core
 
         public IEasyCsv DeleteRow(int index)
         {
-            if (CsvContent == null || index < 0 || index >= CsvContent.Count)
+            if (CsvContent == null! || index < 0 || index >= CsvContent.Count)
             {
                 return this;
             }
 
             CsvContent.RemoveAt(index);
+            return this;
+        }
+
+        public IEasyCsv DeleteRow(CsvRow row)
+        {
+            if (CsvContent == null! || row == null!)
+            {
+                return this;
+            }
+            CsvContent.RemoveAll(x => x == row);
             return this;
         }
 

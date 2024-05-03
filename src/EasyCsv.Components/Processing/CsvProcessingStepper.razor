@@ -180,7 +180,7 @@
     private async Task AddCsv()
     {
         if (_tableHeaderMatcher == null || Runner == null) return;
-        var mappedCsv = await _tableHeaderMatcher.GetMappedCsv();
+        var mappedCsv = await _tableHeaderMatcher.GetMappedCsv(clone: false);
         var mappedColumnsNames = mappedCsv?.ColumnNames();
         if (mappedColumnsNames?.Length is not > 0)
         {

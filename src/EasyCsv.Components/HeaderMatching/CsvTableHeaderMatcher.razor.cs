@@ -307,6 +307,10 @@ public partial class CsvTableHeaderMatcher
                 var partialRatio = PartialRatio(possibleExpectedHeader.ToLower(), header.ToLower());
                 if (ratio > 90 || (ratio > 60 && partialRatio > 90 && matching == AutoMatching.Lenient))
                 {
+                    if (header.StartsWith("EmptyHeader") && possibleExpectedHeader.StartsWith("EmptyHeader"))
+                    {
+                        continue;
+                    }
                     matchedHeader = header;
                     return true;
                 }
@@ -317,19 +321,6 @@ public partial class CsvTableHeaderMatcher
     }
 
     private static Regex _endsWithIntegerRegex = new Regex(@"\d+\Z", RegexOptions.Compiled);
-    public static bool EndsWithInteger(string input, out int result)
-    {
-        result = 0;
-        if (string.IsNullOrEmpty(input))
-            return false;
-        Match match = _endsWithIntegerRegex.Match(input);
-        if (match.Success)
-        {
-            // If a match is found, parse the integer
-            return int.TryParse(match.Value, out result);
-        }
-        return false;
-    }
 
     private static int _Ratio_Default(string source, string target)
     {

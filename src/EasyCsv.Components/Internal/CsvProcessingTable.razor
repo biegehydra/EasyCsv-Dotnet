@@ -319,7 +319,7 @@
     {
         var count = grouping.Count();
         string rows = count == 1 ? "Row" : "Rows";
-        return $"Ref Csv: {grouping.Key + 1}, {rows}: {string.Join('|', grouping.Select(x => x.RowIndex + 1))}";
+        return $"Ref Csv: {grouping.Key + 1}, {rows}: {string.Join(" | ", grouping.Select(x => x.RowIndex + 1))}";
     }
 
     internal Task InvokeStateHasChanged()

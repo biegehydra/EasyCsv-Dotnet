@@ -9,7 +9,7 @@
 	  <PackageReadmeFile>README.md</PackageReadmeFile>
 	  <PackageId>EasyCsv.Processing</PackageId>
 	  <Product>EasyCsv</Product>
-	  <Version>2.0.0-beta3</Version>
+	  <Version>2.0.0-beta5</Version>
 	  <Title>EasyCsv.Processing</Title>
 	  <Description>A package built ontop of CSV Helper to make working with CSVs even easier</Description>
 	  <Copyright>Copyright © 2024 Connor Hallman</Copyright>
@@ -41,7 +41,4 @@
 		<None Include="LICENSE.txt" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
-	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-		<Exec Command="xcopy &quot;$(SolutionDir)\README.md&quot; &quot;$(ProjectDir)&quot; /Y" />
-	</Target>
 </Project>

@@ -18,7 +18,7 @@
     <PackageTags>csv;easycsv;column;row</PackageTags>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-    <Version>2.0.0-beta3</Version>
+    <Version>2.0.0-beta5</Version>
     <IncludeSymbols>True</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
@@ -29,6 +29,7 @@
 	<ItemGroup>
     <ProjectReference Include="..\EasyCsv.Core\EasyCsv.Core.csproj" />
     <ProjectReference Include="..\EasyCsv.FileExtensions\EasyCsv.Files.csproj" />
+    <ProjectReference Include="..\EasyCsv.Processing\EasyCsv.Processing.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -43,9 +44,5 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="xcopy &quot;$(SolutionDir)\README.md&quot; &quot;$(ProjectDir)&quot; /Y" />
-  </Target>
 
 </Project>

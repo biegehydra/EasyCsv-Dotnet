@@ -18,7 +18,7 @@
 @code {
     [Parameter] public ISnackbar? Snackbar { get; set; }
     private CsvProcessingStepper _csvProcessor = null!;
-    private readonly IEasyCsv? _easyCsv = EasyCsvFactory.FromFile("C:\\Users\\sweed\\Downloads\\AppendJob.csv", int.MaxValue, Config);
+    private readonly IEasyCsv _easyCsv = EasyCsvFactory.FromFile("C:\\Users\\sweed\\Downloads\\AppendJob.csv", int.MaxValue, Config);
     private static readonly Dictionary<string, string>[] _beforeExample =
     [
         new Dictionary<string, string>()

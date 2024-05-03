@@ -25,7 +25,7 @@
 	  <SymbolPackageFormat>snupkg</SymbolPackageFormat>
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
 	  <DocumentationFile>$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
-	  <Version>2.0.0-beta3</Version>
+	  <Version>2.0.0-beta5</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0|AnyCPU'">
@@ -68,8 +68,4 @@
 	  <None Include="LICENSE.txt" Pack="true" PackagePath="\" />
 	  <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
-
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="xcopy &quot;$(SolutionDir)\README.md&quot; &quot;$(ProjectDir)&quot; /Y" />
-  </Target>
 </Project>

@@ -106,7 +106,7 @@
     {
         <MudDialog @bind-IsVisible="_isAddDataDialogVisible" Style="min-width: 1000px;">
             <TitleContent>
-                <MudText Class="mb-2" Typo="Typo.h5"><b>Map Columns To Current State</b></MudText>
+                <MudText Class="mb-2" Typo="Typo.h5"><b>Map Columns To Working Csv</b></MudText>
             </TitleContent>
             <DialogContent>
                 <CsvTableHeaderMatcher @ref="_tableHeaderMatcher" ExpectedHeaderThStr="Current Header" FinishedAutoMatching="x => Busy = false" AutoMatch="AutoMatching.Lenient" ExpectedHeaders="_expectedHeaders" Frozen="_busyAddCsv" Csv="_csvToAdd"/>

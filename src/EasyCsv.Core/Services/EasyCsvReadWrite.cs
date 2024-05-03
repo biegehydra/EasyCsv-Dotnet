@@ -184,7 +184,7 @@ namespace EasyCsv.Core
             return new EasyCsvInternal(csvContent, config);
         }
 
-        private async Task CalculateContentBytesAndStrAsync()
+        public async Task CalculateContentBytesAndStrAsync()
         {
 #if NETSTANDARD2_1_OR_GREATER
             await using var writer = new StringWriter();
@@ -199,7 +199,7 @@ namespace EasyCsv.Core
             ContentBytes = Encoding.UTF8.GetBytes(ContentStr);
         }
 
-        private void CalculateContentBytesAndStr()
+        public void CalculateContentBytesAndStr()
         {
             using var writer = new StringWriter();
             using var csv = new CsvWriter(writer, Config.CsvHelperConfig);

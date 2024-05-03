@@ -13,13 +13,15 @@
     [Parameter] public bool Immediate { get; set; } = true;
     [Parameter] public override string? DisplayName { get; set; } = "Dedupe Exact Match";
     [Parameter] public override string? Description { get; set; } = "Find all the duplicate values in this column and let you select which to keep.";
+    [Parameter] public bool MustSelectRow { get; set; } = true;
+    [Parameter] public bool MultiSelect { get; set; } = true;
 
     private bool AllowRun => true;
 
     private async Task RunDivideAndReplicate(string columnName)
     {
         if (!AllowRun) return;
-        var dedupeOperation = new FindDedupesExactMatchColumnStrategy(StrategyBucket.ColumnName);
+        var dedupeOperation = new FindDedupesExactMatchColumnStrategy(StrategyBucket.ColumnName, MustSelectRow, MultiSelect);
         _ = await CsvProcessor.PerformDedupe(dedupeOperation, null);
     }
 }

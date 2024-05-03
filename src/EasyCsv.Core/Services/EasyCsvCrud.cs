@@ -139,7 +139,11 @@ namespace EasyCsv.Core
             {
                 return this;
             }
-            CsvContent.RemoveAll(x => x == row);
+            var rowToDelete = CsvContent.FirstOrDefault(x => RowsEqual(row, x));
+            if (rowToDelete != null)
+            {
+                bool removed = CsvContent.Remove(rowToDelete);
+            }
             return this;
         }
 

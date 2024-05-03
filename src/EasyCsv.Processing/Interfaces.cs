@@ -8,7 +8,10 @@ namespace EasyCsv.Processing;
 
 public interface IFindDedupesOperation
 {
+    public string TitleText { get; }
     public bool MultiSelect { get; }
+    public bool MustSelectRow { get; }
+    public Func<string, string>? DuplicateValuePresenter { get; }
     public IAsyncEnumerable<DuplicateGrouping> YieldReturnDupes(IEasyCsv csv, ICollection<int>? filteredRowIndexes = null, params (IEasyCsv Csv, int ReferenceCsvId)[] referenceCsvs);
 }
 
@@ -84,9 +87,15 @@ public interface IReferenceOperation
 
 public readonly struct DuplicateGrouping
 {
+    public string DuplicateValue { get; }
     public (int?, (int, CsvRow)[])[] Duplicates { get; }
-    public DuplicateGrouping(IEnumerable<(int?, IEnumerable<(int, CsvRow)>)> duplicatesGroupedByReferenceCsvId)
+    public DuplicateGrouping(string duplicateValue, IEnumerable<(int?, IEnumerable<(int, CsvRow)>)> duplicatesGroupedByReferenceCsvId)
     {
+        if (string.IsNullOrWhiteSpace(duplicateValue))
+        {
+            throw new ArgumentException("Duplicate value cannot be null or white space", nameof(duplicateValue));
+        }
+        DuplicateValue = duplicateValue;
         if (duplicatesGroupedByReferenceCsvId == null!)  throw new ArgumentException("duplicatesGroupedByReferenceCsvId cannot be null");
         Duplicates = duplicatesGroupedByReferenceCsvId.Select(x => (x.Item1, x.Item2.ToArray())).ToArray();
     }

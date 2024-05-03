@@ -50,7 +50,7 @@ public partial class CsvProcessingStepper
     [Parameter] public bool OperateOnFilteredRows { get; set; }
     [Parameter] public Color ReferenceChipColor { get; set; } = Color.Primary;
     [Parameter] public string MaxStrategySelectHeight { get; set; } = "600px";
-    [Parameter] public string DefaultDownloadFileName { get; set; } = "CsvSnapshot";
+    [Parameter] public string DefaultDownloadFileName { get; set; } = "WorkingCsvSnapshot";
     [Parameter] public bool AutoControlExpandOptionsOnSelect { get; set; } = true;
     [Parameter] public bool ShowAddCsv { get; set; } 
     [Parameter] public ExpectedHeaderConfig ExpectedHeaderConfig { get; set; } = new (DefaultValueType.Text, false, null, AutoMatching.Lenient);

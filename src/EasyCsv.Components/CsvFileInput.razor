@@ -150,12 +150,21 @@ else if (InputVariant == FileInputVariant.Button)
         {
             HeaderValidated = null,
             MissingFieldFound = null,
-            PrepareHeaderForMatch = new PrepareHeaderForMatch(x => Regex.Replace(x.Header, @"\W", "")),
             ShouldUseConstructorParameters = x => true,
             GetConstructor = x => x.ClassType.GetConstructors().FirstOrDefault(c => c.GetParameters().Length == 0)
         },
         GiveEmptyHeadersNames = true
     };
+
+    [Parameter] public bool PrepareHeadersForMatchReplaceNonWords { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (PrepareHeadersForMatchReplaceNonWords)
+        {
+            EasyCsvConfig.CsvHelperConfig.PrepareHeaderForMatch = new PrepareHeaderForMatch(x => Regex.Replace(x.Header, @"\W", ""));
+        }
+    }
 
     private void OnMouseOver()
     {

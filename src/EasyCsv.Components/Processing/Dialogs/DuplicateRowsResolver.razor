@@ -24,7 +24,8 @@
         }
     </DialogContent>
     <DialogActions>
-        <MudTooltip Text="All other rows will be deleted">
+        <MudButton Disabled="_completed" StartIcon="@Icons.Material.Filled.Close" Variant="Variant.Outlined" Color="Color.Default" OnClick="Cancel">Abort Dedupe</MudButton>
+        <MudTooltip RootClass="ml-3" Text="All other rows will be deleted">
             @{
                 bool disabled = MultiSelect
                     ? _completed || (MustSelectRow && _selectedCsvRows.Count == 0)
@@ -33,8 +34,7 @@
                     ? "Confirm Rows To Keep"
                     : "Select This Row To Keep";
             }
-            <MudButton Disabled="_completed" StartIcon="@Icons.Material.Filled.Close" Variant="Variant.Outlined" Color="Color.Default" OnClick="Cancel">Abort Dedupe</MudButton>
-            <MudButton Disabled="@disabled" Class="ml-3" StartIcon="@Icons.Material.Filled.Download" Variant="Variant.Filled" Color="Color.Info" OnClick="Submit">@text</MudButton>
+            <MudButton Disabled="@disabled" StartIcon="@Icons.Material.Filled.Download" Variant="Variant.Filled" Color="Color.Info" OnClick="Submit">@text</MudButton>
         </MudTooltip>
     </DialogActions>
 </MudDialog>

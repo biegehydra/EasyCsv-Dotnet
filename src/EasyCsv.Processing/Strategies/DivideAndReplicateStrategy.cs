@@ -22,38 +22,29 @@ public class DivideAndReplicateStrategy : ICsvProcessor
         {
             return new OperationResult(false, $"Column to divide and replicate on did not exist. Column Name: {_columnName}");
         }
-        List<int> rowsToDelete = new();
-        List<CsvRow> rowsToAdd = new();
+
+        int deletedCount = 0;
+        int replicatedCount = 0;
         await csv.MutateAsync(x =>
         {
-            int i = 0;
-            foreach (var row in x.CsvContent.FilterByIndexes(filteredRowIndexes))
+            var rowsWithIndexes = x.CsvContent.FilterByIndexesWithOriginalIndex(filteredRowIndexes).ToArray();
+            foreach (var (row, origIndex) in rowsWithIndexes.OrderByDescending(y => y.Item2))
             {
                 var divided = _divideFunc(row[_columnName]);
                 if (divided?.Length > 1)
                 {
-                    rowsToDelete.Add(i);
+                    x.CsvContent.RemoveAt(origIndex);
+                    deletedCount++;
                     foreach (var item in divided)
                     {
                         var clone = row.Clone();
                         clone[_columnName] = item;
-                        rowsToAdd.Add(clone);
+                        x.CsvContent.Insert(origIndex, clone);
+                        replicatedCount++;
                     }
                 }
-
-                i++;
-            }
-
-            foreach (var rowToDelete in rowsToDelete.OrderByDescending(y => y))
-            {
-                x.CsvContent.RemoveAt(rowToDelete);
-            }
-
-            foreach (var rowToAdd in rowsToAdd)
-            {
-                x.CsvContent.Add(rowToAdd);
             }
         });
-        return new OperationResult(true, $"Replicated {rowsToDelete.Count} rows int {rowsToAdd.Count}");
+        return new OperationResult(true, $"Replicated {deletedCount} rows int {replicatedCount}");
     }
 }

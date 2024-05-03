@@ -9,15 +9,18 @@ public class FindDedupesExactMatchColumnStrategy : IFindDedupesOperation
 {
     public string ColumnName { get; }
     public IEqualityComparer<string> Comparer { get; }
-
-    public FindDedupesExactMatchColumnStrategy(string columnName, IEqualityComparer<string>? comparer = null)
+    public bool MultiSelect { get; }
+    public FindDedupesExactMatchColumnStrategy(string columnName, bool multiSelect = true, IEqualityComparer<string>? comparer = null)
     {
         if (string.IsNullOrWhiteSpace(columnName)) throw new ArgumentException("Column name can't be empty", nameof(columnName));
         ColumnName = columnName;
-        comparer ??= EqualityComparer<string>.Default;
+        MultiSelect = multiSelect;
         Comparer = comparer;
+        comparer ??= EqualityComparer<string>.Default;
 
     }
+
+
     public async IAsyncEnumerable<DuplicateGrouping> YieldReturnDupes(IEasyCsv csv, ICollection<int>? filteredRowIndexes = null, params (IEasyCsv Csv, int ReferenceCsvId)[] referenceCsvs)
     {
         var csvValues = csv.CsvContent.Select(x => x[ColumnName]?.ToString()).ToArray();

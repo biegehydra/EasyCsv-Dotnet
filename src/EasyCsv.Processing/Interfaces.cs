@@ -8,6 +8,7 @@ namespace EasyCsv.Processing;
 
 public interface IFindDedupesOperation
 {
+    public bool MultiSelect { get; }
     public IAsyncEnumerable<DuplicateGrouping> YieldReturnDupes(IEasyCsv csv, ICollection<int>? filteredRowIndexes = null, params (IEasyCsv Csv, int ReferenceCsvId)[] referenceCsvs);
 }
 

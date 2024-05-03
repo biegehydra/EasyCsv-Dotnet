@@ -1,0 +1,25 @@
+﻿@namespace EasyCsv.Components
+@inherits StrategyItemBase
+
+@if (CsvProcessor == null)
+{
+    throw new ArgumentException("EasyCsv: Attempted to render strategy options not within CsvProcessingStepper", nameof(CsvProcessingStepper));
+}
+<StrategyItem DisplayName="@DisplayName" Description="@Description" AllowRun="AllowRun" StrategyPicked="RunDivideAndReplicate">
+</StrategyItem>
+
+@code
+{
+    [Parameter] public bool Immediate { get; set; } = true;
+    [Parameter] public override string? DisplayName { get; set; } = "Dedupe Exact Match";
+    [Parameter] public override string? Description { get; set; } = "Find all the duplicate values in this column and let you select which to keep.";
+
+    private bool AllowRun => true;
+
+    private async Task RunDivideAndReplicate(string columnName)
+    {
+        if (!AllowRun) return;
+        var dedupeOperation = new FindDedupesExactMatchColumnStrategy(StrategyBucket.ColumnName);
+        _ = await CsvProcessor.PerformDedupe(dedupeOperation, null);
+    }
+}

@@ -71,7 +71,7 @@
 }
 @if (Runner?.CurrentCsv != null && (columnNames = Runner.CurrentCsv.ColumnNames()) != null)
 {
-    <MudDialog @bind-IsVisible="_isDownloadDialogVisible" Style="min-width: 600px;">
+    <MudDialog @bind-IsVisible="_isDownloadDialogVisible" Class="csv-processing-download-popup" Style="min-width: 600px;">
         <TitleContent>
             <MudText Class="mb-2" Typo="Typo.h5"><b>Download Snapshot Options</b></MudText>
         </TitleContent>
@@ -104,7 +104,7 @@
     </MudDialog>
     @if (_csvToAdd != null)
     {
-        <MudDialog @bind-IsVisible="_isAddDataDialogVisible" Style="min-width: 1000px;">
+        <MudDialog @bind-IsVisible="_isAddDataDialogVisible" Class="csv-processing-add-popup" Style="min-width: 1000px;">
             <TitleContent>
                 <MudText Class="mb-2" Typo="Typo.h5"><b>Map Columns To Working Csv</b></MudText>
             </TitleContent>

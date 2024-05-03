@@ -1,4 +1,5 @@
-﻿using EasyCsv.Components.Enums;
+﻿using CsvHelper;
+using EasyCsv.Components.Enums;
 using EasyCsv.Components.Internal;
 using EasyCsv.Components.Processing;
 using EasyCsv.Components.Processing.Dialogs;
@@ -104,50 +105,50 @@ public partial class CsvProcessingStepper
     {
         if (Runner?.CurrentCsv == null || DialogService == null) return _runnerNull;
         if (_csvProcessingTable == null) return _processingTableNull;
-        var filteredRowIds = FilteredRowIds();
-        var referenceCsvs = Runner.ReferenceCsvs.Select((x, i) => (x.Csv, i)).Where(x => referenceCsvIds?.Contains(x.i) == true).ToArray();
-        int kept = 0;
-        int deleted = 0;
-        var clone = Runner.CurrentCsv.Clone();
-        await foreach (var duplicateGroup in findDedupesOperation.YieldReturnDupes(Runner.CurrentCsv, filteredRowIds, referenceCsvs))
+        _mustSelectRow = findDedupesOperation.MustSelectRow;
+        _multiSelect = findDedupesOperation.MultiSelect;
+        _titleText = findDedupesOperation.TitleText;
+        _duplicateRowsResolveVisible = true;
+        await InvokeAsync(StateHasChanged);
+        try
         {
-            string value = findDedupesOperation.DuplicateValuePresenter != null
-                ? findDedupesOperation.DuplicateValuePresenter(duplicateGroup.DuplicateValue)
-                : duplicateGroup.DuplicateValue;
-            if (findDedupesOperation.MultiSelect)
+            var filteredRowIds = FilteredRowIds();
+            var referenceCsvs = Runner.ReferenceCsvs.Select((x, i) => (x.Csv, i))
+                .Where(x => referenceCsvIds?.Contains(x.i) == true).ToArray();
+            int kept = 0;
+            int deleted = 0;
+            var clone = Runner.CurrentCsv.Clone();
+            await foreach (var duplicateGroup in findDedupesOperation.YieldReturnDupes(Runner.CurrentCsv,
+                               filteredRowIds, referenceCsvs))
             {
-                var dialogParameters = new DialogParameters<MultiDuplicateRootPicker>()
+                string value = findDedupesOperation.DuplicateValuePresenter != null
+                    ? findDedupesOperation.DuplicateValuePresenter(duplicateGroup.DuplicateValue)
+                    : duplicateGroup.DuplicateValue;
+                _duplicateGroup = duplicateGroup;
+                _duplicateValue = value;
+                if (findDedupesOperation.MultiSelect)
                 {
-                    {x => x.Stepper, this},
-                    {x => x.DuplicateGroup, duplicateGroup},
-                    {x => x.MustSelectRow, findDedupesOperation.MustSelectRow},
-                    {x => x.TitleText, findDedupesOperation.TitleText},
-                    {x => x.DuplicateValue, value}
-                };
-                var dialog = await DialogService.ShowAsync<MultiDuplicateRootPicker>(null, dialogParameters, new DialogOptions()
-                {
-                    CloseButton = false,
-                    CloseOnEscapeKey = false,
-                    DisableBackdropClick = true
-                });
-                var dialogResult = await dialog.Result;
-                if (dialogResult.Canceled)
-                {
-                    var failedOperationResult = new OperationResult(false, $"Resolve duplicate roots cancelled");
-                    if (UseSnackBar)
+                    _multiResolveDuplicateRowTaskSource = new TaskCompletionSource<MultiDuplicateRootPickerResult?>();
+                    _singleResolveDuplicateRowTaskSource = null;
+                    _duplicateGroup = duplicateGroup;
+                    var resolvedRows = await _multiResolveDuplicateRowTaskSource.Task;
+                    if (resolvedRows == null)
                     {
-                        Snackbar?.Add("Dedupe operation aborted");
+                        var failedOperationResult = new OperationResult(false, $"Resolve duplicate roots cancelled");
+                        if (UseSnackBar)
+                        {
+                            Snackbar?.Add("Dedupe operation aborted");
+                        }
+
+                        await InvokeAsync(StateHasChanged);
+                        return failedOperationResult;
                     }
-                    await InvokeAsync(StateHasChanged);
-                    return failedOperationResult;
-                }
-                if (dialogResult?.Data is MultiDuplicateRootPickerResult rootPickerResult)
-                {
-                    if (rootPickerResult.RowsToKeep.Any(y => y.ReferenceCsvId.HasValue)) throw new Exception();
+
+                    if (resolvedRows.RowsToKeep.Any(y => y.ReferenceCsvId.HasValue)) throw new Exception();
                     var possibleRowsToDelete = duplicateGroup.Duplicates.First(x => x.Item1 == null).Item2;
                     foreach (var possibleDuplicate in possibleRowsToDelete)
                     {
-                        if (rootPickerResult.RowsToKeep.All(x => x.RowToKeep != possibleDuplicate.Item2))
+                        if (resolvedRows.RowsToKeep.All(x => x.RowToKeep != possibleDuplicate.Item2))
                         {
                             deleted++;
                             await clone.MutateAsync(x => x.DeleteRow(possibleDuplicate.Item2), false);
@@ -158,41 +159,28 @@ public partial class CsvProcessingStepper
                         }
                     }
                 }
-            }
-            else
-            {
-                var dialogParameters = new DialogParameters<DuplicateRootPicker>()
+                else
                 {
-                    {x => x.Stepper, this},
-                    {x => x.DuplicateGroup, duplicateGroup},
-                    {x => x.MustSelectRow, findDedupesOperation.MustSelectRow},
-                    {x => x.TitleText, findDedupesOperation.TitleText},
-                    {x => x.DuplicateValue, value}
-                };
-                var dialog = await DialogService.ShowAsync<DuplicateRootPicker>(null, dialogParameters, new DialogOptions()
-                {
-                    CloseButton = false,
-                    CloseOnEscapeKey = false,
-                    DisableBackdropClick = true
-                });
-                var dialogResult = await dialog.Result;
-                if (dialogResult.Canceled)
-                {
-                    if (UseSnackBar)
+                    _singleResolveDuplicateRowTaskSource = new TaskCompletionSource<DuplicateRootPickerResult?>();
+                    _multiResolveDuplicateRowTaskSource = null;
+                    var resolvedRows = await _singleResolveDuplicateRowTaskSource.Task;
+                    if (resolvedRows == null)
                     {
-                        Snackbar?.Add("Dedupe operation aborted");
+                        if (UseSnackBar)
+                        {
+                            Snackbar?.Add("Dedupe operation aborted");
+                        }
+
+                        var failedOperationResult = new OperationResult(false, $"Resolve duplicate roots cancelled");
+                        await InvokeAsync(StateHasChanged);
+                        return failedOperationResult;
                     }
-                    var failedOperationResult = new OperationResult(false, $"Resolve duplicate roots cancelled");
-                    await InvokeAsync(StateHasChanged);
-                    return failedOperationResult;
-                }
-                if (dialogResult?.Data is DuplicateRootPickerResult rootPickerResult)
-                {
-                    if (rootPickerResult.ReferenceCsvId.HasValue) throw new Exception();
+
+                    if (resolvedRows.ReferenceCsvId.HasValue) throw new Exception();
                     var possibleRowsToDelete = duplicateGroup.Duplicates.First(x => x.Item1 == null).Item2;
                     foreach (var duplicate in possibleRowsToDelete)
                     {
-                        if (duplicate.Item2 != rootPickerResult.RowToKeep)
+                        if (duplicate.Item2 != resolvedRows.RowToKeep)
                         {
                             deleted++;
                             await clone.MutateAsync(x => x.DeleteRow(duplicate.Item2), false);
@@ -204,17 +192,23 @@ public partial class CsvProcessingStepper
                     }
                 }
             }
-        }
-        if (deleted > 0)
-        {
-            await clone.CalculateContentBytesAndStrAsync();
-            Runner.AddToTimeline(clone);
-        }
 
-        var operationResult = new OperationResult(true, $"Dedupe operation complete - {deleted} rows deleted | {kept} rows kept");
-        AddOperationResultSnackbar(operationResult);
-        await InvokeAsync(StateHasChanged);
-        return operationResult;
+            if (deleted > 0)
+            {
+                await clone.CalculateContentBytesAndStrAsync();
+                Runner.AddToTimeline(clone);
+            }
+
+            var operationResult = new OperationResult(true,
+                $"Dedupe operation complete - {deleted} rows deleted | {kept} rows kept");
+            AddOperationResultSnackbar(operationResult);
+            await InvokeAsync(StateHasChanged);
+            return operationResult;
+        }
+        finally
+        {
+            _duplicateRowsResolveVisible = false;
+        }
     }
 
     public async Task<OperationResult> PerformReferenceStrategy(ICsvReferenceProcessor csvReferenceProcessor)

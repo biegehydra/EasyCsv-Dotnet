@@ -6,6 +6,9 @@ namespace EasyCsv.Core
 {
     public interface IEasyCsv : IEasyCsvBase<IEasyCsv>, IInternalCrud, IInternalOperations
     {
+        Task CalculateContentBytesAndStrAsync();
+        void CalculateContentBytesAndStr();
+
         /// <summary>
         /// Performs synchronous mutations on the CSV content using the provided delegate.
         /// </summary>

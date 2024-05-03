@@ -106,44 +106,112 @@ public partial class CsvProcessingStepper
         if (_csvProcessingTable == null) return _processingTableNull;
         var filteredRowIds = FilteredRowIds();
         var referenceCsvs = Runner.ReferenceCsvs.Select((x, i) => (x.Csv, i)).Where(x => referenceCsvIds?.Contains(x.i) == true).ToArray();
-        int resolved = 0;
-        int resolvedGrouos = 0;
+        int kept = 0;
+        int deleted = 0;
         var clone = Runner.CurrentCsv.Clone();
         await foreach (var duplicateGroup in findDedupesOperation.YieldReturnDupes(Runner.CurrentCsv, filteredRowIds, referenceCsvs))
         {
-            var dialogParameters = new DialogParameters<DuplicateRootPicker>()
+            string value = findDedupesOperation.DuplicateValuePresenter != null
+                ? findDedupesOperation.DuplicateValuePresenter(duplicateGroup.DuplicateValue)
+                : duplicateGroup.DuplicateValue;
+            if (findDedupesOperation.MultiSelect)
             {
-                {x => x.Stepper, this},
-                {x => x.DuplicateGroup, duplicateGroup},
-            };
-            var dialog = await DialogService.ShowAsync<DuplicateRootPicker>(null, dialogParameters, new DialogOptions()
-            {
-                CloseButton = false,
-                CloseOnEscapeKey = false,
-                DisableBackdropClick = true
-            });
-            var dialogResult = await dialog.Result;
-            if (dialogResult?.Data is DuplicateRootPickerResult rootPickerResult)
-            {
-                if (rootPickerResult.ReferenceCsvId.HasValue) throw new Exception();
-                foreach (var duplicate in duplicateGroup.Duplicates.First(x => x.Item1 == null).Item2)
+                var dialogParameters = new DialogParameters<MultiDuplicateRootPicker>()
                 {
-                    if (duplicate.Item2 != rootPickerResult.SelectedRow)
+                    {x => x.Stepper, this},
+                    {x => x.DuplicateGroup, duplicateGroup},
+                    {x => x.MustSelectRow, findDedupesOperation.MustSelectRow},
+                    {x => x.TitleText, findDedupesOperation.TitleText},
+                    {x => x.DuplicateValue, value}
+                };
+                var dialog = await DialogService.ShowAsync<MultiDuplicateRootPicker>(null, dialogParameters, new DialogOptions()
+                {
+                    CloseButton = false,
+                    CloseOnEscapeKey = false,
+                    DisableBackdropClick = true
+                });
+                var dialogResult = await dialog.Result;
+                if (dialogResult.Canceled)
+                {
+                    var failedOperationResult = new OperationResult(false, $"Resolve duplicate roots cancelled");
+                    if (UseSnackBar)
                     {
-                        await clone.MutateAsync(x => x.DeleteRow(duplicate.Item2));
+                        Snackbar?.Add("Dedupe operation aborted");
+                    }
+                    await InvokeAsync(StateHasChanged);
+                    return failedOperationResult;
+                }
+                if (dialogResult?.Data is MultiDuplicateRootPickerResult rootPickerResult)
+                {
+                    if (rootPickerResult.RowsToKeep.Any(y => y.ReferenceCsvId.HasValue)) throw new Exception();
+                    var possibleRowsToDelete = duplicateGroup.Duplicates.First(x => x.Item1 == null).Item2;
+                    foreach (var possibleDuplicate in possibleRowsToDelete)
+                    {
+                        if (rootPickerResult.RowsToKeep.All(x => x.RowToKeep != possibleDuplicate.Item2))
+                        {
+                            deleted++;
+                            await clone.MutateAsync(x => x.DeleteRow(possibleDuplicate.Item2), false);
+                        }
+                        else
+                        {
+                            kept++;
+                        }
                     }
                 }
             }
-
-            resolvedGrouos++;
-            resolved += duplicateGroup.Duplicates.Length;
+            else
+            {
+                var dialogParameters = new DialogParameters<DuplicateRootPicker>()
+                {
+                    {x => x.Stepper, this},
+                    {x => x.DuplicateGroup, duplicateGroup},
+                    {x => x.MustSelectRow, findDedupesOperation.MustSelectRow},
+                    {x => x.TitleText, findDedupesOperation.TitleText},
+                    {x => x.DuplicateValue, value}
+                };
+                var dialog = await DialogService.ShowAsync<DuplicateRootPicker>(null, dialogParameters, new DialogOptions()
+                {
+                    CloseButton = false,
+                    CloseOnEscapeKey = false,
+                    DisableBackdropClick = true
+                });
+                var dialogResult = await dialog.Result;
+                if (dialogResult.Canceled)
+                {
+                    if (UseSnackBar)
+                    {
+                        Snackbar?.Add("Dedupe operation aborted");
+                    }
+                    var failedOperationResult = new OperationResult(false, $"Resolve duplicate roots cancelled");
+                    await InvokeAsync(StateHasChanged);
+                    return failedOperationResult;
+                }
+                if (dialogResult?.Data is DuplicateRootPickerResult rootPickerResult)
+                {
+                    if (rootPickerResult.ReferenceCsvId.HasValue) throw new Exception();
+                    var possibleRowsToDelete = duplicateGroup.Duplicates.First(x => x.Item1 == null).Item2;
+                    foreach (var duplicate in possibleRowsToDelete)
+                    {
+                        if (duplicate.Item2 != rootPickerResult.RowToKeep)
+                        {
+                            deleted++;
+                            await clone.MutateAsync(x => x.DeleteRow(duplicate.Item2), false);
+                        }
+                        else
+                        {
+                            kept++;
+                        }
+                    }
+                }
+            }
         }
-        if (resolved > 0)
+        if (deleted > 0)
         {
+            await clone.CalculateContentBytesAndStrAsync();
             Runner.AddToTimeline(clone);
         }
 
-        var operationResult = new OperationResult(true, $"Resolved {resolvedGrouos} duplicate groups. {resolved} total duplicates resolved.");
+        var operationResult = new OperationResult(true, $"Dedupe operation complete - {deleted} rows deleted | {kept} rows kept");
         AddOperationResultSnackbar(operationResult);
         await InvokeAsync(StateHasChanged);
         return operationResult;

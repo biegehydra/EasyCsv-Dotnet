@@ -7,16 +7,24 @@ using EasyCsv.Core.Extensions;
 namespace EasyCsv.Processing.Strategies;
 public class FindDedupesExactMatchColumnStrategy : IFindDedupesOperation
 {
+    public string TitleText { get; }
     public string ColumnName { get; }
     public IEqualityComparer<string> Comparer { get; }
     public bool MultiSelect { get; }
-    public FindDedupesExactMatchColumnStrategy(string columnName, bool multiSelect = true, IEqualityComparer<string>? comparer = null)
+    public bool MustSelectRow { get; }
+
+    public Func<string?, string?>? DuplicateValuePresenter { get; }
+
+    public FindDedupesExactMatchColumnStrategy(string columnName, bool mustSelectRow, bool multiSelect = true, Func<string?, string?>? duplicateValuePresenter = null, IEqualityComparer<string>? comparer = null)
     {
         if (string.IsNullOrWhiteSpace(columnName)) throw new ArgumentException("Column name can't be empty", nameof(columnName));
+        TitleText = $"Duplicate Resolver ({columnName})";
         ColumnName = columnName;
+        MustSelectRow = mustSelectRow;
+        DuplicateValuePresenter = duplicateValuePresenter;
         MultiSelect = multiSelect;
-        Comparer = comparer;
         comparer ??= EqualityComparer<string>.Default;
+        Comparer = comparer;
 
     }
 
@@ -25,19 +33,16 @@ public class FindDedupesExactMatchColumnStrategy : IFindDedupesOperation
     {
         var csvValues = csv.CsvContent.Select(x => x[ColumnName]?.ToString()).ToArray();
         var csvMap = StrategyHelpers.MapArray(csvValues, Comparer);
-        int matched = 0;
         HashSet<int> processed = new HashSet<int>();
-        int i = -1;
         foreach (var (row, index) in csv.CsvContent.FilterByIndexesWithOriginalIndex(filteredRowIndexes))
         {
             if (processed.Contains(index)) continue;
-            i++;
             var value = row[ColumnName]?.ToString();
             List<int>? rowIds = null;
             if (!string.IsNullOrWhiteSpace(value) && csvMap.TryGetValue(value!, out rowIds) &&
                 rowIds?.Count > 1)
             {
-                var duplicateGrouping = new DuplicateGrouping([(null, rowIds.Select(x => (x, csv.CsvContent[x])))]);
+                var duplicateGrouping = new DuplicateGrouping(value, [(null, rowIds.Select(x => (x, csv.CsvContent[x])))]);
                 yield return duplicateGrouping;
             }
 

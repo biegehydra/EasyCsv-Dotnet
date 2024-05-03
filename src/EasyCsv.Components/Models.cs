@@ -17,7 +17,7 @@ public class ExpectedHeader
     /// <summary>
     /// AutoMatching will be done on all the values in this list
     /// </summary>
-    internal List<string> ValuesToMatch { get; private set; }
+    internal string[] ValuesToMatch { get; private set; }
 
     internal string DisplayName { get; init; }
     internal ExpectedHeaderConfig Config { get; private set; }
@@ -35,9 +35,9 @@ public class ExpectedHeader
     /// </param>
     /// <param name="valuesToMatch">The header values this expected header should match with when a csv is uploaded.</param>
     /// <param name="config">Configurations for the expected header</param>
-    public ExpectedHeader(string csharpPropertyName, string displayName, List<string> valuesToMatch, ExpectedHeaderConfig? config = null)
+    public ExpectedHeader(string csharpPropertyName, string displayName, ICollection<string> valuesToMatch, ExpectedHeaderConfig? config = null)
     {
-        ValuesToMatch = valuesToMatch;
+        ValuesToMatch = valuesToMatch.ToArray();
         CSharpPropertyName = csharpPropertyName;
         DisplayName = displayName;
         config ??= ExpectedHeaderConfig.Default;
@@ -56,9 +56,9 @@ public class ExpectedHeader
     /// </param>
     /// <param name="valuesToMatch">The header values this expected header should match with when a csv is uploaded.</param>
     /// <param name="configurator">Configurations for the expected header</param>
-    public ExpectedHeader(string csharpPropertyName, string displayName, List<string> valuesToMatch, Action<ExpectedHeaderConfigurator>? configurator = null)
+    public ExpectedHeader(string csharpPropertyName, string displayName, ICollection<string> valuesToMatch, Action<ExpectedHeaderConfigurator>? configurator = null)
     {
-        ValuesToMatch = valuesToMatch;
+        ValuesToMatch = valuesToMatch.ToArray();
         CSharpPropertyName = csharpPropertyName;
         DisplayName = displayName;
         if (configurator != null)
@@ -115,7 +115,7 @@ public class ExpectedHeader
     {
         if (other == null) return false;
         return CSharpPropertyName == other.CSharpPropertyName && DisplayName == other.DisplayName &&
-               ValuesToMatch.Count == other.ValuesToMatch.Count && ValuesToMatch.All(other.ValuesToMatch.Contains) 
+               ValuesToMatch.Length == other.ValuesToMatch.Length && ValuesToMatch.All(other.ValuesToMatch.Contains) 
                && Config.Equals(other.Config);
     }
 
@@ -123,7 +123,7 @@ public class ExpectedHeader
     {
         var clone = (ExpectedHeader) MemberwiseClone();
         clone.Config = Config.Clone();
-        clone.ValuesToMatch = ValuesToMatch.ToList();
+        clone.ValuesToMatch = ValuesToMatch.ToArray();
         return clone;
     }
 }

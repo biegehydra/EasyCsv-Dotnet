@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using CsvHelper;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
@@ -247,10 +248,10 @@ public partial class CsvTableHeaderMatcher
         // Collision, move to temp row
         if (Csv.ColumnNames()?.Any(x => x.Equals(expectedHeader.CSharpPropertyName)) == true && currentHeaderName.Equals(expectedHeader.CSharpPropertyName) != true)
         {
-            await Csv.MutateAsync(x => x.ReplaceColumn(expectedHeader.CSharpPropertyName, expectedHeader.CSharpPropertyName + "temp"));
+            await Csv.MutateAsync(x => x.ReplaceColumn(expectedHeader.CSharpPropertyName, expectedHeader.CSharpPropertyName + "temp"), false);
             _originalHeaderCurrentHeaderDict[expectedHeader.CSharpPropertyName] = expectedHeader.CSharpPropertyName + "temp";
         }
-        await Csv.MutateAsync(x => x.ReplaceColumn(currentHeaderName, expectedHeader.CSharpPropertyName));
+        await Csv.MutateAsync(x => x.ReplaceColumn(currentHeaderName, expectedHeader.CSharpPropertyName), false);
         _originalHeaderCurrentHeaderDict[originalHeaderName] = expectedHeader.CSharpPropertyName;
         _mappedDict[originalHeaderName] = expectedHeader;
         expectedHeader.Value = null;
@@ -261,11 +262,12 @@ public partial class CsvTableHeaderMatcher
     {
         if (Csv == null) return;
         var currentHeaderName = _originalHeaderCurrentHeaderDict[originalHeaderName];
-        await Csv.MutateAsync(x => x.ReplaceColumn(currentHeaderName, originalHeaderName));
+        await Csv.MutateAsync(x => x.ReplaceColumn(currentHeaderName, originalHeaderName), false);
         _originalHeaderCurrentHeaderDict[originalHeaderName] = originalHeaderName;
         _mappedDict[originalHeaderName] = null;
         AllHeadersValid = ValidateRequiredHeaders();
     }
+
     private bool DoMatching(ExpectedHeader expectedHeader, string[] filteredHeaders, AutoMatching autoMatching, [NotNullWhen(true)] out string? matchedHeader)
     {
         matchedHeader = null;
@@ -279,7 +281,8 @@ public partial class CsvTableHeaderMatcher
             _ => throw new NotImplementedException("AutMatching case not implemented")
         };
     }
-    private bool TryExactMatch(ExpectedHeader expectedHeader, string[] filteredHeaders, out string? matchedHeader)
+
+    private static bool TryExactMatch(ExpectedHeader expectedHeader, string[] filteredHeaders, out string? matchedHeader)
     {
         foreach (var possibleExpectedHeader in expectedHeader.ValuesToMatch)
         {
@@ -293,6 +296,7 @@ public partial class CsvTableHeaderMatcher
         matchedHeader = null;
         return false;
     }
+
     private bool TryFuzzyMatch(ExpectedHeader expectedHeader, string[] filteredHeaders, AutoMatching matching, out string? matchedHeader)
     {
         foreach (var possibleExpectedHeader in expectedHeader.ValuesToMatch)
@@ -309,6 +313,21 @@ public partial class CsvTableHeaderMatcher
             }
         }
         matchedHeader = null;
+        return false;
+    }
+
+    private static Regex _endsWithIntegerRegex = new Regex(@"\d+\Z", RegexOptions.Compiled);
+    public static bool EndsWithInteger(string input, out int result)
+    {
+        result = 0;
+        if (string.IsNullOrEmpty(input))
+            return false;
+        Match match = _endsWithIntegerRegex.Match(input);
+        if (match.Success)
+        {
+            // If a match is found, parse the integer
+            return int.TryParse(match.Value, out result);
+        }
         return false;
     }
 
@@ -395,12 +414,7 @@ public partial class CsvTableHeaderMatcher
         }
     }
 
-    public Task<IEasyCsv?> GetMappedCsv()
-    {
-        return GetMappedCsv(clone: true);
-    }
-
-    private async Task<IEasyCsv?> GetMappedCsv(bool clone)
+    public async Task<IEasyCsv?> GetMappedCsv(bool clone = true)
     {
         if (!ValidateRequiredHeaders() || Csv == null)
         {
@@ -409,6 +423,7 @@ public partial class CsvTableHeaderMatcher
         try
         {
             await AddDefaultValues();
+            await Csv.CalculateContentBytesAndStrAsync();
             if (clone)
             {
                 return Csv.Clone();
@@ -431,7 +446,7 @@ public partial class CsvTableHeaderMatcher
         }
         var defaultValueKvps = ExpectedHeaders.Where(x => x is { Config.DefaultValueType: not DefaultValueType.None, HasValue: true } or { Config.DefaultValueRenderFragment: not null, HasValue: true })
             .ToDictionary(x => x.CSharpPropertyName, x => x.Value);
-        return Csv.MutateAsync(x => x.AddColumns(defaultValueKvps));
+        return Csv.MutateAsync(x => x.AddColumns(defaultValueKvps), false);
     }
 
     public bool ValidateRequiredHeaders()

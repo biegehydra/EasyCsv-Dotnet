@@ -100,13 +100,14 @@ public partial class CsvProcessingStepper
         return aggregateOperationDeleteResult;
     }
 
-    public async Task<OperationResult> PerformDedupe(IFindDedupesOperation findDedupesOperation, int[] referenceCsvIds)
+    public async Task<OperationResult> PerformDedupe(IFindDedupesOperation findDedupesOperation, int[]? referenceCsvIds)
     {
         if (Runner?.CurrentCsv == null || DialogService == null) return _runnerNull;
         if (_csvProcessingTable == null) return _processingTableNull;
         var filteredRowIds = FilteredRowIds();
-        var referenceCsvs = Runner.ReferenceCsvs.Select((x, i) => (x.Csv, i)).Where(x => referenceCsvIds.Contains(x.i)).ToArray();
+        var referenceCsvs = Runner.ReferenceCsvs.Select((x, i) => (x.Csv, i)).Where(x => referenceCsvIds?.Contains(x.i) == true).ToArray();
         int resolved = 0;
+        int resolvedGrouos = 0;
         var clone = Runner.CurrentCsv.Clone();
         await foreach (var duplicateGroup in findDedupesOperation.YieldReturnDupes(Runner.CurrentCsv, filteredRowIds, referenceCsvs))
         {
@@ -133,9 +134,16 @@ public partial class CsvProcessingStepper
                     }
                 }
             }
-            resolved++;
+
+            resolvedGrouos++;
+            resolved += duplicateGroup.Duplicates.Length;
         }
-        var operationResult = new OperationResult(true, $"Resolved {resolved} duplicate groups.");
+        if (resolved > 0)
+        {
+            Runner.AddToTimeline(clone);
+        }
+
+        var operationResult = new OperationResult(true, $"Resolved {resolvedGrouos} duplicate groups. {resolved} total duplicates resolved.");
         AddOperationResultSnackbar(operationResult);
         await InvokeAsync(StateHasChanged);
         return operationResult;

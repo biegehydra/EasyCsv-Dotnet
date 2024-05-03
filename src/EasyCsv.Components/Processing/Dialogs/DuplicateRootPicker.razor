@@ -1,21 +1,29 @@
-﻿<MudDialog Style="min-width: 1000px;">
+﻿<style>
+    .dedupe-table-easy-csv .mud-table-container {
+        max-height: 500px;
+    }
+</style>
+<MudDialog Style="min-width: 1000px;">
     <TitleContent>
         <MudText Class="mb-2" Typo="Typo.h5"><b>Pick Duplicate To Keep</b></MudText>
     </TitleContent>
     <DialogContent>
-        @if (DuplicateGroup?.Duplicates.Any() == true && Stepper.Runner?.ReferenceCsvs.Count > 0)
+        @if (DuplicateGroup?.Duplicates.Any() == true)
         {
             foreach (var duplicateGroup in DuplicateGroup?.Duplicates!)
             {
                 var dictionaryArray = duplicateGroup.Item2.Select(x => x.Item2).ToArray();
-                string fileNameStr = duplicateGroup.Item1 is > 0 ? Stepper.Runner.ReferenceCsvs[duplicateGroup.Item1.Value].FileName : "Working Csv";
-                string duplicatesStr = duplicateGroup.Item2.Length == 1 ? "duplicate" : "duplicates";
-                @ExampleCsvInternal(dictionaryArray, $"{duplicateGroup.Item1} {duplicatesStr} in {fileNameStr}", duplicateGroup.Item1)
+                string fileNameStr = duplicateGroup.Item1 is > 0 && Utils.IsValidIndex(duplicateGroup.Item1.Value, Stepper?.Runner?.ReferenceCsvs?.Count ?? -1) 
+                    ? Stepper!.Runner!.ReferenceCsvs![duplicateGroup.Item1.Value].FileName : "Working Csv";
+                string duplicatesStr = duplicateGroup.Item2.Length == 1 ? "Duplicate" : "Duplicates";
+                @ExampleCsvInternal(dictionaryArray, $"{duplicateGroup.Item2.Length} {duplicatesStr} in {fileNameStr}", duplicateGroup.Item1)
             }
         }
     </DialogContent>
     <DialogActions>
-        <MudButton Disabled="_selectedCsvRow == null" StartIcon="@Icons.Material.Filled.Download" Variant="Variant.Filled" Color="Color.Info" OnClick="Submit">Add Data</MudButton>
+        <MudTooltip Text="All other rows will be deleted" >
+            <MudButton Disabled="_selectedCsvRow == null" StartIcon="@Icons.Material.Filled.Download" Variant="Variant.Filled" Color="Color.Info" OnClick="Submit">Select This Row To Keep</MudButton>
+        </MudTooltip>
     </DialogActions>
 </MudDialog>
 
@@ -63,7 +71,7 @@
 
         return @<text>
                     <MudText Class="mb-3" Typo="Typo.h5">@text</MudText>
-                    <MudTable Items="exampleCsv" Hover Striped Bordered Elevation="0">
+                    <MudTable Class="dedupe-table-easy-csv" Items="exampleCsv" RowsPerPage="10" FixedHeader="true" Header="500px" Hover Striped Bordered Elevation="3">
                         <HeaderContent>
                             <MudTh>Selected</MudTh>
                             @foreach (var key in exampleCsv[0].Keys.Where(x => x != InternalColumnNames.Tags && x != InternalColumnNames.References))
@@ -107,6 +115,9 @@
                                 </MudTd>
                             }
                         </RowTemplate>
+                        <PagerContent>
+                            <MudTablePager></MudTablePager>
+                        </PagerContent>
                     </MudTable>
                 </text>;
     }

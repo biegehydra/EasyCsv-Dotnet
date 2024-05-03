@@ -3,9 +3,12 @@
         max-height: 500px;
     }
 </style>
-<MudDialog Style="min-width: 1000px;">
+<MudDialog Style="min-width: 1000px;" @bind-IsVisible="_isVisible" Options="_dialogOptions" >
     <TitleContent>
-        <MudText Class="mb-2" Typo="Typo.h5"><b>@TitleText</b></MudText>
+        <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;" >
+            <MudText Class="mb-2" Typo="Typo.h5"><b>@TitleText</b></MudText>
+            <MudChip Color="Color.Primary" Size="Size.Large" Text="Select Rows To Keep" ></MudChip>
+        </div>
     </TitleContent>
     <DialogContent>
         @if (DuplicateGroup?.Duplicates.Any() == true)
@@ -13,8 +16,8 @@
             foreach (var duplicateGroup in DuplicateGroup?.Duplicates!)
             {
                 var dictionaryArray = duplicateGroup.Item2.Select(x => x.Item2).ToArray();
-                string fileNameStr = duplicateGroup.Item1 is > 0 && Utils.IsValidIndex(duplicateGroup.Item1.Value, Stepper?.Runner?.ReferenceCsvs?.Count ?? -1) 
-                    ? Stepper!.Runner!.ReferenceCsvs![duplicateGroup.Item1.Value].FileName : "Working Csv";
+                string fileNameStr = duplicateGroup.Item1 is > 0 && Utils.IsValidIndex(duplicateGroup.Item1.Value, Stepper?.Runner?.ReferenceCsvs?.Count ?? -1)
+                ? Stepper!.Runner!.ReferenceCsvs![duplicateGroup.Item1.Value].FileName : "Working Csv";
                 <MudText Class="mb-3" Typo="Typo.h5">Duplicates with value: '@DuplicateValue'</MudText>
                 @ExampleCsvInternal(dictionaryArray, $"{duplicateGroup.Item2.Length} in {fileNameStr}", duplicateGroup.Item1)
             }
@@ -22,24 +25,105 @@
     </DialogContent>
     <DialogActions>
         <MudTooltip Text="All other rows will be deleted">
-            <MudButton Disabled="_completed" StartIcon="@Icons.Material.Filled.Close" Variant="Variant.Outlined" Color="Color.Default" OnClick="x => Cancel()">Abort Dedupe</MudButton>
-            <MudButton Disabled="_completed || (MustSelectRow && _selectedCsvRow == null)" StartIcon="@Icons.Material.Filled.Download" Variant="Variant.Filled" Color="Color.Info" OnClick="Submit">Select This Row To Keep</MudButton>
+            @{
+                bool disabled = MultiSelect
+                    ? _completed || (MustSelectRow && _selectedCsvRows.Count == 0)
+                    : _completed || (MustSelectRow && _selectedCsvRow == null);
+                string text = MultiSelect
+                    ? "Confirm Rows To Keep"
+                    : "Select This Row To Keep";
+            }
+            <MudButton Disabled="_completed" StartIcon="@Icons.Material.Filled.Close" Variant="Variant.Outlined" Color="Color.Default" OnClick="Cancel">Abort Dedupe</MudButton>
+            <MudButton Disabled="@disabled" Class="ml-3" StartIcon="@Icons.Material.Filled.Download" Variant="Variant.Filled" Color="Color.Info" OnClick="Submit">@text</MudButton>
         </MudTooltip>
     </DialogActions>
 </MudDialog>
 
 @code {
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
-    [Parameter] public DuplicateGrouping? DuplicateGroup { get; set; }
+    private DuplicateGrouping? _duplicateGroup;
+    [Parameter]
+    public DuplicateGrouping? DuplicateGroup
+    {
+        get => _duplicateGroup;
+        set
+        {
+            _duplicateGroup = value;
+            if (value != null)
+            {
+                Reset();
+                _completed = false;
+            }
+        }
+    }
     [Parameter] public CsvProcessingStepper Stepper { get; set; } = null!;
     [Parameter] public bool MustSelectRow { get; set; }
+    [Parameter] public bool MultiSelect { get; set; }
     [Parameter] public string? TitleText { get; set; }
     [Parameter] public string? DuplicateValue { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    [Parameter]
+    public bool IsVisible
+    {
+        get => _isVisible;
+        set
+        {
+            if (_isVisible != value)
+            {
+                _isVisible = value;
+                IsVisibleChanged.InvokeAsync(value);
+            }
+        }
+    }
+    [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
+
+    [Parameter] public EventCallback<MultiDuplicateRootPickerResult> MultiComplete { get; set; }
+    [Parameter] public EventCallback<DuplicateRootPickerResult> SingleComplete { get; set; }
+    private bool _completed;
+    private bool _isVisible;
+
+    private void Reset()
+    {
+        _selectedCsvRow = null;
+        _selectedCsvRowReferenceCsvId = null;
+        _selectedCsvRows.Clear();
+    }
+
+    private static DialogOptions _dialogOptions = new DialogOptions()
+    {
+        CloseButton = false,
+        CloseOnEscapeKey = false,
+        DisableBackdropClick = true
+    };
+
+    private async Task Cancel()
+    {
+        _completed = false;
+        Reset();
+        _isVisible = false;
+        await OnCancel.InvokeAsync();
+    }
+
+    private async Task Submit()
+    {
+        _completed = true;
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(5);
+        if (MultiSelect)
+        {
+            await MultiComplete.InvokeAsync(new MultiDuplicateRootPickerResult(_selectedCsvRows.ToHashSet()));
+        }
+        else
+        {
+            await SingleComplete.InvokeAsync(new DuplicateRootPickerResult(_selectedCsvRow!, _selectedCsvRowReferenceCsvId));
+        }
+        Reset();
+    }
+
     private CsvRow? _selectedCsvRow;
     private int? _selectedCsvRowReferenceCsvId;
-    private bool _completed;
 
-    private void SelectRow(CsvRow row, int? referenceCsvId)
+    private void SelectRowSingle(CsvRow row, int? referenceCsvId)
     {
         if (_selectedCsvRow == null || _selectedCsvRow != row)
         {
@@ -53,16 +137,15 @@
         }
     }
 
-    async Task Submit()
+    private readonly HashSet<(CsvRow, int?)> _selectedCsvRows = new();
+    private void SelectRowMultiple(CsvRow row, int? referenceCsvId)
     {
-        _completed = true;
-        await InvokeAsync(StateHasChanged);
-        await Task.Delay(5);
-        MudDialog.Close(DialogResult.Ok(new DuplicateRootPickerResult(_selectedCsvRow!, _selectedCsvRowReferenceCsvId)));
+        var record = (row, referenceCsvId);
+        if (!_selectedCsvRows.Add(record))
+        {
+            _selectedCsvRows.Remove(record);
+        }
     }
-
-    void Cancel() => MudDialog.Cancel();
-
 
     private RenderFragment? ExampleCsvInternal(CsvRow[] exampleCsv, string text, int? referenceCsvId)
     {
@@ -99,9 +182,18 @@
                             @{
                                 int i = -1;
                             }
-                            <MudTd>
-                                <MudCheckBox T="bool" Disabled="_completed || (_selectedCsvRow != null && _selectedCsvRow != row)" Value="_selectedCsvRow == row" ValueChanged="x => SelectRow(row, referenceCsvId)" ></MudCheckBox>
-                            </MudTd>
+                            @if (MultiSelect) 
+                            {
+                                <MudTd>
+                                    <MudCheckBox T="bool" Disabled="_completed" Value="_selectedCsvRows.Contains((row, referenceCsvId))" ValueChanged="x => SelectRowMultiple(row, referenceCsvId)"></MudCheckBox>
+                                </MudTd>
+                            }
+                            else 
+                            {
+                                <MudTd>
+                                    <MudCheckBox T="bool" Disabled="_completed || (_selectedCsvRow != null && _selectedCsvRow != row)" Value="_selectedCsvRow == row" ValueChanged="x => SelectRowSingle(row, referenceCsvId)"></MudCheckBox>
+                                </MudTd>
+                            }
                             @foreach (var (_, value) in row)
                             {
                                 i++;

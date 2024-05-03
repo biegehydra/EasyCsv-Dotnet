@@ -1,4 +1,6 @@
 ﻿@namespace EasyCsv.Components
+@using EasyCsv.Components.Processing.Dialogs
+@using EasyCsv.Components.Processing
 <style>
     .csv-processing-download-popup-container {
         display: flex;
@@ -116,7 +118,38 @@
         </MudDialog>
     }
 }
+<DuplicateRowsResolver Stepper="this" DuplicateGroup="_duplicateGroup" DuplicateValue="@_duplicateValue" @bind-IsVisible="_duplicateRowsResolveVisible"
+                            SingleComplete="SingleComplete"  MultiComplete="MultiComplete" MultiSelect="_multiSelect" 
+                            MustSelectRow="_mustSelectRow" OnCancel="OnCancel" TitleText="@_titleText" >
+
+</DuplicateRowsResolver>
 @code {
+    private TaskCompletionSource<MultiDuplicateRootPickerResult?>? _multiResolveDuplicateRowTaskSource;
+    private TaskCompletionSource<DuplicateRootPickerResult?>? _singleResolveDuplicateRowTaskSource;
+    private DuplicateGrouping? _duplicateGroup;
+    private string? _duplicateValue;
+    private bool _multiSelect;
+    private bool _mustSelectRow;
+    private string? _titleText;
+    private bool _duplicateRowsResolveVisible = false;
+
+    private void OnCancel()
+    {
+        _singleResolveDuplicateRowTaskSource?.SetResult(null);
+        _multiResolveDuplicateRowTaskSource?.SetResult(null);
+    }
+
+    private void MultiComplete(MultiDuplicateRootPickerResult result)
+    {
+        _multiResolveDuplicateRowTaskSource!.SetResult(result);
+    }
+
+    private void SingleComplete(DuplicateRootPickerResult result)
+    {
+        _singleResolveDuplicateRowTaskSource!.SetResult(result);
+    }
+
+
     private CsvTableHeaderMatcher? _tableHeaderMatcher;
     private bool _isAddDataDialogVisible;
     private IEasyCsv? _csvToAdd;

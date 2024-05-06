@@ -82,7 +82,7 @@
                                   HelperText="Name given to downloaded file" HelperTextOnFocus Variant="Variant.Outlined" @bind-Value="_fileName"
                                   Clearable OnClearButtonClick="x => _sq = null"/>
                     <MudText Typo="Typo.h6">Column Filter (Required)</MudText>
-                    <MultiColumnSelect @bind-ColumnNames="_columnsToDownload" Label="Columns To Download" SelectAll="true" SelectAllText="Download All Columns"></MultiColumnSelect>
+                    <MultiColumnSelect @bind-ColumnNames="_columnsToDownload" InitializeWithAllColumnNames="@OpenDownloadWithAllColumnsSelected" Label="Columns To Download" SelectAll="true" SelectAllText="Download All Columns"></MultiColumnSelect>
                     <MudText Typo="Typo.h6">Search Filter (Optional)</MudText>
                     <MudTextField T="string" DebounceInterval="SearchDebounceInterval" Immediate="true" Label="Search Query"
                                   HelperText="Value to search for" HelperTextOnFocus Variant="Variant.Outlined" @bind-Value="_sq"

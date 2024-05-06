@@ -20,6 +20,27 @@
     .csv-processing-table .mud-toolbar {
         --mud-internal-toolbar-height: 120px !important;
     }
+    .csv-processing-table .mud-th {
+        border-color: lightgray;
+        border-top: 1px;
+        border-right: 1px;
+        border-bottom: 1px;
+        border-style: inset;
+    }
+
+    .mud-table-dense.csv-processing-table .mud-tr:first-child:has(.mud-th) {
+        border-left: 1px;
+    }
+
+    .csv-processing-table-th-name {
+
+    }
+
+
+    .csv-processing-table-th-button {
+
+    }
+
 
     .csv-processing-toolbar {
         display: flex;
@@ -29,6 +50,15 @@
 
     .csv-processing-toolbar-search-field {
         width: 350px;
+    }
+
+    .mud-table-dense th.mud-table-cell.csv-processing-table-th .mud-button-root {
+        padding-right: 5px;
+    }
+
+    .mud-table-dense th.mud-table-cell.csv-processing-table-th {
+        padding-right: 18px;
+        padding-left: 7px;
     }
 
     .csv-processing-popover .mud-nested-list > .mud-list-item {
@@ -94,10 +124,14 @@
                 }
 
                 _strategyBuckets[column].SetOrigins(anchorOrigin, transformOrigin);
-                <MudTh>
-                    <div style="display: flex; flex-direction: row; justify-content: space-between">
-                        @column
-                        <MudIconButton Disabled="Busy" Icon="@Icons.Material.Filled.OpenInFull" OnClick="_ => TogglePopover(column)"></MudIconButton>
+                <MudTh Class="csv-processing-table-th">
+                    <div style="display: flex; flex-direction: row; gap: 10px; align-items: center;">
+                        <div class="csv-processing-table-th-name" >
+                            @column
+                        </div>
+                        <div class="csv-processing-table-th-button">
+                            <MudIconButton Disabled="Busy" Icon="@InternalIcons.Strategies" OnClick="_ => TogglePopover(column)"></MudIconButton>
+                        </div>
                     </div>
                     <MudPopover Open="_popOverDict[column]" Style="@($"max-height:{Stepper.MaxStrategySelectHeight}")" Class="csv-processing-popover" OverflowBehavior="OverflowBehavior.FlipAlways" AnchorOrigin="anchorOrigin" TransformOrigin="transformOrigin">
                         <CascadingValue TValue="CsvProcessingStepper" Value="Stepper" IsFixed="true">

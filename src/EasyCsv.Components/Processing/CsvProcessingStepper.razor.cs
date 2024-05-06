@@ -52,7 +52,8 @@ public partial class CsvProcessingStepper
     [Parameter] public string MaxStrategySelectHeight { get; set; } = "600px";
     [Parameter] public string DefaultDownloadFileName { get; set; } = "WorkingCsvSnapshot";
     [Parameter] public bool AutoControlExpandOptionsOnSelect { get; set; } = true;
-    [Parameter] public bool ShowAddCsv { get; set; } 
+    [Parameter] public bool ShowAddCsv { get; set; }
+    [Parameter] public bool OpenDownloadWithAllColumnsSelected { get; set; } = true; 
     [Parameter] public ExpectedHeaderConfig ExpectedHeaderConfig { get; set; } = new (DefaultValueType.Text, false, null, AutoMatching.Lenient);
     public StrategyRunner? Runner { get; private set; }
     private CsvProcessingTable? _csvProcessingTable { get; set; }

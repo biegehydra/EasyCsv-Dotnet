@@ -3,7 +3,7 @@
 
 @if (CsvProcessor?.Runner?.CurrentCsv != null)
 {
-    <MudSelect Immediate="Immediate" Disabled="Disabled" Label="@Label" T="string" MultiSelection="true" MultiSelectionTextFunc="@(x => string.Join(", ", x))"
+    <MudSelect Immediate="Immediate" Disabled="Disabled" Label="@Label" T="string" MultiSelection="true" MultiSelectionTextFunc="@(MultiSelectionTextFunc)"
                SelectedValues="ColumnNames" SelectedValuesChanged="x => ColumnNames = x?.ToArray() ?? []" Variant="@Variant" Style="min-width: 300px;"
                Clearable="true" OnClearButtonClick="x => ColumnNames = []" SelectAll="@SelectAll" SelectAllText="@SelectAllText">
         @foreach (var value in CsvProcessor.Runner.CurrentCsv.ColumnNames()!.Where(x => x.Equals(InternalColumnNames.Tags, StringComparison.OrdinalIgnoreCase) == false))
@@ -43,13 +43,23 @@
     [Parameter] public Variant Variant { get; set; } = Variant.Outlined;
     [Parameter] public string Label { get; set; } = "Column Names";
     [Parameter] public bool InitializeWithStrategyBucketColumnName { get; set; }
+    [Parameter] public bool InitializeWithAllColumnNames { get; set; }
+    [Parameter] public Func<string[], string>? AllColumnsSelectedText { get; set; }
     [Parameter] public bool SelectAll { get; set; }
     [Parameter] public string? SelectAllText { get; set; }
     [Parameter] public Func<ICollection<string>, string[]?>? AutoMatchColumns { get; set; }
 
     protected override void OnInitialized()
     {
-        if (InitializeWithStrategyBucketColumnName && !string.IsNullOrWhiteSpace(StrategyBucket?.ColumnName))
+        if (InitializeWithAllColumnNames)
+        {
+            var columnNames = CsvProcessor?.Runner?.CurrentCsv?.ColumnNames();
+            if (columnNames?.Length > 0)
+            {
+                ColumnNames = columnNames;
+            }
+        }
+        else if (InitializeWithStrategyBucketColumnName && !string.IsNullOrWhiteSpace(StrategyBucket?.ColumnName))
         {
             ColumnNames = [StrategyBucket.ColumnName];
         }
@@ -70,4 +80,20 @@
             }
         }
     }
+
+    private string MultiSelectionTextFunc(List<string> x)
+    {
+        if (x == null!) return "";
+        var columnNames = CsvProcessor?.Runner?.CurrentCsv?.ColumnNames();
+        if (x.Count == columnNames?.Length && AllColumnsSelectedText != null)
+        {
+            return AllColumnsSelectedText(columnNames);
+        }
+        if (x.Count == columnNames?.Length)
+        {
+            return $"All {columnNames.Length} Columns Selected";
+        }
+        return string.Join(", ", x);
+    }
+
 }

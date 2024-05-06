@@ -45,6 +45,6 @@ public class DivideAndReplicateStrategy : ICsvProcessor
                 }
             }
         });
-        return new OperationResult(true, $"Replicated {deletedCount} rows int {replicatedCount}");
+        return new OperationResult(true, $"Replicated {deletedCount} rows into {replicatedCount}");
     }
 }

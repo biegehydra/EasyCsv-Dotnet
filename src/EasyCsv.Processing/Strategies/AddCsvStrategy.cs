@@ -10,15 +10,15 @@ public class AddCsvStrategy : ICsvProcessor
     private readonly IEasyCsv _csvToAdd;
     public AddCsvStrategy(IEasyCsv csvToAdd)
     {
-        _csvToAdd = csvToAdd ?? throw new ArgumentException("Csv to add can't be null.", nameof(csvToAdd));
+        _csvToAdd = csvToAdd ?? throw new ArgumentException("CsvToAdd can't be null.", nameof(csvToAdd));
     }
 
     public async ValueTask<OperationResult> ProcessCsv(IEasyCsv csv, ICollection<int>? filteredRowIndexes = null)
     {
         var columnNames = csv.ColumnNames()?.ToHashSet();
-        if (columnNames == null) return new OperationResult(false, "Csv has no column names");
+        if (columnNames == null) return new OperationResult(false, "WorkingCsv has no column names");
         var toAddColumnNames = _csvToAdd.ColumnNames()?.ToHashSet();
-        if (toAddColumnNames == null) return new OperationResult(false, "Csv to had has no column names");
+        if (toAddColumnNames == null) return new OperationResult(false, "CsvToAdd has no column names");
         await csv.MutateAsync(x =>
         {
             foreach (var additionalRow in _csvToAdd.CsvContent)
@@ -41,6 +41,6 @@ public class AddCsvStrategy : ICsvProcessor
                 x.CsvContent.Add(new CsvRow(newRow, true));
             }
         });
-        return new OperationResult(true);
+        return new OperationResult(true, $"Added {_csvToAdd.CsvContent.Count} rows to WorkingCsv");
     }
 }

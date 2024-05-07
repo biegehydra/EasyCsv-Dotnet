@@ -7,7 +7,7 @@
 }
 @if (CsvProcessor.Runner?.CurrentCsv != null)
 {
-    <StrategyItem DisplayName="@DisplayName" DescriptionStr="@DescriptionStr" ExampleOptions="_exampleOptions" BeforeCsvExample="_beforeExample"
+    <StrategyItem DisplayName="@DisplayName" Description="Description" DescriptionStr="@DescriptionStr" ExampleOptions="_exampleOptions" BeforeCsvExample="_beforeExample"
                   AfterCsvExample="_afterExample" AllowRun="AllowRun" StrategyPicked="RunCombineColumns">
         <Options>
             <MudListItem>
@@ -31,6 +31,7 @@
     [Parameter] public bool Immediate { get; set; } = true;
     [Parameter] public override string? DisplayName { get; set; } = "Combine Columns";
     [Parameter] public override string? DescriptionStr { get; set; } = "Combine the specified columns using a delimiter into a new column.";
+    [Parameter] public override RenderFragment<string>? Description { get; set; }
 
     private static Dictionary<string, string> _exampleOptions = new ()
     {

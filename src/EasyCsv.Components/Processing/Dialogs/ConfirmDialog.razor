@@ -1,0 +1,41 @@
+﻿<MudDialog Class="easy-csv-confirm-dialog" >
+    <DialogContent>
+        <MudText >@ContentText</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Color="@CancelColor" Variant="@CancelVariant">@CancelText</MudButton>
+        <MudButton Color="@Color" Variant="Variant.Filled" OnClick="Submit">@ButtonText</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public string ContentText { get; set; }
+
+    [Parameter] public string ButtonText { get; set; }
+
+    [Parameter] public Color Color { get; set; }
+
+    [Parameter] public string CancelText { get; set; } = "Cancel";
+
+    [Parameter] public Color CancelColor { get; set; } = Color.Default;
+
+    [Parameter] public Variant CancelVariant { get; set; } = Variant.Outlined;
+
+    [Parameter] public bool TriState { get; set; } = false;
+
+    void Submit() => MudDialog.Close(DialogResult.Ok(true));
+    void Cancel()
+    {
+        if (TriState)
+        {
+            MudDialog.Close(DialogResult.Ok(false));
+        }
+        else
+        {
+            MudDialog.Cancel();
+        }
+    }
+
+}

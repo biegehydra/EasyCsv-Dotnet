@@ -8,10 +8,12 @@ namespace EasyCsv.Processing;
 
 public interface IFindDedupesOperation
 {
-    public string TitleText { get; }
+    public string? ColumnName { get; }
     public bool MultiSelect { get; }
     public bool MustSelectRow { get; }
     public Func<string, string>? DuplicateValuePresenter { get; }
+    public Func<CsvRow[], CsvRow?>? AutoSelectRow { get; }
+    public Func<CsvRow[], CsvRow[]?>? AutoSelectRows { get; }
     public IAsyncEnumerable<DuplicateGrouping> YieldReturnDupes(IEasyCsv csv, ICollection<int>? filteredRowIndexes = null, params (IEasyCsv Csv, int ReferenceCsvId)[] referenceCsvs);
 }
 
@@ -37,11 +39,13 @@ public interface ICsvRowProcessor
 
 public interface ICsvColumnDeleteEvaluator : IColumnOperation
 {
+    public string? ColumnName { get; }
     public ValueTask<OperationDeleteResult> EvaluateDelete<TCell>(TCell cell) where TCell : ICell;
 }
 
 public interface ICsvRowDeleteEvaluator
 {
+    public string? ColumnName { get; }
     /// <summary>
     /// This function will be called for each row in the csv.
     /// </summary>
@@ -88,8 +92,8 @@ public interface IReferenceOperation
 public readonly struct DuplicateGrouping
 {
     public string DuplicateValue { get; }
-    public (int?, (int, CsvRow)[])[] Duplicates { get; }
-    public DuplicateGrouping(string duplicateValue, IEnumerable<(int?, IEnumerable<(int, CsvRow)>)> duplicatesGroupedByReferenceCsvId)
+    public (int, CsvRow)[] Duplicates { get; }
+    public DuplicateGrouping(string duplicateValue, IEnumerable<(int, CsvRow)> duplicatesGroupedByReferenceCsvId)
     {
         if (string.IsNullOrWhiteSpace(duplicateValue))
         {
@@ -97,7 +101,7 @@ public readonly struct DuplicateGrouping
         }
         DuplicateValue = duplicateValue;
         if (duplicatesGroupedByReferenceCsvId == null!)  throw new ArgumentException("duplicatesGroupedByReferenceCsvId cannot be null");
-        Duplicates = duplicatesGroupedByReferenceCsvId.Select(x => (x.Item1, x.Item2.ToArray())).ToArray();
+        Duplicates = duplicatesGroupedByReferenceCsvId.ToArray();
     }
 }
 

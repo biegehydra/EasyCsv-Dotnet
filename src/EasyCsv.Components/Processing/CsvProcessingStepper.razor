@@ -159,7 +159,10 @@
 {
     <MudDialog @bind-IsVisible="_isDownloadDialogVisible" Class="csv-processing-download-popup" Style="min-width: 600px;">
         <TitleContent>
-            <MudText Class="mb-2" Typo="Typo.h5"><b>Download Snapshot Options</b></MudText>
+            <div style="display: flex; flex-direction: row; gap: 10px; justify-content: space-between;" >
+                <MudText Class="mb-2" Typo="Typo.h5"><b>Download Snapshot Options</b></MudText>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="() => { _isDownloadDialogVisible = false; }"></MudIconButton>
+            </div>
         </TitleContent>
         <DialogContent >
             <CascadingValue TValue="CsvProcessingStepper" Value="this" IsFixed="true">
@@ -191,17 +194,21 @@
 }
 <DuplicateRowsResolver Stepper="this" DuplicateGroup="_duplicateGroup" DuplicateValue="@_duplicateValue" @bind-IsVisible="_duplicateRowsResolveVisible"
                             SingleComplete="SingleComplete"  MultiComplete="MultiComplete" MultiSelect="_multiSelect" 
-                            MustSelectRow="_mustSelectRow" OnCancel="OnCancel" TitleText="@_titleText" >
+                            MustSelectRow="_mustSelectRow" OnCancel="OnCancel" ColumnName="@_columnName"
+                            ResolveDuplicatesAutoSelect="ResolveDuplicatesAutoSelect" AutoSelectRow="_autoSelectRow"
+                            AutoSelectRows="_autoSelectRows">
 
 </DuplicateRowsResolver>
 @code {
     private TaskCompletionSource<MultiDuplicateRootPickerResult?>? _multiResolveDuplicateRowTaskSource;
     private TaskCompletionSource<DuplicateRootPickerResult?>? _singleResolveDuplicateRowTaskSource;
     private DuplicateGrouping? _duplicateGroup;
+    public Func<CsvRow[], CsvRow?>? _autoSelectRow = null;
+    public Func<CsvRow[], CsvRow[]?>? _autoSelectRows = null;
     private string? _duplicateValue;
     private bool _multiSelect;
     private bool _mustSelectRow;
-    private string? _titleText;
+    private string? _columnName;
     private bool _duplicateRowsResolveVisible = false;
 
     private void OnCancel()

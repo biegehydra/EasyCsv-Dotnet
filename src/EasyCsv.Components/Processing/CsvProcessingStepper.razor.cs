@@ -40,6 +40,7 @@ public partial class CsvProcessingStepper
     [Parameter] public bool ShowAddReferenceCsv { get; set; } = true;
     [Parameter] public RunOperationNoneSelectedBehaviour RunOperationNoneSelectedBehaviour { get; set; } = RunOperationNoneSelectedBehaviour.Hidden;
     [Parameter] public ColumnLocation TagsAndReferencesLocation { get; set; } = ColumnLocation.Beginning;
+    [Parameter] public ResolveDuplicatesAutoSelect ResolveDuplicatesAutoSelect { get; set; } = ResolveDuplicatesAutoSelect.None;
     [Parameter] public bool AllowControlTagsAndReferencesLocation { get; set; } = true;
     [Parameter] public bool UseSearchBar { get; set; } = true;
     [Parameter] public double SearchDebounceInterval { get; set; } = 250;
@@ -113,7 +114,9 @@ public partial class CsvProcessingStepper
         if (_csvProcessingTable == null) return _processingTableNull;
         _mustSelectRow = findDedupesOperation.MustSelectRow;
         _multiSelect = findDedupesOperation.MultiSelect;
-        _titleText = findDedupesOperation.TitleText;
+        _columnName = findDedupesOperation.ColumnName;
+        _autoSelectRow = findDedupesOperation.AutoSelectRow;
+        _autoSelectRows = findDedupesOperation.AutoSelectRows;
         _duplicateRowsResolveVisible = true;
         await InvokeAsync(StateHasChanged);
         try
@@ -150,9 +153,7 @@ public partial class CsvProcessingStepper
                         return failedOperationResult;
                     }
 
-                    if (resolvedRows.RowsToKeep.Any(y => y.ReferenceCsvId.HasValue)) throw new Exception();
-                    var possibleRowsToDelete = duplicateGroup.Duplicates.First(x => x.Item1 == null).Item2;
-                    foreach (var possibleDuplicate in possibleRowsToDelete)
+                    foreach (var possibleDuplicate in duplicateGroup.Duplicates)
                     {
                         if (resolvedRows.RowsToKeep.All(x => x.RowToKeep != possibleDuplicate.Item2))
                         {
@@ -182,9 +183,7 @@ public partial class CsvProcessingStepper
                         return failedOperationResult;
                     }
 
-                    if (resolvedRows.ReferenceCsvId.HasValue) throw new Exception();
-                    var possibleRowsToDelete = duplicateGroup.Duplicates.First(x => x.Item1 == null).Item2;
-                    foreach (var duplicate in possibleRowsToDelete)
+                    foreach (var duplicate in duplicateGroup.Duplicates)
                     {
                         if (duplicate.Item2 != resolvedRows.RowToKeep)
                         {

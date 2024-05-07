@@ -44,3 +44,11 @@ public enum DefaultValueType
     [Description("The input will be a MudCheckBox with tri state enabled.")]
     TriStateCheckBox
 }
+
+public enum ResolveDuplicatesAutoSelect
+{
+    [Description("Do not auto select any row.")]
+    None,
+    [Description("Auto select the first row.")]
+    FirstRow
+}

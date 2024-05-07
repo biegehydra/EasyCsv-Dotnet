@@ -11,14 +11,14 @@
     }
 </style>
 
-<CsvProcessingStepper @ref="_csvProcessor" EasyCsvFileName="AppendJob.csv" EasyCsv="_easyCsv">
+<CsvProcessingStepper @ref="_csvProcessor" EasyCsvFileName="AppendJob.csv" EasyCsv="_easyCsv" ResolveDuplicatesAutoSelect="ResolveDuplicatesAutoSelect.FirstRow">
     <ColumnStrategies>
-        <FindDedupesExactMatchColumn />
+        <FindDedupesExactMatchColumn MustSelectRow="false" />
         <StringSplitColumn />
         <DivideAndReplicate />
         <TagAndReferenceMatches />
         <DeleteOnEmptyColumn />
-        <StrategyItem DisplayName="Tag Invalid Email" DescriptionStr="Tag all rows with an invalid email on specified column"
+        <StrategyItem DisplayName="Tag Invalid Email" DescriptionStr="Tag all rows with an invalid email in $column_name"
                       BeforeCsvExample="_beforeExample" AfterCsvExample="_afterExample" StrategyPicked="OnTagPicked"/>
     </ColumnStrategies>
     <FullCsvStrategies>

@@ -3,24 +3,25 @@
         max-height: 500px;
     }
 </style>
-<MudDialog Style="min-width: 1000px;" @bind-IsVisible="_isVisible" Class="csv-processing-resolve-duplicates-popup" Options="_dialogOptions">
+<MudDialog Style="min-width: 1000px;" @bind-IsVisible="IsVisible" Class="csv-processing-resolve-duplicates-popup" Options="_dialogOptions">
     <TitleContent>
-        <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;" >
-            <MudText Class="mb-2" Typo="Typo.h5"><b>@TitleText</b></MudText>
-            <MudChip Color="Color.Primary" Size="Size.Large" Text="Select Rows To Keep" ></MudChip>
+        <div style="display: flex; flex-direction: row; gap: 10px; justify-content: space-between;" >
+            <MudText Class="mb-2" Typo="Typo.h5"><b>Duplicate Resolver</b></MudText>
+            <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="OnCancel"></MudIconButton>
         </div>
     </TitleContent>
     <DialogContent>
         @if (DuplicateGroup?.Duplicates.Any() == true)
         {
-            foreach (var duplicateGroup in DuplicateGroup?.Duplicates!)
-            {
-                var dictionaryArray = duplicateGroup.Item2.Select(x => x.Item2).ToArray();
-                string fileNameStr = duplicateGroup.Item1 is > 0 && Utils.IsValidIndex(duplicateGroup.Item1.Value, Stepper?.Runner?.ReferenceCsvs?.Count ?? -1)
-                ? Stepper!.Runner!.ReferenceCsvs![duplicateGroup.Item1.Value].FileName : "Working Csv";
-                <MudText Class="mb-3" Typo="Typo.h5">Duplicates with value: '@DuplicateValue'</MudText>
-                @ExampleCsvInternal(dictionaryArray, $"{duplicateGroup.Item2.Length} in {fileNameStr}", duplicateGroup.Item1)
-            }
+            <MudText Class="mb-3" Typo="Typo.h5">
+                Found @DuplicateGroup.Value.Duplicates.Length duplicates with value '<b>@DuplicateValue</b>'
+                @if (!string.IsNullOrWhiteSpace(ColumnName))
+                {
+                    @:&nbsp;in&nbsp;'
+                    <b>@ColumnName</b>@:'
+                }
+            </MudText>
+            @ExampleCsvInternal(DuplicateGroup.Value.Duplicates)
         }
     </DialogContent>
     <DialogActions>
@@ -40,6 +41,7 @@
 </MudDialog>
 
 @code {
+    private DuplicateGrouping? _submittingGroup;
     private DuplicateGrouping? _duplicateGroup;
     [Parameter]
     public DuplicateGrouping? DuplicateGroup
@@ -47,21 +49,49 @@
         get => _duplicateGroup;
         set
         {
+            if (_submitting)
+            {
+                _submittingGroup = value;
+                return;
+            }
             _duplicateGroup = value;
             if (value != null)
             {
                 Reset();
                 _completed = false;
+                if (value.Value.Duplicates.Length == 0) return;
+                switch (AutoSelectRow, AutoSelectRows, MultiSelect)
+                {
+                    case (_, not null, true):
+                        _selectedCsvRows = AutoSelectRows(value.Value.Duplicates.Select(x => x.Item2).ToArray())?.Select(x => (-1, x)).ToHashSet() ?? new HashSet<(int, CsvRow)>();
+                        return;
+                    case (not null, _, false):
+                        _selectedCsvRow = AutoSelectRow(value.Value.Duplicates.Select(x => x.Item2).ToArray());
+                        return;
+
+                }
+                switch ((ResolveDuplicatesAutoSelect, MultiSelect))
+                {
+                    case (ResolveDuplicatesAutoSelect.FirstRow, false):
+                        _selectedCsvRow = value.Value.Duplicates[0].Item2;
+                        _selectedCsvRowIndex = value.Value.Duplicates[0].Item1;
+                        break;
+                    case (ResolveDuplicatesAutoSelect.FirstRow, true):
+                        _selectedCsvRows.Add(value.Value.Duplicates[0]);
+                        break;
+                }
             }
         }
     }
+    [Parameter] public ResolveDuplicatesAutoSelect ResolveDuplicatesAutoSelect { get; set; } = ResolveDuplicatesAutoSelect.None;
     [Parameter] public CsvProcessingStepper Stepper { get; set; } = null!;
+    [Parameter] public Func<CsvRow[], CsvRow?>? AutoSelectRow { get; set; }
+    [Parameter] public Func<CsvRow[], CsvRow[]?>? AutoSelectRows { get; set; }
     [Parameter] public bool MustSelectRow { get; set; }
     [Parameter] public bool MultiSelect { get; set; }
-    [Parameter] public string? TitleText { get; set; }
+    [Parameter] public string? ColumnName { get; set; }
     [Parameter] public string? DuplicateValue { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
-
     [Parameter]
     public bool IsVisible
     {
@@ -85,7 +115,7 @@
     private void Reset()
     {
         _selectedCsvRow = null;
-        _selectedCsvRowReferenceCsvId = null;
+        _selectedCsvRowIndex = null;
         _selectedCsvRows.Clear();
     }
 
@@ -100,58 +130,73 @@
     {
         _completed = false;
         Reset();
-        _isVisible = false;
+        IsVisible = false;
         await OnCancel.InvokeAsync();
     }
 
+
+    private bool _submitting;
     private async Task Submit()
     {
         _completed = true;
         await InvokeAsync(StateHasChanged);
         await Task.Delay(5);
-        if (MultiSelect)
+        _submitting = true;
+        try
         {
-            await MultiComplete.InvokeAsync(new MultiDuplicateRootPickerResult(_selectedCsvRows.ToHashSet()));
+            if (MultiSelect)
+            {
+                await MultiComplete.InvokeAsync(new MultiDuplicateRootPickerResult(_selectedCsvRows.ToHashSet()));
+            }
+            else
+            {
+                await SingleComplete.InvokeAsync(new DuplicateRootPickerResult(_selectedCsvRow, _selectedCsvRowIndex));
+            }
+            Reset();
+            _submitting = false;
+            if (_submittingGroup != null)
+            {
+                DuplicateGroup = _submittingGroup;
+            }
         }
-        else
+        finally
         {
-            await SingleComplete.InvokeAsync(new DuplicateRootPickerResult(_selectedCsvRow!, _selectedCsvRowReferenceCsvId));
+            _submitting = false;
         }
-        Reset();
     }
 
     private CsvRow? _selectedCsvRow;
-    private int? _selectedCsvRowReferenceCsvId;
+    private int? _selectedCsvRowIndex;
 
-    private void SelectRowSingle(CsvRow row, int? referenceCsvId)
+    private void SelectRowSingle(CsvRow row, int rowIndex)
     {
         if (_selectedCsvRow == null || _selectedCsvRow != row)
         {
             _selectedCsvRow = row;
-            _selectedCsvRowReferenceCsvId = referenceCsvId;
+            _selectedCsvRowIndex = rowIndex;
         }
         else if (_selectedCsvRow == row)
         {
             _selectedCsvRow = null;
-            _selectedCsvRowReferenceCsvId = null;
+            _selectedCsvRowIndex = rowIndex;
         }
     }
 
-    private readonly HashSet<(CsvRow, int?)> _selectedCsvRows = new();
-    private void SelectRowMultiple(CsvRow row, int? referenceCsvId)
+    private HashSet<(int, CsvRow)> _selectedCsvRows = new();
+    private void SelectRowMultiple(CsvRow row, int rowIndex)
     {
-        var record = (row, referenceCsvId);
+        var record = (rowIndex, row);
         if (!_selectedCsvRows.Add(record))
         {
             _selectedCsvRows.Remove(record);
         }
     }
 
-    private RenderFragment? ExampleCsvInternal(CsvRow[] exampleCsv, string text, int? referenceCsvId)
+    private RenderFragment? ExampleCsvInternal((int, CsvRow)[] exampleCsv)
     {
         if (exampleCsv?.Length > 0 != true) return null;
-        int tagsColumnIndex = exampleCsv[0].Keys.IndexOf(InternalColumnNames.Tags);
-        int referencesColumnIndex = exampleCsv[0].Keys.IndexOf(InternalColumnNames.References);
+        int tagsColumnIndex = exampleCsv[0].Item2.Keys.IndexOf(InternalColumnNames.Tags);
+        int referencesColumnIndex = exampleCsv[0].Item2.Keys.IndexOf(InternalColumnNames.References);
         var tagColors = new Dictionary<string, Color>();
 
         void AddTag(string tag)
@@ -165,11 +210,10 @@
         }
 
         return @<text>
-                    <MudText Class="mb-3" Typo="Typo.h5">@text</MudText>
-                    <MudTable Class="dedupe-table-easy-csv" Items="exampleCsv" RowsPerPage="10" FixedHeader="true" Header="500px" Hover Striped Bordered Elevation="3">
+                    <MudTable Class="dedupe-table-easy-csv" Items="exampleCsv" RowsPerPage="10" FixedHeader="true" Hover Striped Bordered Elevation="3">
                         <HeaderContent>
                             <MudTh>Keep</MudTh>
-                            @foreach (var key in exampleCsv[0].Keys.Where(x => x != InternalColumnNames.Tags && x != InternalColumnNames.References))
+                            @foreach (var key in exampleCsv[0].Item2.Keys.Where(x => x != InternalColumnNames.Tags && x != InternalColumnNames.References))
                             {
                                 <MudTh>@key</MudTh>
                             }
@@ -185,16 +229,16 @@
                             @if (MultiSelect) 
                             {
                                 <MudTd>
-                                    <MudCheckBox T="bool" Disabled="_completed" Value="_selectedCsvRows.Contains((row, referenceCsvId))" ValueChanged="x => SelectRowMultiple(row, referenceCsvId)"></MudCheckBox>
+                                    <MudCheckBox T="bool" Disabled="_completed" Value="_selectedCsvRows.Contains(row)" ValueChanged="x => SelectRowMultiple(row.Item2, row.Item1)"></MudCheckBox>
                                 </MudTd>
                             }
                             else 
                             {
                                 <MudTd>
-                                    <MudCheckBox T="bool" Disabled="_completed || (_selectedCsvRow != null && _selectedCsvRow != row)" Value="_selectedCsvRow == row" ValueChanged="x => SelectRowSingle(row, referenceCsvId)"></MudCheckBox>
+                                    <MudCheckBox T="bool" Disabled="_completed || (_selectedCsvRow != null && _selectedCsvRow != row.Item2)" Value="_selectedCsvRow == row.Item2" ValueChanged="x => SelectRowSingle(row.Item2, row.Item1)"></MudCheckBox>
                                 </MudTd>
                             }
-                            @foreach (var (_, value) in row)
+                            @foreach (var (_, value) in row.Item2)
                             {
                                 i++;
                                 if (i != tagsColumnIndex && i != referencesColumnIndex)
@@ -204,7 +248,7 @@
                             }
                             @if (tagsColumnIndex >= 0)
                             {
-                                var tags = row.ValueAt(tagsColumnIndex)?.ToString()?.Split(",", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                                var tags = row.Item2.ValueAt(tagsColumnIndex)?.ToString()?.Split(",", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
                                 <MudTd Class="extra-dense">
                                     @if (tags?.Any() == true)
                                     {

@@ -7,15 +7,21 @@
         flex-direction: column;
         gap: 15px;
     }
+    .csv-file-container {
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        align-items: center;
+    }
+
 </style>
 
 <ErrorBoundary >
     <ChildContent>
         @if (Runner?.CurrentCsv != null && (ColumnStrategies != null || FullCsvStrategies != null))
         {
-            <MudText Typo="Typo.h5">Current Step: @(Runner.CurrentIndex + 1)</MudText>
-            <br />
-            <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: baseline;">
+            <div style="display: flex; flex-direction: row; width: 100%; padding: 0 15px; align-items: center; justify-content: space-between" >
+                <MudText Typo="Typo.h5">Current Step: @(Runner.CurrentIndex + 1)</MudText>
                 <div style="display: flex; gap: 20px; flex-direction: row;">
                     @if (Runner.IsCacheIndexValid(Runner.CurrentIndex - 1))
                     {
@@ -26,9 +32,91 @@
                         <MudButton Disabled="@Busy" OnClick="_ => GoForwardStep()" Variant="Variant.Filled" Color="Color.Secondary">Go Forward Step</MudButton>
                     }
                 </div>
+            </div>
+            <br />
+            <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: baseline;">
                 @{
                     var columnsNames = Runner.CurrentCsv.ColumnNames();
                 }
+                <div style="display: flex; flex-direction: row; padding: 0 15px; gap: 50px;">
+                    <div style="display: flex; flex-direction: column; gap: 15px;" >
+                        <div style="display: flex; flex-direction: row; gap: 8px; align-items: end;" >
+                            <MudText Typo="Typo.h6">
+                                "Working Csv" Composition
+                            </MudText>
+                            <MudTooltip Delay="750" Style="max-width: 260px;" >
+                                <TooltipContent>
+                                    <p>The "Working Csv" is what you are looking at in the table.</p> 
+                                    <br/>
+                                    <p>It is the result of all previous operations leading up to the CURRENT step, which is not necessarily the last step.</p>
+                                    <br/>
+                                    <p>To help you keep track of things, below shows the initial csv that was uploaded, and all the csvs that have been added.</p>
+                                    @if (_addedCsvsWithStepIndexAdded.Count == 0)
+                                    {
+                                        <br/>
+                                        <p>
+                                            * To add a csv and all it's rows to your Working Csv,
+                                            select the <b>full csv</b> operations icon, and then select
+                                            Add Csv.
+                                        </p>
+                                    }
+                                </TooltipContent>
+                                <ChildContent>
+                                    <MudIcon Icon="@Icons.Material.Filled.Info"></MudIcon>
+                                </ChildContent>
+                            </MudTooltip>
+                        </div>
+                        <div class="csv-file-container">
+                            <MudChip Color="Color.Dark" Text="@EasyCsvFileName"/>
+                            @Runner?.CachedCsvs[0].RowCount()&nbsp;rows&nbsp;
+                            <MudTooltip RootClass="csv-file-container" Text="Initial Csv">
+                                <MudIcon Color="Color.Primary" Icon="@Icons.Material.Filled.Star"></MudIcon>
+                            </MudTooltip>
+                        </div>
+                        @foreach (var (fileName, rowCount, indexAdded) in _addedCsvsWithStepIndexAdded)
+                        {
+                            <div class="csv-file-container">
+                                <MudChip Color="Color.Dark" Text="@fileName" />
+                                @rowCount&nbsp;rows&nbsp;
+                                <MudTooltip RootClass="csv-file-container" Text="@($"This Csv was added on step {indexAdded + 1}")">
+                                    <MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.StarHalf"></MudIcon>
+                                </MudTooltip>
+                            </div>
+                        }
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 15px;" >
+                        <div style="display: flex; flex-direction: row; gap: 8px; align-items: end;" >
+                            <MudText Typo="Typo.h6">
+                                Reference Csvs
+                            </MudText>
+                            <MudTooltip Delay="750" Style="max-width: 260px;" >
+                                <TooltipContent>
+                                    <p>Reference Csvs are csvs you upload so that they can be referred to (looked at) during operations on the Working Csv.</p> 
+                                    <br/>
+                                    <p>They are immutable and cannot be operated on by strategies, they may only be looked at.</p>
+                                    @if (Runner!.ReferenceCsvs.Count == 0)
+                                    {
+                                        <br/>
+                                        <p>* To add your first Reference Csv, select the "Add Reference Csv" button on the right.</p>
+                                    }
+                                </TooltipContent>
+                                <ChildContent>
+                                    <MudIcon Icon="@Icons.Material.Filled.Info"></MudIcon>
+                                </ChildContent>
+                            </MudTooltip>
+                        </div>
+                        @foreach (var (csv, fileName) in Runner!.ReferenceCsvs)
+                        {
+                            <div class="csv-file-container">
+                                <MudChip Color="Color.Dark" Text="@fileName" />
+                                @csv.RowCount()&nbsp;rows&nbsp;
+                                <MudTooltip RootClass="csv-file-container" Text="@($"This is a Reference Csv.")">
+                                    <MudIcon Color="Color.Tertiary" Icon="@Icons.Material.Filled.StarBorder"></MudIcon>
+                                </MudTooltip>
+                            </div>
+                        }
+                    </div>
+                </div>
                 <div style="display: flex; flex-direction: row; justify-content: space-between; gap: 20px; align-items: baseline;">
                     @if (AllowControlTagsAndReferencesLocation && columnsNames != null && (columnsNames.Contains(InternalColumnNames.References) || columnsNames.Contains(InternalColumnNames.Tags)))
                     {
@@ -140,7 +228,7 @@
     private string? _sq;
     private string? _fileName;
 
-    private List<(string FileName, int IndexAdded)> _addedCsvsWithStepIndexAdded = new();
+    private List<(string FileName, int RowCount, int IndexAdded)> _addedCsvsWithStepIndexAdded = new();
     public async Task AddCsv(IEasyCsv csv, string csvName)
     {
         if (csv == null! || Runner == null) return;
@@ -157,7 +245,7 @@
             {
                 _addedCsvsWithStepIndexAdded.RemoveAt(existingEntryIndex);
             }
-            _addedCsvsWithStepIndexAdded.Add((csvName, Runner.CurrentIndex - 1));
+            _addedCsvsWithStepIndexAdded.Add((csvName, csv.RowCount(),  Runner.CurrentIndex - 1));
         }
     }
 

@@ -1,4 +1,5 @@
-﻿<style>
+﻿@using EasyCsv.Components.Processing.Dialogs
+<style>
     .dedupe-table-easy-csv .mud-table-container {
         max-height: 500px;
     }
@@ -13,7 +14,7 @@
     <DialogContent>
         @if (DuplicateGroup?.Duplicates.Any() == true)
         {
-            <MudText Class="mb-3" Typo="Typo.h5">
+            <MudText Class="mb-3" Typo="Typo.h5" Style="margin-top: -15px;">
                 Found @DuplicateGroup.Value.Duplicates.Length duplicates with value '<b>@DuplicateValue</b>'
                 @if (!string.IsNullOrWhiteSpace(ColumnName))
                 {
@@ -41,6 +42,8 @@
 </MudDialog>
 
 @code {
+    [Inject] private IDialogService? DialogService { get; set; }
+
     private DuplicateGrouping? _submittingGroup;
     private DuplicateGrouping? _duplicateGroup;
     [Parameter]
@@ -138,6 +141,8 @@
     private bool _submitting;
     private async Task Submit()
     {
+        var userConfirmation = await GetUserConfirmationIfNoneSelect();
+        if (!userConfirmation) return;
         _completed = true;
         await InvokeAsync(StateHasChanged);
         await Task.Delay(5);
@@ -164,6 +169,29 @@
             _submitting = false;
         }
     }
+
+    private async Task<bool> GetUserConfirmationIfNoneSelect()
+    {
+        if (DialogService == null) return true;
+        switch (MultiSelect)
+        {
+            case true when _selectedCsvRows.Count > 0:
+                return true;
+            case false when _selectedCsvRow != null:
+                return true;
+        }
+        var parameters = new DialogParameters<ConfirmDialog>()
+        {
+            {x => x.ContentText, $"Are you sure you'd like to remove ALL {DuplicateGroup?.Duplicates.Length} duplicates?"},
+            {x => x.ButtonText, "Confirm"},
+            {x => x.Color, Color.Info}
+        };
+        string text = MultiSelect ? "No rows selected" : "No row selected";
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(text, parameters);
+        var result = await dialog.Result;
+        return result.Data is true;
+    }
+
 
     private CsvRow? _selectedCsvRow;
     private int? _selectedCsvRowIndex;

@@ -22,7 +22,7 @@
     private async Task RunDivideAndReplicate(string columnName)
     {
         if (!AllowRun) return;
-        var dedupeOperation = new FindDedupesExactMatchColumnStrategy(StrategyBucket.ColumnName, MustSelectRow, MultiSelect);
+        var dedupeOperation = new FindDedupesExactMatchColumnStrategy(StrategyBucket.ColumnName, MustSelectRow, null, null, multiSelect: MultiSelect);
         _ = await CsvProcessor.PerformDedupe(dedupeOperation, null);
     }
 }

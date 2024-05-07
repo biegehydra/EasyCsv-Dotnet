@@ -30,12 +30,21 @@
         z-index: 1000; /* This should be lower than the popover's z-index but higher than most other elements on your page */
         background-color: rgba(0, 0, 0, 0); /* You can adjust the opacity as needed */
     }
+
+    .strategy-item-selected {
+
+    }
+
+    .strategy-item-unselected > .mud-icon-root {
+        display: none;
+    }
 </style>
+
 @if (!string.IsNullOrWhiteSpace(DisplayName) && (IsSelected || StrategyBucket.MatchesSearchQuery(this)) && (!CsvProcessor.HideOtherStrategiesOnSelect || !StrategyBucket.IsOtherStrategySelected(this)))
 {
     @if (Options != null)
     {
-        <MudListItem @bind-Expanded="_expanded" >
+        <MudListItem @bind-Expanded="_expanded" Class="@Class" >
             <ChildContent>
                 @MudListItemChildContent()
             </ChildContent>
@@ -46,7 +55,7 @@
     }
     else
     {
-        <MudListItem @bind-Expanded="_expanded" Text="@DisplayName">
+        <MudListItem @bind-Expanded="_expanded" Class="@Class" Text="@DisplayName">
             <ChildContent>
                 @MudListItemChildContent()
             </ChildContent>
@@ -55,6 +64,20 @@
 }
 
 @code {
+
+    private bool Expanded
+    {
+        get => _expanded;
+        set
+        {
+            if (value && CsvProcessor?.HideExpandUnselected == true && !IsSelected)
+            {
+                _expanded = false;
+                return;
+            }
+            _expanded = value;
+        }
+    }
     private bool _expanded;
     private bool _open;
     private bool _backDropOpen;
@@ -90,6 +113,8 @@
     [Parameter] public RenderFragment<IReadOnlyList<IReadOnlyDictionary<string, string?>>?>? DisplayReferenceCsv { get; set; }
     [Parameter] public RenderFragment<IReadOnlyList<IReadOnlyDictionary<string, string?>>?>? DisplayBeforeCsv { get; set; }
     [Parameter] public RenderFragment<IReadOnlyList<IReadOnlyDictionary<string, string?>>?>? DisplayAfterCsv { get; set; }
+
+    private string Class => IsSelected ? "strategy-item-selected" : "strategy-item-unselected";
 
     protected override void OnInitialized()
     {
@@ -144,7 +169,8 @@
 
     private RenderFragment? MudListItemChildContent()
     {
-        return @<div style="display: flex; flex-direction: row; align-items: center; gap: 15px;">
+        bool stopPropagation = CsvProcessor?.HideExpandUnselected == true ? true : false;
+        return @<div style="display: flex; flex-direction: row; align-items: center; gap: 15px;" @onclick:stopPropagation="stopPropagation">
                    <MudCheckBox T="bool" Disabled="StrategyBucket.IsOtherStrategySelected(this)"  Value="IsSelected" ValueChanged="SelectedChanged"></MudCheckBox>
                    @DisplayName
                    @if (!string.IsNullOrWhiteSpace(DescriptionStr) || Description != null || ReferenceCsvExample != null || 

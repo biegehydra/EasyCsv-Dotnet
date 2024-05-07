@@ -23,7 +23,7 @@
 @code
 {
     [Parameter] public override string? DisplayName { get; set; } = "String Split";
-    [Parameter] public override string? DescriptionStr { get; set; } = "Split all the values in $column_name on a specified delimiter into new columns";
+    [Parameter] public override string? DescriptionStr { get; set; } = "Will split all the values in $column_name, on a specified delimiter, into new columns";
     [Parameter] public override RenderFragment<string>? Description { get; set; }
     [Parameter] public bool Immediate { get; set; } = true;
     private bool AllowRun => _newColumnNames?.Contains(',') == true && !string.IsNullOrWhiteSpace(_delimiter);

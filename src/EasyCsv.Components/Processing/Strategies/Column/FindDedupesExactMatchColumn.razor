@@ -12,7 +12,7 @@
 {
     [Parameter] public bool Immediate { get; set; } = true;
     [Parameter] public override string? DisplayName { get; set; } = "Dedupe Exact Match";
-    [Parameter] public override string? DescriptionStr { get; set; } = "Find all the duplicate values in this column and let you select which to keep.";
+    [Parameter] public override string? DescriptionStr { get; set; } = "Will find all rows with duplicate values in $column_name and let you select which to keep.";
     [Parameter] public override RenderFragment<string>? Description { get; set; }
     [Parameter] public bool MustSelectRow { get; set; } = true;
     [Parameter] public bool MultiSelect { get; set; } = true;

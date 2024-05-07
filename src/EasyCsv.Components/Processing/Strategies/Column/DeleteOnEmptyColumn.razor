@@ -11,7 +11,7 @@
 @code
 {
     [Parameter] public override string? DisplayName { get; set; } = "Delete On Empty";
-    [Parameter] public override string? DescriptionStr { get; set; } = "Will delete any row where the value in this column is empty";
+    [Parameter] public override string? DescriptionStr { get; set; } = "Will delete any row where the value in $column_name is empty";
     [Parameter] public override RenderFragment<string>? Description { get; set; }
     [Parameter] public bool Immediate { get; set; } = true;
     private static Dictionary<string, string?>[] BeforeExample { get; } =

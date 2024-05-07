@@ -79,7 +79,7 @@
     [Parameter] public EventCallback<bool> AllowRunChanged { get; set; }
     [Parameter] public override string? DisplayName { get; set; }
     [Parameter] public override string? DescriptionStr { get; set; }
-    [Parameter] public override RenderFragment? Description { get; set; }
+    [Parameter] public override RenderFragment<string>? Description { get; set; }
     [Parameter] public IReadOnlyDictionary<string, string>? ExampleOptions { get; set; }
     [Parameter] public IReadOnlyList<IReadOnlyDictionary<string, string?>>? ReferenceCsvExample { get; set; }
     [Parameter] public IReadOnlyList<IReadOnlyDictionary<string, string?>>? BeforeCsvExample { get; set; }
@@ -174,13 +174,17 @@
                                           background-color: var(--mud-palette-grey-darker);
                                           padding: 10px; max-width: 600px;" Open="_backDropOpen" >
                            <ChildContent>
+                               <div style="display: flex; flex-direction: row; gap: 10px; justify-content: space-between;" >
+                                   <MudText Typo="Typo.h5">@DisplayName</MudText>
+                                   <MudIconButton Style="color: white;" Icon="@Icons.Material.Filled.Close" OnClick="() => { _backDropOpen = false; _open = false; }"></MudIconButton>
+                               </div>
                                @if (Description != null)
                                {
-                                   @Description
+                                   @Description(StrategyBucket.ColumnName)
                                }
                                else if (!string.IsNullOrWhiteSpace(DescriptionStr))
                                {
-                                   <MudText Typo="Typo.h6">@DescriptionStr</MudText>
+                                   <MudText Typo="Typo.h6" Style="font-weight: 300;" >@DescriptionStr.Replace("$column_name", $"'{StrategyBucket.ColumnName}'")</MudText>
                                }
                                @if (DisplayOptions != null)
                                {

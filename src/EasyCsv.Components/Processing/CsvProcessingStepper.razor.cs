@@ -45,6 +45,7 @@ public partial class CsvProcessingStepper
     [Parameter] public bool UseSearchBar { get; set; } = true;
     [Parameter] public double SearchDebounceInterval { get; set; } = 250;
     [Parameter] public string? ViewFullCsvOperationsIcon { get; set; } = InternalIcons.ColumnStrategies;
+    [Parameter] public bool HideExpandUnselected { get; set; }
     [Parameter] public string? ViewColumnOperationsIcon { get; set; } = InternalIcons.FullCsvStrategies;
     /// <summary>
     /// If true, operations will only run on filtered rows,

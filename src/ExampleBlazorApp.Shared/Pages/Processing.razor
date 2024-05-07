@@ -3,6 +3,14 @@
 @using System.Globalization
 @using EasyCsv.Processing.Strategies
 @page "/processing"
+<style>
+    @@media (min-width: 1280px) {
+        .mud-container.mud-container-maxwidth-lg {
+            max-width: 1600px;
+        }
+    }
+</style>
+
 <CsvProcessingStepper @ref="_csvProcessor" EasyCsv="_easyCsv" >
     <ColumnStrategies>
         <FindDedupesExactMatchColumn />

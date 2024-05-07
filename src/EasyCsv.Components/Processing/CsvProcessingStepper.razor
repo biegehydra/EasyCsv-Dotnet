@@ -26,25 +26,27 @@
                         <MudButton Disabled="@Busy" OnClick="_ => GoForwardStep()" Variant="Variant.Filled" Color="Color.Secondary">Go Forward Step</MudButton>
                     }
                 </div>
-                @if (ShowAddReferenceCsvs)
-                {
+                @{
                     var columnsNames = Runner.CurrentCsv.ColumnNames();
-                    <div style="display: flex; flex-direction: row; justify-content: space-between; gap: 20px; align-items: baseline;">
-                        @if (columnsNames != null && (columnsNames.Contains(InternalColumnNames.References) || columnsNames.Contains(InternalColumnNames.Tags)))
-                        {
-                            string text = TagsAndReferencesLocation == ColumnLocation.Beginning ? "Move tags and references columns to end" : "Move tags and references columns to beginning";
-                            <MudTooltip Text="@text" Delay="600">
-                                <MudIconButton Disabled="@Busy" Variant="Variant.Filled" Color="Color.Tertiary" Icon="@Icons.Material.Filled.SwapHoriz"
-                                               OnClick="() => TagsAndReferencesLocation = TagsAndReferencesLocation == ColumnLocation.End ? ColumnLocation.Beginning : ColumnLocation.End" />
-                            </MudTooltip>
-                        }
-                        <MudTooltip Text="Download Snapshot of Current Csv" Delay="600">
-                            <MudIconButton Variant="Variant.Filled" Color="Color.Info" Icon="@Icons.Material.Filled.Download"
-                                           Disabled="@Busy" OnClick="_ => OpenDownloadDialog()" />
-                        </MudTooltip>
-                        <CsvFileInput Disabled="@Busy" InputVariant="@FileInputVariant.Button" ButtonText="Add Reference Csv" OnCsvUpload="x => AddReferenceCsv(x)"></CsvFileInput>
-                    </div>
                 }
+                <div style="display: flex; flex-direction: row; justify-content: space-between; gap: 20px; align-items: baseline;">
+                    @if (AllowControlTagsAndReferencesLocation && columnsNames != null && (columnsNames.Contains(InternalColumnNames.References) || columnsNames.Contains(InternalColumnNames.Tags)))
+                    {
+                        string text = TagsAndReferencesLocation == ColumnLocation.Beginning ? "Move tags and references columns to end" : "Move tags and references columns to beginning";
+                        <MudTooltip Text="@text" Delay="600">
+                            <MudIconButton Disabled="@Busy" Variant="Variant.Filled" Color="Color.Tertiary" Icon="@Icons.Material.Filled.SwapHoriz"
+                                           OnClick="() => TagsAndReferencesLocation = TagsAndReferencesLocation == ColumnLocation.End ? ColumnLocation.Beginning : ColumnLocation.End" />
+                        </MudTooltip>
+                    }
+                    <MudTooltip Text="Download Snapshot of Current Csv" Delay="600">
+                        <MudIconButton Variant="Variant.Filled" Color="Color.Info" Icon="@Icons.Material.Filled.Download"
+                                       Disabled="@Busy" OnClick="_ => OpenDownloadDialog()" />
+                    </MudTooltip>
+                    @if (ShowAddReferenceCsv)
+                    {
+                        <CsvFileInput Disabled="@Busy" InputVariant="@FileInputVariant.Button" ButtonText="Add Reference Csv" OnCsvUpload="x => AddReferenceCsv(x)"></CsvFileInput>
+                    }
+                </div>
             </div>
             <br />
             <br />

@@ -7,6 +7,9 @@
         flex-direction: column;
         align-items: baseline;
     }
+    .strategy-example-tooltip {
+        margin-bottom: -6px;
+    }
     .example-options-container {
         display: flex;
         font-size: x-large;
@@ -140,7 +143,7 @@
                    @DisplayName
                    @if (!string.IsNullOrWhiteSpace(Description))
                    {
-                       <MudTooltip Delay="750"  Style="padding: 10px; max-width: 600px;" RootStyle="margin-bottom: -6px;">
+                       <MudTooltip Delay="750"  Style="padding: 10px; max-width: 600px;" RootClass="strategy-example-tooltip">
                            <TooltipContent>
                                <RenderDelay Delay="750" DelayComplete="() => { _open = true; StateHasChanged(); }" ></RenderDelay>
                            </TooltipContent>

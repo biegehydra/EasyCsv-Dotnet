@@ -66,17 +66,36 @@ else if (InputVariant == FileInputVariant.Button)
     }
     else
     {
-        <MudFileUpload T="IReadOnlyList<IBrowserFile>" Accept="@Accept" FilesChanged="OnFilesChanged">
-            <ButtonTemplate>
-                <MudButton  Disabled="@Disabled" HtmlTag="label"
-                            Variant="@ButtonVariant"
-                            Color="@ButtonColor"
-                            StartIcon="@ButtonIcon"
-                            for="@context">
-                    @ButtonText
-                </MudButton>
-            </ButtonTemplate>
-        </MudFileUpload>
+        @if (!string.IsNullOrWhiteSpace(ButtonTooltip))
+        {
+            <MudTooltip Text="@ButtonTooltip" Delay="ButtonTooltipDelay">
+                <MudFileUpload T="IReadOnlyList<IBrowserFile>" Accept="@Accept" FilesChanged="OnFilesChanged">
+                    <ButtonTemplate>
+                        <MudButton  Disabled="@Disabled" HtmlTag="label"
+                                    Variant="@ButtonVariant"
+                                    Color="@ButtonColor"
+                                    StartIcon="@ButtonIcon"
+                                    for="@context">
+                            @ButtonText
+                        </MudButton>
+                    </ButtonTemplate>
+                </MudFileUpload>
+            </MudTooltip>
+        }
+        else
+        {
+            <MudFileUpload T="IReadOnlyList<IBrowserFile>" Accept="@Accept" FilesChanged="OnFilesChanged">
+                <ButtonTemplate>
+                    <MudButton  Disabled="@Disabled" HtmlTag="label"
+                                Variant="@ButtonVariant"
+                                Color="@ButtonColor"
+                                StartIcon="@ButtonIcon"
+                                for="@context">
+                        @ButtonText
+                    </MudButton>
+                </ButtonTemplate>
+            </MudFileUpload>
+        }
     }
 }
 
@@ -91,6 +110,8 @@ else if (InputVariant == FileInputVariant.Button)
     [Parameter] public Color ButtonColor { get; set; } = Color.Primary;
     [Parameter] public string ButtonIcon { get; set; } = Icons.Material.Filled.AttachFile;
     [Parameter] public string ButtonText { get; set; } = "Select A Csv";
+    [Parameter] public string? ButtonTooltip { get; set; }
+    [Parameter] public double ButtonTooltipDelay { get; set; } = 750;
     [Parameter] public string Accept { get; set; } = ".csv";
     [Parameter] public int MaxFileSizeMbs { get; set; } = 30;
     private bool _disabled;
@@ -193,8 +214,9 @@ else if (InputVariant == FileInputVariant.Button)
         await OnFilesChanged(args.GetMultipleFiles());
     }
 
-    private async Task OnFilesChanged(IReadOnlyList<IBrowserFile> browserFiles)
+    private async Task OnFilesChanged(IReadOnlyList<IBrowserFile>? browserFiles)
     {
+        if (browserFiles == null) return;
         _loading = true;
         await InvokeAsync(StateHasChanged);
         try

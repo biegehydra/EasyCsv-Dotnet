@@ -76,7 +76,7 @@
     }
 
     .mud-table-dense th.mud-table-cell.csv-processing-table-th .mud-button-root {
-        padding-right: 5px;
+        
     }
 
     .mud-table-dense th.mud-table-cell.csv-processing-table-th {
@@ -145,8 +145,10 @@
                         <div class="csv-processing-table-th-name" >
                             @column
                         </div>
-                        <div class="csv-processing-table-th-button">
-                            <MudIconButton Disabled="Busy" Icon="@Stepper.ViewColumnOperationsIcon" OnClick="_ => TogglePopover(column)"></MudIconButton>
+                        <div class="csv-processing-table-th-button">                            
+                            <MudTooltip Delay="750" Text="View Column Strategies" >
+                                <MudIconButton Disabled="Busy" Icon="@Stepper.ViewColumnOperationsIcon" OnClick="_ => TogglePopover(column)"></MudIconButton>
+                            </MudTooltip>
                         </div>
                     </div>
                     @StrategyBucketPopover(column, anchorOrigin, transformOrigin, fullCsv: false)
@@ -381,7 +383,9 @@
                    {
                        <div class="csv-processing-toolbar-options">
                            <div class="csv-processing-toolbar-full-csv-operations-button">
-                               <MudIconButton Disabled="Busy" Icon="@Stepper.ViewFullCsvOperationsIcon" OnClick="_ => TogglePopover(InternalColumnNames.FullCsvOperations)"></MudIconButton>
+                               <MudTooltip Delay="750" Text="View Full Csv Strategies" >
+                                   <MudIconButton Disabled="Busy" Icon="@Stepper.ViewFullCsvOperationsIcon" OnClick="_ => TogglePopover(InternalColumnNames.FullCsvOperations)"></MudIconButton>
+                               </MudTooltip>
                                @StrategyBucketPopover(InternalColumnNames.FullCsvOperations, Origin.BottomLeft, Origin.TopRight, true)
                            </div>
                            <MudTextField Disabled="Busy" T="string" Class="csv-processing-toolbar-search-field" DebounceInterval="Stepper.SearchDebounceInterval" Immediate="true" Label="Search Csv"
@@ -396,7 +400,9 @@
                    else
                    {
                        <div class="csv-processing-toolbar-full-csv-operations-button">
-                           <MudIconButton Disabled="Busy" Icon="@Stepper.ViewFullCsvOperationsIcon" OnClick="_ => TogglePopover(InternalColumnNames.FullCsvOperations)"></MudIconButton>
+                           <MudTooltip Delay="750" Text="View Full Csv Strategies" >
+                               <MudIconButton Disabled="Busy" Icon="@Stepper.ViewFullCsvOperationsIcon" OnClick="_ => TogglePopover(InternalColumnNames.FullCsvOperations)"></MudIconButton>
+                           </MudTooltip>
                            @StrategyBucketPopover(InternalColumnNames.FullCsvOperations, Origin.BottomLeft, Origin.TopRight, true)
                        </div>
                    }

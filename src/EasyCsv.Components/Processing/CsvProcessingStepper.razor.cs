@@ -1,8 +1,5 @@
-﻿using CsvHelper;
-using EasyCsv.Components.Enums;
-using EasyCsv.Components.Internal;
+﻿using EasyCsv.Components.Enums;
 using EasyCsv.Components.Processing;
-using EasyCsv.Components.Processing.Dialogs;
 using EasyCsv.Core;
 using EasyCsv.Core.Extensions;
 using EasyCsv.Processing;
@@ -24,6 +21,7 @@ public partial class CsvProcessingStepper
     [Inject] public IDialogService? DialogService { get; set; }
     [Inject] public IJSRuntime? Js { get; set; }
     [Parameter] public IEasyCsv? EasyCsv { get; set; }
+    [Parameter] public string? EasyCsvFileName { get; set; }
     [Parameter] public bool UseSnackBar { get; set; } = true;
 
     /// <summary>
@@ -57,11 +55,13 @@ public partial class CsvProcessingStepper
     [Parameter] public ExpectedHeaderConfig ExpectedHeaderConfig { get; set; } = new (DefaultValueType.Text, false, null, AutoMatching.Lenient);
     public StrategyRunner? Runner { get; private set; }
     private CsvProcessingTable? _csvProcessingTable { get; set; }
+    private int _initialRowCount;
 
     protected override void OnParametersSet()
     {
         if (EasyCsv != null && Runner == null)
         {
+            _initialRowCount = EasyCsv.RowCount();
             Runner = new StrategyRunner(EasyCsv);
         }
     }
@@ -80,29 +80,31 @@ public partial class CsvProcessingStepper
         }
     }
 
-    public async Task<AggregateOperationDeleteResult> PerformColumnEvaluateDelete(ICsvColumnDeleteEvaluator evaluateDelete)
+    public async ValueTask<AggregateOperationDeleteResult> PerformColumnEvaluateDelete(ICsvColumnDeleteEvaluator evaluateDelete)
     {
         if (Runner == null) return _runnerNullAggregateDelete;
         if (_csvProcessingTable == null) return _processingTableNullAggregateDelete;
         var filteredRowIds = FilteredRowIds();
         var aggregateOperationDeleteResult = await Runner.PerformColumnEvaluateDelete(evaluateDelete, filteredRowIds);
+        CheckAddedCsvsAfterOperation(aggregateOperationDeleteResult);
         AddAggregateDeleteOperationResultSnackbar(aggregateOperationDeleteResult);
         await InvokeAsync(StateHasChanged);
         return aggregateOperationDeleteResult;
     }
 
-    public async Task<AggregateOperationDeleteResult> PerformRowEvaluateDelete(ICsvRowDeleteEvaluator evaluateDelete)
+    public async ValueTask<AggregateOperationDeleteResult> PerformRowEvaluateDelete(ICsvRowDeleteEvaluator evaluateDelete)
     {
         if (Runner == null) return _runnerNullAggregateDelete;
         if (_csvProcessingTable == null) return _processingTableNullAggregateDelete;
         var filteredRowIds = FilteredRowIds();
         var aggregateOperationDeleteResult = await Runner.RunRowEvaluateDelete(evaluateDelete, filteredRowIds);
+        CheckAddedCsvsAfterOperation(aggregateOperationDeleteResult);
         AddAggregateDeleteOperationResultSnackbar(aggregateOperationDeleteResult);
         await InvokeAsync(StateHasChanged);
         return aggregateOperationDeleteResult;
     }
 
-    public async Task<OperationResult> PerformDedupe(IFindDedupesOperation findDedupesOperation, int[]? referenceCsvIds)
+    public async ValueTask<OperationResult> PerformDedupe(IFindDedupesOperation findDedupesOperation, int[]? referenceCsvIds)
     {
         if (Runner?.CurrentCsv == null || DialogService == null) return _runnerNull;
         if (_csvProcessingTable == null) return _processingTableNull;
@@ -200,9 +202,8 @@ public partial class CsvProcessingStepper
                 Runner.AddToTimeline(clone);
             }
 
-            var operationResult = new OperationResult(true,
-                $"Dedupe operation complete - {deleted} rows deleted | {kept} rows kept");
-            AddOperationResultSnackbar(operationResult);
+            var operationResult = new OperationResult(true, $"Dedupe operation complete - {deleted+kept} rows evaluated | {deleted} rows deleted | {kept} rows kept");
+            OnAfterOperation(operationResult);
             await InvokeAsync(StateHasChanged);
             return operationResult;
         }
@@ -212,48 +213,54 @@ public partial class CsvProcessingStepper
         }
     }
 
-    public async Task<OperationResult> PerformReferenceStrategy(ICsvReferenceProcessor csvReferenceProcessor)
+    public async ValueTask<OperationResult> PerformReferenceStrategy(ICsvReferenceProcessor csvReferenceProcessor)
     {
         if (Runner == null) return _runnerNull;
         if (_csvProcessingTable == null) return _processingTableNull;
         var filteredRowIds = FilteredRowIds();
         var operationResult = await Runner.RunReferenceStrategy(csvReferenceProcessor, filteredRowIds);
-        AddOperationResultSnackbar(operationResult);
+        OnAfterOperation(operationResult);
         await InvokeAsync(StateHasChanged);
         return operationResult;
     }
 
-    public async Task<OperationResult> PerformColumnStrategy(ICsvColumnProcessor columnProcessor)
+    public async ValueTask<OperationResult> PerformColumnStrategy(ICsvColumnProcessor columnProcessor)
     {
         if (Runner == null) return _runnerNull;
         if (_csvProcessingTable == null) return _processingTableNull;
         var filteredRowIds = FilteredRowIds();
         var operationResult = await Runner.RunColumnStrategy(columnProcessor, filteredRowIds);
-        AddOperationResultSnackbar(operationResult, skipSuccess: true);
+        OnAfterOperation(operationResult, skipSuccessSnackbar: true);
         await InvokeAsync(StateHasChanged);
         return operationResult;
     }
 
-    public async Task<OperationResult> PerformRowStrategy(ICsvRowProcessor rowProcessor)
+    public async ValueTask<OperationResult> PerformRowStrategy(ICsvRowProcessor rowProcessor)
     {
         if (Runner == null) return _runnerNull;
         if (_csvProcessingTable == null) return _processingTableNull;
         var filteredRowIds = FilteredRowIds();
         var operationResult = await Runner.RunRowStrategy(rowProcessor, filteredRowIds);
-        AddOperationResultSnackbar(operationResult, skipSuccess: true);
+        OnAfterOperation(operationResult, skipSuccessSnackbar: true);
         await InvokeAsync(StateHasChanged);
         return operationResult;
     }
 
-    public async Task<OperationResult> PerformCsvStrategy(ICsvProcessor csvProcessor)
+    public async ValueTask<OperationResult> PerformCsvStrategy(ICsvProcessor csvProcessor)
     {
         if (Runner == null) return _runnerNull;
         if (_csvProcessingTable == null) return _processingTableNull;
         var filteredRowIds = FilteredRowIds();
         var operationResult = await Runner.RunCsvStrategy(csvProcessor, filteredRowIds);
-        AddOperationResultSnackbar(operationResult);
+        OnAfterOperation(operationResult);
         await InvokeAsync(StateHasChanged);
         return operationResult;
+    }
+
+    private void OnAfterOperation<T>(T operationResult, bool skipSuccessSnackbar = false) where T : IOperationResult
+    {
+        AddOperationResultSnackbar(operationResult, skipSuccess: skipSuccessSnackbar);
+        CheckAddedCsvsAfterOperation(operationResult);
     }
 
     private HashSet<int>? FilteredRowIds()
@@ -267,7 +274,7 @@ public partial class CsvProcessingStepper
         return filteredIndexes;
     }
 
-    private void AddOperationResultSnackbar(OperationResult operationResult, bool skipSuccess = false)
+    private void AddOperationResultSnackbar<T>(T operationResult, bool skipSuccess = false) where T : IOperationResult
     {
         if (operationResult.Success && UseSnackBar && !string.IsNullOrWhiteSpace(operationResult.Message) && !skipSuccess)
         {

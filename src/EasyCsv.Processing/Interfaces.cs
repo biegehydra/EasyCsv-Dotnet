@@ -101,7 +101,7 @@ public readonly struct DuplicateGrouping
     }
 }
 
-public readonly struct OperationResult
+public readonly struct OperationResult : IOperationResult
 {
     public OperationResult(bool success, string? message = null, double progress = 0)
     {
@@ -114,7 +114,7 @@ public readonly struct OperationResult
     public string? Message { get; } 
 }
 
-public readonly struct OperationDeleteResult
+public readonly struct OperationDeleteResult : IOperationResult
 {
     public OperationDeleteResult(bool success, bool delete, string? message = null, double progress = 0)
     {
@@ -129,7 +129,13 @@ public readonly struct OperationDeleteResult
     public string? Message { get; }
 }
 
-public readonly struct AggregateOperationDeleteResult
+internal interface IOperationResult
+{
+    public string? Message { get; }
+    public bool Success { get; }
+}
+
+public readonly struct AggregateOperationDeleteResult : IOperationResult
 {
     public AggregateOperationDeleteResult(bool success, int deleted, string? message = null)
     {

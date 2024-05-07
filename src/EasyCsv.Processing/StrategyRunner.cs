@@ -27,7 +27,7 @@ public class StrategyRunner
         _tagsCache.Add(AllUniqueTags());
     }
 
-    public async Task<AggregateOperationDeleteResult> PerformColumnEvaluateDelete(ICsvColumnDeleteEvaluator evaluateDelete, ICollection<int>? filteredRowIds)
+    public async ValueTask<AggregateOperationDeleteResult> PerformColumnEvaluateDelete(ICsvColumnDeleteEvaluator evaluateDelete, ICollection<int>? filteredRowIds)
     {
         if (CurrentCsv == null) return new AggregateOperationDeleteResult(false, 0, "Component not initialized yet.");
         if (evaluateDelete == null!) return new AggregateOperationDeleteResult(false, 0, "CsvColumnDeleteEvaluator was null");
@@ -54,7 +54,7 @@ public class StrategyRunner
         return new AggregateOperationDeleteResult(true, rowsToDelete.Count, message);
     }
 
-    public async Task<AggregateOperationDeleteResult> RunRowEvaluateDelete(ICsvRowDeleteEvaluator evaluateDelete, ICollection<int>? filteredRowIds)
+    public async ValueTask<AggregateOperationDeleteResult> RunRowEvaluateDelete(ICsvRowDeleteEvaluator evaluateDelete, ICollection<int>? filteredRowIds)
     {
         if (CurrentCsv == null) return new AggregateOperationDeleteResult(false, 0, "Component not initialized yet.");
         if (evaluateDelete == null!) return new AggregateOperationDeleteResult(false, 0, "CsvRowDeleteEvaluator was null");
@@ -82,7 +82,7 @@ public class StrategyRunner
         return new AggregateOperationDeleteResult(true, rowsToDelete.Count, message);
     }
 
-    public async Task<OperationResult> RunReferenceStrategy(ICsvReferenceProcessor csvReferenceProcessor, ICollection<int>? filteredRowIds)
+    public async ValueTask<OperationResult> RunReferenceStrategy(ICsvReferenceProcessor csvReferenceProcessor, ICollection<int>? filteredRowIds)
     {
         if (csvReferenceProcessor == null!) return new OperationResult(false, "CsvReferenceProcessor was null");
         int referenceId = csvReferenceProcessor.ReferenceCsvId;
@@ -100,7 +100,7 @@ public class StrategyRunner
         return operationResult;
     }
 
-    public async Task<OperationResult> RunColumnStrategy(ICsvColumnProcessor columnProcessor, ICollection<int>? filteredRowIds)
+    public async ValueTask<OperationResult> RunColumnStrategy(ICsvColumnProcessor columnProcessor, ICollection<int>? filteredRowIds)
     {
         if (CurrentCsv == null) return new OperationResult(false, "Component not initialized yet.");
         var clone = CurrentCsv.Clone();
@@ -117,7 +117,7 @@ public class StrategyRunner
         return new OperationResult(true);
     }
 
-    public async Task<OperationResult> RunRowStrategy(ICsvRowProcessor rowProcessor, ICollection<int>? filteredRowIds)
+    public async ValueTask<OperationResult> RunRowStrategy(ICsvRowProcessor rowProcessor, ICollection<int>? filteredRowIds)
     {
         if (CurrentCsv == null) return new OperationResult(false, "Component not initialized yet.");
         var clone = CurrentCsv.Clone();
@@ -133,7 +133,7 @@ public class StrategyRunner
         return new OperationResult(true);
     }
 
-    public async Task<OperationResult> RunCsvStrategy(ICsvProcessor csvProcessor, ICollection<int>? filteredRowIds)
+    public async ValueTask<OperationResult> RunCsvStrategy(ICsvProcessor csvProcessor, ICollection<int>? filteredRowIds)
     {
         if (CurrentCsv == null) return new OperationResult(false, "Component not initialized yet.");
         var clone = CurrentCsv.Clone();

@@ -17,7 +17,7 @@ public class StrategyRunner
     public IReadOnlyList<(IEasyCsv Csv, string FileName)> ReferenceCsvs => _referenceCsvs;
     public IReadOnlyList<IEasyCsv> CachedCsvs => _cachedCsvs;
     private readonly List<IEasyCsv> _cachedCsvs = new();
-    private List<HashSet<string>> _tagsCache = new();
+    private readonly List<HashSet<string>> _tagsCache = new();
     public IReadOnlyList<ICollection<string>> TagsCache => _tagsCache;
 
     public StrategyRunner(IEasyCsv baseCsv)

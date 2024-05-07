@@ -1,4 +1,5 @@
 ﻿using EasyCsv.Components.Enums;
+using EasyCsv.Components.Internal;
 using EasyCsv.Components.Processing;
 using EasyCsv.Core;
 using EasyCsv.Core.Extensions;
@@ -36,7 +37,7 @@ public partial class CsvProcessingStepper
     [Parameter] public bool HideOtherStrategiesOnSelect { get; set; } = true;
     [Parameter] public bool SearchBar { get; set; } = true;
     [Parameter] public bool ShowColumnNameInStrategySelect { get; set; } = true;
-    [Parameter] public bool ShowAddReferenceCsvs { get; set; } = true;
+    [Parameter] public bool ShowAddReferenceCsv { get; set; } = true;
     [Parameter] public RunOperationNoneSelectedBehaviour RunOperationNoneSelectedBehaviour { get; set; } = RunOperationNoneSelectedBehaviour.Hidden;
     [Parameter] public ColumnLocation TagsAndReferencesLocation { get; set; } = ColumnLocation.Beginning;
     [Parameter] public bool AllowControlTagsAndReferencesLocation { get; set; } = true;
@@ -54,6 +55,7 @@ public partial class CsvProcessingStepper
     [Parameter] public string DefaultDownloadFileName { get; set; } = "WorkingCsvSnapshot";
     [Parameter] public bool AutoControlExpandOptionsOnSelect { get; set; } = true;
     [Parameter] public bool OpenDownloadWithAllColumnsSelected { get; set; } = true; 
+    [Parameter] public bool AutoSelectAllColumnsToSearch { get; set; } = true; 
     public StrategyRunner? Runner { get; private set; }
     private CsvProcessingTable? _csvProcessingTable { get; set; }
     private int _initialRowCount;

@@ -6,8 +6,9 @@ using EasyCsv.Core;
 using EasyCsv.Core.Extensions;
 
 namespace EasyCsv.Processing.Strategies;
-public class DivideAndReplicateStrategy : ICsvProcessor
+public class DivideAndReplicateStrategy : IFullCsvProcessor
 {
+    public bool OperatesOnlyOnFilteredRows => true;
     private readonly string _columnName;
     private readonly Func<object?, object?[]?> _divideFunc;
     public DivideAndReplicateStrategy(string columnName, Func<object?, object?[]?> divideFunc)

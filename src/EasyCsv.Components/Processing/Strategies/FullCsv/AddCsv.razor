@@ -16,7 +16,7 @@
 }
 @if (CsvProcessor.Runner?.CurrentCsv != null)
 {
-    <StrategyItem DisplayName="@DisplayName" DescriptionStr="@DescriptionStr" Description="Description" AllowRun="AllowRun" StrategyPicked="x => RunAddCsv(x)" >
+    <StrategyItem DisplayName="@DisplayName" OnlyOperatesOnFilteredRows="OnlyOperatesOnFilteredRows" DescriptionStr="@DescriptionStr" Description="Description" AllowRun="AllowRun" StrategyPicked="x => RunAddCsv(x)" >
         <Options>
             <MudListItem>
                 <div class="add-csv-container">
@@ -59,6 +59,7 @@
     [Parameter] public override string? DescriptionStr { get; set; } = "Adds all the rows in a specified csv to the Working Csv.";
     [Parameter] public override RenderFragment<string>? Description { get; set; }
     [Parameter] public ExpectedHeaderConfig ExpectedHeaderConfig { get; set; } = new(DefaultValueType.Text, false, null, AutoMatching.Lenient);
+    [Parameter] public override bool OnlyOperatesOnFilteredRows { get; set; } = false;
 
     private bool AllowRun => _csvToAdd != null && _tableHeaderMatcher != null;
     private CsvTableHeaderMatcher? _tableHeaderMatcher;

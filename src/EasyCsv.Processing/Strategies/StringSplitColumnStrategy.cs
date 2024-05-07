@@ -5,10 +5,10 @@ using System.Threading.Tasks;
 using EasyCsv.Core;
 
 namespace EasyCsv.Processing.Strategies;
-public class StringSplitColumnStrategy : ICsvProcessor
+public class StringSplitColumnStrategy : IFullCsvProcessor
 {
+    public bool OperatesOnlyOnFilteredRows => true;
     private readonly SplitColumnStrategy _splitColumnStrategy;
-
     public StringSplitColumnStrategy(string columnToSplit, string[] newColumnNames, string delimiter, bool removeSplitColumn, StringSplitOptions stringSplitOptions = StringSplitOptions.RemoveEmptyEntries)
     {
         if (newColumnNames.Length == 0) throw new ArgumentException("New column names must be specified.");

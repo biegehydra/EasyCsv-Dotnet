@@ -100,9 +100,6 @@
         }
     }
     [Parameter] public EventCallback<bool> AllowRunChanged { get; set; }
-    [Parameter] public override string? DisplayName { get; set; }
-    [Parameter] public override string? DescriptionStr { get; set; }
-    [Parameter] public override RenderFragment<string>? Description { get; set; }
     [Parameter] public IReadOnlyDictionary<string, string>? ExampleOptions { get; set; }
     [Parameter] public IReadOnlyList<IReadOnlyDictionary<string, string?>>? ReferenceCsvExample { get; set; }
     [Parameter] public IReadOnlyList<IReadOnlyDictionary<string, string?>>? BeforeCsvExample { get; set; }
@@ -246,6 +243,14 @@
                                }
                            </ChildContent>
                        </MudPopover>
+                       @if (CsvProcessor?.CsvProcessingTable?.IsFiltered() == true)
+                       {
+                           var icon = OnlyOperatesOnFilteredRows ? Icons.Material.Outlined.FilterAlt : Icons.Material.Outlined.FilterAltOff;
+                           var text = OnlyOperatesOnFilteredRows ? "Filtered Strategy: Only operates on filtered rows" : "Unfiltered Strategy: Operates on ALL rows";
+                            <MudTooltip Delay="750" Text="@text" >
+                               <MudIcon Icon="@icon"></MudIcon>
+                           </MudTooltip>
+                       }
                    }
                </div>;
     }

@@ -7,6 +7,7 @@ using EasyCsv.Core.Extensions;
 namespace EasyCsv.Processing.Strategies;
 public class FindDedupesExactMatchColumnStrategy : IFindDedupesOperation
 {
+    public bool OperatesOnlyOnFilteredRows => true;
     public string ColumnName { get; }
     public IEqualityComparer<string> Comparer { get; }
     public bool MultiSelect { get; }

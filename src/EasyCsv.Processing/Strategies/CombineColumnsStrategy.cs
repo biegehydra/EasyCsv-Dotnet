@@ -8,8 +8,9 @@ using EasyCsv.Core.Extensions;
 
 namespace EasyCsv.Processing.Strategies;
 
-public class CombineColumnsStrategy : ICsvProcessor
+public class CombineColumnsStrategy : IFullCsvProcessor
 {
+    public bool OperatesOnlyOnFilteredRows => true;
     private readonly Func<string?[], string?> _combineValuesFunc;
     private readonly string[] _columnsToJoin;
     private readonly bool _combineIfNotAllPresent;

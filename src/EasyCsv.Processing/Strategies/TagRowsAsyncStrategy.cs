@@ -7,8 +7,9 @@ using EasyCsv.Core.Enums;
 using EasyCsv.Core.Extensions;
 
 namespace EasyCsv.Processing.Strategies;
-public class TagRowsAsyncStrategy : ICsvProcessor
+public class TagRowsAsyncStrategy : IFullCsvProcessor
 {
+    public bool OperatesOnlyOnFilteredRows => true;
     public string ColumnName { get; }
     private readonly Func<CsvRow, IList<string>, Task> _addTagsFunc;
     public TagRowsAsyncStrategy(string columnName, Func<CsvRow, IList<string>, Task> addTagsFunc)

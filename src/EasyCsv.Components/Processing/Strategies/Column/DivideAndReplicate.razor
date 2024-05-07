@@ -5,7 +5,7 @@
 {
     throw new ArgumentException("EasyCsv: Attempted to render strategy options not within CsvProcessingStepper", nameof(CsvProcessingStepper));
 }
-<StrategyItem DisplayName="@DisplayName" DescriptionStr="@DescriptionStr" Description="Description" BeforeCsvExample="BeforeExample" AfterCsvExample="AfterExample" ExampleOptions="ExampleOptions" AllowRun="AllowRun" StrategyPicked="RunDivideAndReplicate">
+<StrategyItem DisplayName="@DisplayName" OnlyOperatesOnFilteredRows="OnlyOperatesOnFilteredRows" DescriptionStr="@DescriptionStr" Description="Description" BeforeCsvExample="BeforeExample" AfterCsvExample="AfterExample" ExampleOptions="ExampleOptions" AllowRun="AllowRun" StrategyPicked="RunDivideAndReplicate">
     <Options>
         <MudListItem>
             <MudTextField Disabled="context" Placeholder="Delimiter" Immediate="true" Variant="Variant.Outlined" @bind-Value="_delimiter"></MudTextField>
@@ -18,7 +18,6 @@
     [Parameter] public bool Immediate { get; set; } = true;
     [Parameter] public override string? DisplayName { get; set; } = "Divide And Replicate";
     [Parameter] public override string? DescriptionStr { get; set; } = "Will split the values in $column_name, on a specified delimiter, into parts and then create a copy of the row for each part";
-    [Parameter] public override RenderFragment<string>? Description { get; set; }
 
     private static readonly Dictionary<string, string> ExampleOptions = new Dictionary<string, string>()
     {

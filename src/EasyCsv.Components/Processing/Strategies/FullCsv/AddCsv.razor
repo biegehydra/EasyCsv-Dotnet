@@ -54,7 +54,7 @@
     [Parameter] public bool Immediate { get; set; } = true;
     [Parameter] public override string? DisplayName { get; set; } = "Add Csv";
     [Parameter] public override string? DescriptionStr { get; set; } = "Adds all the rows in a specified csv to the Working Csv.";
-    [Parameter] public override RenderFragment? Description { get; set; }
+    [Parameter] public override RenderFragment<string>? Description { get; set; }
     [Parameter] public ExpectedHeaderConfig ExpectedHeaderConfig { get; set; } = new(DefaultValueType.Text, false, null, AutoMatching.Lenient);
 
     private bool AllowRun => _csvToAdd != null && _tableHeaderMatcher != null;

@@ -5,13 +5,14 @@
 {
     throw new ArgumentException("EasyCsv: Attempted to render strategy options not within CsvProcessingStepper", nameof(CsvProcessingStepper));
 }
-<StrategyItem DisplayName="@DisplayName" DescriptionStr="@DescriptionStr" BeforeCsvExample="BeforeExample" AfterCsvExample="AfterExample" AllowRun="true" StrategyPicked="SplitPicked">
+<StrategyItem DisplayName="@DisplayName" DescriptionStr="@DescriptionStr" Description="Description" BeforeCsvExample="BeforeExample" AfterCsvExample="AfterExample" AllowRun="true" StrategyPicked="SplitPicked">
 </StrategyItem>
 
 @code
 {
     [Parameter] public override string? DisplayName { get; set; } = "Delete On Empty";
     [Parameter] public override string? DescriptionStr { get; set; } = "Will delete any row where the value in this column is empty";
+    [Parameter] public override RenderFragment<string>? Description { get; set; }
     [Parameter] public bool Immediate { get; set; } = true;
     private static Dictionary<string, string?>[] BeforeExample { get; } =
     [

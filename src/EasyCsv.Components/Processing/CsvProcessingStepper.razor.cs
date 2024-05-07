@@ -28,7 +28,8 @@ public partial class CsvProcessingStepper
     /// If true, this component will make a clone of the provided
     /// EasyCsv and operate on the clone
     /// </summary>
-    [Parameter] public RenderFragment<string>? ProcessingOptions { get; set; }
+    [Parameter] public RenderFragment<string>? ColumnStrategies { get; set; }
+    [Parameter] public RenderFragment? FullCsvStrategies { get; set; }
     [Parameter] public RenderFragment? ErrorBoundaryContent { get; set; }
 
     [Parameter] public CloseBehaviour CloseBehaviour { get; set; } = Enums.CloseBehaviour.CloseButtonAndClickAway;
@@ -39,8 +40,10 @@ public partial class CsvProcessingStepper
     [Parameter] public RunOperationNoneSelectedBehaviour RunOperationNoneSelectedBehaviour { get; set; } = RunOperationNoneSelectedBehaviour.Hidden;
     [Parameter] public ColumnLocation TagsAndReferencesLocation { get; set; } = ColumnLocation.Beginning;
     [Parameter] public bool AllowControlTagsAndReferencesLocation { get; set; } = true;
-    [Parameter] public bool UseToolbar { get; set; } = true;
+    [Parameter] public bool UseSearchBar { get; set; } = true;
     [Parameter] public double SearchDebounceInterval { get; set; } = 250;
+    [Parameter] public string? ViewFullCsvOperationsIcon { get; set; } = InternalIcons.ColumnStrategies;
+    [Parameter] public string? ViewColumnOperationsIcon { get; set; } = InternalIcons.FullCsvStrategies;
     /// <summary>
     /// If true, operations will only run on filtered rows,
     /// otherwise they will run on every row
@@ -50,9 +53,7 @@ public partial class CsvProcessingStepper
     [Parameter] public string MaxStrategySelectHeight { get; set; } = "600px";
     [Parameter] public string DefaultDownloadFileName { get; set; } = "WorkingCsvSnapshot";
     [Parameter] public bool AutoControlExpandOptionsOnSelect { get; set; } = true;
-    [Parameter] public bool ShowAddCsv { get; set; }
     [Parameter] public bool OpenDownloadWithAllColumnsSelected { get; set; } = true; 
-    [Parameter] public ExpectedHeaderConfig ExpectedHeaderConfig { get; set; } = new (DefaultValueType.Text, false, null, AutoMatching.Lenient);
     public StrategyRunner? Runner { get; private set; }
     private CsvProcessingTable? _csvProcessingTable { get; set; }
     private int _initialRowCount;

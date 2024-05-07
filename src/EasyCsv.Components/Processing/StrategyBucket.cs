@@ -32,7 +32,7 @@ public class StrategyBucket
 
     public IEnumerable<StrategyItem> Search(string query)
     {
-        return _strategies.Where(x => x.DisplayName?.Contains(query) == true || x.Description?.Contains(query) == true);
+        return _strategies.Where(x => x.DisplayName?.Contains(query) == true || x.DescriptionStr?.Contains(query) == true);
     }
 
     public async Task OnAllowRunChanged()
@@ -93,7 +93,7 @@ public class StrategyBucket
     internal bool MatchesSearchQuery(StrategyItem strategyItem)
     {
         return string.IsNullOrWhiteSpace(SearchQuery) || strategyItem.DisplayName?.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase) == true ||
-               strategyItem.Description?.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase) == true;
+               strategyItem.DescriptionStr?.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase) == true;
     }
 
     internal void SetOrigins(Origin anchorOrigin, Origin transformOrigin)

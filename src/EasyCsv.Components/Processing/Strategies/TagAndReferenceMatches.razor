@@ -5,7 +5,7 @@
 {
     throw new ArgumentException("EasyCsv: Attempted to render strategy options not within CsvProcessingStepper", nameof(CsvProcessingStepper));
 }
-<StrategyItem DisplayName="@DisplayName" Description="@Description" BeforeCsvExample="BeforeExample" AfterCsvExample="AfterExample" ExampleOptions="ExampleOptions" AllowRun="AllowRun" StrategyPicked="DivideAndReplicate">
+<StrategyItem DisplayName="@DisplayName" DescriptionStr="@DescriptionStr" BeforeCsvExample="BeforeExample" AfterCsvExample="AfterExample" ExampleOptions="ExampleOptions" AllowRun="AllowRun" StrategyPicked="DivideAndReplicate">
     <Options>
         <MudListItem>
             <ReferenceCsvSelect  Immediate="@Immediate" Disabled="context" @bind-ReferenceCsvId="_referenceCsvId"></ReferenceCsvSelect>
@@ -22,7 +22,7 @@
 @code
 {
     [Parameter] public override string? DisplayName { get; set; } = "Reference Compare And Tag";
-    [Parameter] public override string? Description { get; set; } = "Compare all the values in a column in the csv being processing to all the values in the column of a reference csv. On any exact matches, the specified tag will be added to the row, and a link to the reference table will be created.";
+    [Parameter] public override string? DescriptionStr { get; set; } = "Compare all the values in a column in the csv being processing to all the values in the column of a reference csv. On any exact matches, the specified tag will be added to the row, and a link to the reference table will be created.";
     [Parameter] public bool Immediate { get; set; } = true;
 
     private static readonly Dictionary<string, string> ExampleOptions = new Dictionary<string, string>()

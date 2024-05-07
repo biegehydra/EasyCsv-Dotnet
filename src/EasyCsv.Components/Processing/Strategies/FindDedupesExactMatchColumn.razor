@@ -5,14 +5,14 @@
 {
     throw new ArgumentException("EasyCsv: Attempted to render strategy options not within CsvProcessingStepper", nameof(CsvProcessingStepper));
 }
-<StrategyItem DisplayName="@DisplayName" Description="@Description" AllowRun="AllowRun" StrategyPicked="RunDivideAndReplicate">
+<StrategyItem DisplayName="@DisplayName" DescriptionStr="@DescriptionStr" AllowRun="AllowRun" StrategyPicked="RunDivideAndReplicate">
 </StrategyItem>
 
 @code
 {
     [Parameter] public bool Immediate { get; set; } = true;
     [Parameter] public override string? DisplayName { get; set; } = "Dedupe Exact Match";
-    [Parameter] public override string? Description { get; set; } = "Find all the duplicate values in this column and let you select which to keep.";
+    [Parameter] public override string? DescriptionStr { get; set; } = "Find all the duplicate values in this column and let you select which to keep.";
     [Parameter] public bool MustSelectRow { get; set; } = true;
     [Parameter] public bool MultiSelect { get; set; } = true;
 

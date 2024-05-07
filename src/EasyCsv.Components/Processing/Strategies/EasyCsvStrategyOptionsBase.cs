@@ -10,5 +10,6 @@ public class StrategyBucketItemBase : ComponentBase
 public class StrategyItemBase : StrategyBucketItemBase
 {
     [Parameter] public virtual string? DisplayName { get; set; } 
-    [Parameter] public virtual string? Description { get; set; }
+    [Parameter] public virtual string? DescriptionStr { get; set; }
+    [Parameter] public virtual RenderFragment? Description { get; set; }
 }

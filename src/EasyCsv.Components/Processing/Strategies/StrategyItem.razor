@@ -77,13 +77,18 @@
     }
     [Parameter] public EventCallback<bool> AllowRunChanged { get; set; }
     [Parameter] public override string? DisplayName { get; set; }
-    [Parameter] public override string? Description { get; set; }
+    [Parameter] public override string? DescriptionStr { get; set; }
+    [Parameter] public override RenderFragment? Description { get; set; }
     [Parameter] public IReadOnlyDictionary<string, string>? ExampleOptions { get; set; }
     [Parameter] public IReadOnlyList<IReadOnlyDictionary<string, string?>>? ReferenceCsvExample { get; set; }
     [Parameter] public IReadOnlyList<IReadOnlyDictionary<string, string?>>? BeforeCsvExample { get; set; }
     [Parameter] public IReadOnlyList<IReadOnlyDictionary<string, string?>>? AfterCsvExample { get; set; }
     [Parameter] public EventCallback<string> StrategyPicked { get; set; }
     [Parameter] public RenderFragment<bool>? Options { get; set; }
+    [Parameter] public RenderFragment<IReadOnlyDictionary<string, string?>?>? DisplayOptions { get; set; }
+    [Parameter] public RenderFragment<IReadOnlyList<IReadOnlyDictionary<string, string?>>?>? DisplayReferenceCsv { get; set; }
+    [Parameter] public RenderFragment<IReadOnlyList<IReadOnlyDictionary<string, string?>>?>? DisplayBeforeCsv { get; set; }
+    [Parameter] public RenderFragment<IReadOnlyList<IReadOnlyDictionary<string, string?>>?>? DisplayAfterCsv { get; set; }
 
     protected override void OnInitialized()
     {
@@ -141,7 +146,9 @@
         return @<div style="display: flex; flex-direction: row; align-items: center; gap: 15px;">
                    <MudCheckBox T="bool" Disabled="StrategyBucket.IsOtherStrategySelected(this)"  Value="IsSelected" ValueChanged="SelectedChanged"></MudCheckBox>
                    @DisplayName
-                   @if (!string.IsNullOrWhiteSpace(Description))
+                   @if (!string.IsNullOrWhiteSpace(DescriptionStr) || Description != null || ReferenceCsvExample != null || 
+                                                                   BeforeCsvExample != null || AfterCsvExample != null || 
+                                                                   ExampleOptions != null)   
                    {
                        <MudTooltip Delay="750"  Style="padding: 10px; max-width: 600px;" RootClass="strategy-example-tooltip">
                            <TooltipContent>
@@ -166,11 +173,46 @@
                                           background-color: var(--mud-palette-grey-darker);
                                           padding: 10px; max-width: 600px;" Open="_backDropOpen" >
                            <ChildContent>
-                               <MudText Typo="Typo.h6">@Description</MudText>
-                               @ExampleOptionsFragment(ExampleOptions)
-                               @ExampleCsv(ReferenceCsvExample, "Reference Csv")
-                               @ExampleCsv(BeforeCsvExample, "Before Operation")
-                               @ExampleCsv(AfterCsvExample, "After Operation")
+                               @if (Description != null)
+                               {
+                                   @Description
+                               }
+                               else if (!string.IsNullOrWhiteSpace(DescriptionStr))
+                               {
+                                   <MudText Typo="Typo.h6">@DescriptionStr</MudText>
+                               }
+                               @if (DisplayOptions != null)
+                               {
+                                   @DisplayOptions(ExampleOptions)
+                               }
+                               else
+                               {
+                                   @ExampleOptionsFragment(ExampleOptions)
+                               }
+                               @if (DisplayReferenceCsv != null)
+                               {
+                                   @DisplayReferenceCsv(ReferenceCsvExample)
+                               }
+                               else
+                               {
+                                   @ExampleCsv(ReferenceCsvExample, "Reference Csv")
+                               }
+                               @if (DisplayBeforeCsv != null)
+                               {
+                                   @DisplayBeforeCsv(AfterCsvExample)
+                               }
+                               else
+                               {
+                                   @ExampleCsv(BeforeCsvExample, "Before Operation")
+                               }
+                               @if (DisplayAfterCsv != null)
+                               {
+                                   @DisplayAfterCsv(AfterCsvExample)
+                               }
+                               else
+                               {
+                                   @ExampleCsv(AfterCsvExample, "After Operation")
+                               }
                            </ChildContent>
                        </MudPopover>
                    }

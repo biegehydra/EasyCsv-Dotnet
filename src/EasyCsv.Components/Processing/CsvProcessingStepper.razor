@@ -11,7 +11,7 @@
 
 <ErrorBoundary >
     <ChildContent>
-        @if (Runner?.CurrentCsv != null && ProcessingOptions != null)
+        @if (Runner?.CurrentCsv != null && (ColumnStrategies != null || FullCsvStrategies != null))
         {
             <MudText Typo="Typo.h5">Current Step: @(Runner.CurrentIndex + 1)</MudText>
             <br />
@@ -43,16 +43,12 @@
                                            Disabled="@Busy" OnClick="_ => OpenDownloadDialog()" />
                         </MudTooltip>
                         <CsvFileInput Disabled="@Busy" InputVariant="@FileInputVariant.Button" ButtonText="Add Reference Csv" OnCsvUpload="x => AddReferenceCsv(x)"></CsvFileInput>
-                        @if (ShowAddCsv)
-                        {
-                            <CsvFileInput Disabled="@Busy" InputVariant="@FileInputVariant.Button" ButtonText="Add Csv" OnCsvUpload="x => BeginAddCsv(x)"></CsvFileInput>
-                        }
                     </div>
                 }
             </div>
             <br />
             <br />
-            <CsvProcessingTable @ref="_csvProcessingTable" Busy="@Busy" ProcessingOptions="ProcessingOptions" Stepper="this" EasyCsv="Runner.CurrentCsv" />
+            <CsvProcessingTable @ref="_csvProcessingTable" Busy="@Busy" ColumnOptions="ColumnStrategies" FullCsvOptions="FullCsvStrategies"  Stepper="this" EasyCsv="Runner.CurrentCsv" />
         }
     </ChildContent>
     <ErrorContent>
@@ -102,21 +98,6 @@
             <MudButton Disabled="string.IsNullOrWhiteSpace(_fileName)" StartIcon="@Icons.Material.Filled.Download" Variant="Variant.Filled" Color="Color.Info" OnClick="async _ => await DownloadSnapShot()">Download</MudButton>
         </DialogActions>
     </MudDialog>
-    @if (_csvToAdd != null)
-    {
-        <MudDialog @bind-IsVisible="_isAddDataDialogVisible" Class="csv-processing-add-popup" Style="min-width: 1000px;">
-            <TitleContent>
-                <MudText Class="mb-2" Typo="Typo.h5"><b>Map Columns To Working Csv</b></MudText>
-            </TitleContent>
-            <DialogContent>
-                <CsvTableHeaderMatcher @ref="_tableHeaderMatcher" ExpectedHeaderThStr="Current Header" FinishedAutoMatching="x => Busy = false" AutoMatch="AutoMatching.Lenient" ExpectedHeaders="_expectedHeaders" Frozen="_busyAddCsv" Csv="_csvToAdd"/>
-            </DialogContent>
-            <DialogActions>
-                <MudButton Disabled="_busyAddCsv" StartIcon="@Icons.Material.Filled.Close" Variant="Variant.Outlined" Color="Color.Default" OnClick="x => _isAddDataDialogVisible = false">Cancel</MudButton>
-                <MudButton Disabled="_busyAddCsv" StartIcon="@Icons.Material.Filled.Download" Variant="Variant.Filled" Color="Color.Info" OnClick="AddCsv">Add Data</MudButton>
-            </DialogActions>
-        </MudDialog>
-    }
 }
 <DuplicateRowsResolver Stepper="this" DuplicateGroup="_duplicateGroup" DuplicateValue="@_duplicateValue" @bind-IsVisible="_duplicateRowsResolveVisible"
                             SingleComplete="SingleComplete"  MultiComplete="MultiComplete" MultiSelect="_multiSelect" 
@@ -149,13 +130,6 @@
         _singleResolveDuplicateRowTaskSource!.SetResult(result);
     }
 
-
-    private CsvTableHeaderMatcher? _tableHeaderMatcher;
-    private bool _isAddDataDialogVisible;
-    private IEasyCsv? _csvToAdd;
-    private string? _csvToAddFileName;
-    private ICollection<ExpectedHeader>? _expectedHeaders;
-
     private bool _isDownloadDialogVisible = false;
     private string[] _columnsToDownload = [];
     private string[] _searchColumns = [];
@@ -164,56 +138,24 @@
     private string? _sq;
     private string? _fileName;
 
-    private void BeginAddCsv(CsvUploadedArgs args)
-    {
-        var columnNames = Runner?.CurrentCsv?.ColumnNames();
-        if (columnNames?.Length > 0)
-        {
-            _csvToAdd = args.Csv;
-            _csvToAddFileName = args.FileName;
-            _isAddDataDialogVisible = true;
-            _expectedHeaders = columnNames.Select(x => new ExpectedHeader(x, ExpectedHeaderConfig)).ToArray();
-            Busy = true;
-            StateHasChanged();
-        }
-    }
-
     private List<(string FileName, int IndexAdded)> _addedCsvsWithStepIndexAdded = new();
-    private bool _busyAddCsv;
-    private async Task AddCsv()
+    public async Task AddCsv(IEasyCsv csv, string csvName)
     {
-        if (_tableHeaderMatcher == null || Runner == null) return;
-        var mappedCsv = await _tableHeaderMatcher.GetMappedCsv(clone: false);
-        var mappedColumnsNames = mappedCsv?.ColumnNames();
-        if (mappedColumnsNames?.Length is not > 0)
+        if (csv == null! || Runner == null) return;
+        if (string.IsNullOrWhiteSpace(csvName))
         {
-            if (UseSnackBar)
-            {
-                Snackbar?.Add("Couldn't add csv, something went wrong matching columns");
-            }
-            return;
+            csvName = "N/A";
         }
-        try
+        var addCsvStrategy = new AddCsvStrategy(csv!);
+        var result = await PerformCsvStrategy(addCsvStrategy);
+        if (result.Success && !string.IsNullOrWhiteSpace(csvName))
         {
-            _busyAddCsv = true;
-            StateHasChanged();
-            await Task.Delay(1);
-            var addCsvStrategy = new AddCsvStrategy(mappedCsv!);
-            var result = await PerformCsvStrategy(addCsvStrategy);
-            if (result.Success && !string.IsNullOrWhiteSpace(_csvToAddFileName))
+            var existingEntryIndex = _addedCsvsWithStepIndexAdded.IndexOf(x => x.IndexAdded == Runner.CurrentIndex - 1);
+            if (existingEntryIndex >= 0)
             {
-                var existingEntryIndex = _addedCsvsWithStepIndexAdded.IndexOf(x => x.IndexAdded == Runner.CurrentIndex - 1);
-                if (existingEntryIndex >= 0)
-                {
-                    _addedCsvsWithStepIndexAdded.RemoveAt(existingEntryIndex);
-                }
-                _addedCsvsWithStepIndexAdded.Add((_csvToAddFileName, Runner.CurrentIndex-1));
+                _addedCsvsWithStepIndexAdded.RemoveAt(existingEntryIndex);
             }
-        }
-        finally
-        {
-            _busyAddCsv = false;
-            _isAddDataDialogVisible = false;
+            _addedCsvsWithStepIndexAdded.Add((csvName, Runner.CurrentIndex - 1));
         }
     }
 

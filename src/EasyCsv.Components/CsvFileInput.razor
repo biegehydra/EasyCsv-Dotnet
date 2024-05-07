@@ -60,17 +60,24 @@
 }
 else if (InputVariant == FileInputVariant.Button)
 {
-    <MudFileUpload T="IReadOnlyList<IBrowserFile>" Accept="@Accept" FilesChanged="OnFilesChanged">
-        <ButtonTemplate>
-            <MudButton  Disabled="@Disabled" HtmlTag="label"
-                       Variant="@ButtonVariant"
-                       Color="@ButtonColor"
-                       StartIcon="@ButtonIcon"
-                       for="@context">
-                @ButtonText
-            </MudButton>
-        </ButtonTemplate>
-    </MudFileUpload>
+    @if (!string.IsNullOrWhiteSpace(FileName) && CsvValid)
+    {
+        <MudChip Style="@(_loading ? "display: none" : null)" Color="Color.Dark" Text="@FileName" />
+    }
+    else
+    {
+        <MudFileUpload T="IReadOnlyList<IBrowserFile>" Accept="@Accept" FilesChanged="OnFilesChanged">
+            <ButtonTemplate>
+                <MudButton  Disabled="@Disabled" HtmlTag="label"
+                            Variant="@ButtonVariant"
+                            Color="@ButtonColor"
+                            StartIcon="@ButtonIcon"
+                            for="@context">
+                    @ButtonText
+                </MudButton>
+            </ButtonTemplate>
+        </MudFileUpload>
+    }
 }
 
 @code {

@@ -59,7 +59,7 @@
                 ColumnNames = columnNames;
             }
         }
-        else if (InitializeWithStrategyBucketColumnName && !string.IsNullOrWhiteSpace(StrategyBucket?.ColumnName))
+        else if (InitializeWithStrategyBucketColumnName && !string.IsNullOrWhiteSpace(StrategyBucket?.ColumnName) && StrategyBucket.ColumnName != InternalColumnNames.FullCsvOperations)
         {
             ColumnNames = [StrategyBucket.ColumnName];
         }

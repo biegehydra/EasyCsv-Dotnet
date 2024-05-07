@@ -3,17 +3,20 @@
 @using System.Globalization
 @using EasyCsv.Processing.Strategies
 @page "/processing"
-<CsvProcessingStepper @ref="_csvProcessor" EasyCsv="_easyCsv" ShowAddCsv="true">
-    <ProcessingOptions>
-        <FindDedupesExactMatchColumn ></FindDedupesExactMatchColumn>
-        <StringSplitColumn ></StringSplitColumn>
-        <DivideAndReplicate ></DivideAndReplicate>
-        <CombineColumns  ></CombineColumns>
-        <TagAndReferenceMatches ></TagAndReferenceMatches>
-        <DeleteOnEmptyColumn ></DeleteOnEmptyColumn>
+<CsvProcessingStepper @ref="_csvProcessor" EasyCsv="_easyCsv" >
+    <ColumnStrategies>
+        <FindDedupesExactMatchColumn />
+        <StringSplitColumn />
+        <DivideAndReplicate />
+        <TagAndReferenceMatches />
+        <DeleteOnEmptyColumn />
         <StrategyItem DisplayName="Tag Invalid Email" DescriptionStr="Tag all rows with an invalid email on specified column"
                       BeforeCsvExample="_beforeExample" AfterCsvExample="_afterExample" StrategyPicked="OnTagPicked"/>
-    </ProcessingOptions>
+    </ColumnStrategies>
+    <FullCsvStrategies>
+        <AddCsv  />
+        <CombineColumns  />
+    </FullCsvStrategies>
 </CsvProcessingStepper>
 @code {
     [Parameter] public ISnackbar? Snackbar { get; set; }

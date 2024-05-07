@@ -1,0 +1,116 @@
+﻿@namespace EasyCsv.Components
+@inherits StrategyItemBase
+
+<style>
+    .add-csv-container {
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        align-items: center;
+    }
+</style>
+
+@if (CsvProcessor == null || StrategyBucket == null)
+{
+    throw new ArgumentException("EasyCsv: Attempted to render strategy options not within CsvProcessingStepper", nameof(CsvProcessingStepper));
+}
+@if (CsvProcessor.Runner?.CurrentCsv != null)
+{
+    <StrategyItem DisplayName="@DisplayName" DescriptionStr="@DescriptionStr" Description="Description" AllowRun="AllowRun" StrategyPicked="x => RunAddCsv(x)" >
+        <Options>
+            <MudListItem>
+                <div class="add-csv-container">
+                    <CsvFileInput Disabled="@context" FileName="@(_mappedCsv != null ? _csvToAddFileName : null)" CsvValid="_mappedCsv != null" InputVariant="@FileInputVariant.Button" ButtonText="Select Csv" OnCsvUpload="x => BeginAddCsv(x)"></CsvFileInput>
+                    @if (!string.IsNullOrWhiteSpace(_csvToAddFileName) && _mappedCsv != null)
+                    {
+                        @_mappedCsv.RowCount()@:&nbsp;rows&nbsp;
+                        <MudIcon Color="Color.Success" Icon="@Icons.Material.Filled.Check"></MudIcon>
+                    }
+                </div>
+
+            </MudListItem>
+        </Options>
+    </StrategyItem>
+}
+@if (_csvToAdd != null)
+{
+    <MudDialog @bind-IsVisible="_isAddDataDialogVisible" Class="csv-processing-add-popup" Style="min-width: 1000px;">
+        <TitleContent>
+            <MudText Class="mb-2" Typo="Typo.h5"><b>Map Columns To Working Csv</b></MudText>
+        </TitleContent>
+        <DialogContent>
+            <CsvTableHeaderMatcher @ref="_tableHeaderMatcher" ExpectedHeaderThStr="Current Header" AutoMatch="AutoMatching.Lenient" ExpectedHeaders="_expectedHeaders" Frozen="_busyReadCsv" Csv="_csvToAdd"/>
+        </DialogContent>
+        <DialogActions>
+            <MudButton Disabled="CsvProcessor?.Busy == true" StartIcon="@Icons.Material.Filled.Close" Variant="Variant.Outlined" Color="Color.Default" OnClick="x => _isAddDataDialogVisible = false">Cancel</MudButton>
+            <MudButton Disabled="CsvProcessor?.Busy == true" StartIcon="@Icons.Material.Filled.Download" Variant="Variant.Filled" Color="Color.Info" OnClick="OnConfirmMapCsv">Confirm Column Mappings</MudButton>
+        </DialogActions>
+    </MudDialog>
+}
+
+@code
+{
+    [Inject] private ISnackbar? Snackbar { get; set; }
+    [Parameter] public bool Immediate { get; set; } = true;
+    [Parameter] public override string? DisplayName { get; set; } = "Add Rows";
+    [Parameter] public override string? DescriptionStr { get; set; } = "Adds all the rows in a specified csv to the Working Csv.";
+    [Parameter] public override RenderFragment? Description { get; set; }
+    [Parameter] public ExpectedHeaderConfig ExpectedHeaderConfig { get; set; } = new(DefaultValueType.Text, false, null, AutoMatching.Lenient);
+
+    private bool AllowRun => _csvToAdd != null && _tableHeaderMatcher != null;
+    private CsvTableHeaderMatcher? _tableHeaderMatcher;
+    private bool _isAddDataDialogVisible;
+    private IEasyCsv? _csvToAdd;
+    private IEasyCsv? _mappedCsv;
+    private string? _csvToAddFileName;
+    private ICollection<ExpectedHeader>? _expectedHeaders;
+
+    private void BeginAddCsv(CsvUploadedArgs args)
+    {
+        var columnNames = CsvProcessor?.Runner?.CurrentCsv?.ColumnNames();
+        if (columnNames?.Length > 0)
+        {
+            _csvToAdd = args.Csv;
+            _csvToAddFileName = args.FileName;
+            _isAddDataDialogVisible = true;
+            _expectedHeaders = columnNames.Select(x => new ExpectedHeader(x, ExpectedHeaderConfig)).ToArray();
+            StateHasChanged();
+        }
+    }
+
+    private bool _busyReadCsv = false;
+    private async Task OnConfirmMapCsv()
+    {
+        if (_tableHeaderMatcher == null || CsvProcessor?.Runner == null) return;
+        try
+        {
+            _busyReadCsv = true;
+            StateHasChanged();
+            await Task.Delay(2);
+            var mappedCsv = await _tableHeaderMatcher.GetMappedCsv(clone: false);
+            var mappedColumnsNames = mappedCsv?.ColumnNames();
+            if (mappedColumnsNames?.Length is not > 0)
+            {
+                if (CsvProcessor.UseSnackBar)
+                {
+                    Snackbar?.Add("Couldn't add csv, something went wrong matching columns");
+                }
+                return;
+            }
+            _mappedCsv = _csvToAdd;
+            await InvokeAsync(StateHasChanged);            
+            await StrategyBucket.OnAllowRunChanged();            
+        }
+        finally
+        {
+            _isAddDataDialogVisible = false;
+            _busyReadCsv = false;
+        }
+    }
+
+    private async Task RunAddCsv(string columnName)
+    {
+        if (!AllowRun || _mappedCsv == null || _csvToAddFileName == null) return;
+        await CsvProcessor.AddCsv(_mappedCsv, _csvToAddFileName);
+    }
+}

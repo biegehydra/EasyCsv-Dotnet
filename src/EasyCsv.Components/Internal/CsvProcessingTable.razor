@@ -46,6 +46,29 @@
         display: flex;
         flex-direction: row;
         gap: 16px;
+        width: 100%;
+        padding: 0 13px;
+        justify-content: space-between;
+    }
+
+    .csv-processing-toolbar-options {
+        display: flex;
+        flex-direction: row;
+        gap: 16px;
+        align-items: baseline;
+    }
+
+    .csv-processing-toolbar-atlas {
+        
+    }
+
+    .csv-processing-toolbar-full-csv-operations-button {
+
+    }
+    .csv-processing-toolbar-atlas-item {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
     }
 
     .csv-processing-toolbar-search-field {
@@ -75,7 +98,7 @@
     }
 </style>
 
-@if (EasyCsv?.CsvContent != null && EasyCsv.ColumnNames() != null && ProcessingOptions != null) 
+@if (EasyCsv?.CsvContent != null && EasyCsv.ColumnNames() != null && ColumnOptions != null) 
 {
     int tagsColumnIndex = EasyCsv.ColumnNames()?.IndexOf(InternalColumnNames.Tags) ?? -1;
     int referenceColumnIndex = EasyCsv.ColumnNames()?.IndexOf(InternalColumnNames.References) ?? -1;
@@ -117,64 +140,16 @@
                 var transformOrigin = i >= mid ? Origin.TopRight : Origin.TopLeft;
                 var column = columnNames[i];
                 if (i == tagsColumnIndex || i == referenceColumnIndex) continue;
-                _popOverDict.TryAdd(column, false);
-                if (!_strategyBuckets.ContainsKey(column))
-                {
-                    _strategyBuckets.Add(column, new StrategyBucket(column, InvokeStateHasChanged));
-                }
-
-                _strategyBuckets[column].SetOrigins(anchorOrigin, transformOrigin);
                 <MudTh Class="csv-processing-table-th">
                     <div style="display: flex; flex-direction: row; gap: 10px; align-items: center;">
                         <div class="csv-processing-table-th-name" >
                             @column
                         </div>
                         <div class="csv-processing-table-th-button">
-                            <MudIconButton Disabled="Busy" Icon="@InternalIcons.Strategies" OnClick="_ => TogglePopover(column)"></MudIconButton>
+                            <MudIconButton Disabled="Busy" Icon="@Stepper.ViewColumnOperationsIcon" OnClick="_ => TogglePopover(column)"></MudIconButton>
                         </div>
                     </div>
-                    <MudPopover Open="_popOverDict[column]" Style="@($"max-height:{Stepper.MaxStrategySelectHeight}")" Class="csv-processing-popover" OverflowBehavior="OverflowBehavior.FlipAlways" AnchorOrigin="anchorOrigin" TransformOrigin="transformOrigin">
-                        <CascadingValue TValue="CsvProcessingStepper" Value="Stepper" IsFixed="true">
-                            <CascadingValue TValue="StrategyBucket" Value="_strategyBuckets[column]" IsFixed="true">
-                                <MudList Clickable="true" Style="z-index: inherit">
-                                    <MudListSubheader>
-                                        <div style="display: flex; flex-direction: row; justify-content: space-between">
-                                            <MudText Class="mt-4" Typo="Typo.h5">
-                                                Column Strategies&nbsp;
-                                                @if (Stepper.ShowColumnNameInStrategySelect)
-                                                {
-                                                    @:(@column)
-                                                }
-                                            </MudText>
-                                            <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="x => TogglePopover(column, false)"></MudIconButton>
-                                        </div>
-                                    </MudListSubheader>
-                                    @if (Stepper.SearchBar)
-                                    {
-                                        <MudListItem>
-                                            <MudTextField T="string" Disabled="_strategyBuckets[column].IsAnySelected()" Immediate="true" Placeholder="Search strategies" Variant="Variant.Outlined" Value="_strategyBuckets[column].SearchQuery"
-                                                          ValueChanged="_strategyBuckets[column].SetSearchQuery"
-                                                          Clearable="true" OnClearButtonClick="() => _strategyBuckets[column].SetSearchQuery(string.Empty)"></MudTextField>
-                                        </MudListItem>
-                                    }
-                                    @ProcessingOptions(column)
-                                    @if (_strategyBuckets[column].IsAnySelected() || Stepper.RunOperationNoneSelectedBehaviour == RunOperationNoneSelectedBehaviour.Disabled)
-                                    {
-                                        <MudListItem>
-                                            <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between;">
-                                                <div></div>
-                                                <MudButton Disabled="!_strategyBuckets[column].StrategySelectedAndRunAllowed()" Variant="Variant.Filled" Color="Color.Info" OnClick="x => _strategyBuckets[column].StrategyPicked()">Run Operation</MudButton>
-                                            </div>
-                                        </MudListItem>
-                                    }
-                                </MudList>
-                                @if (_popOverDict[column] && Stepper.CloseBehaviour is CloseBehaviour.ClickAway or CloseBehaviour.CloseButtonAndClickAway)
-                                {
-                                    <div @onclick="() => TogglePopover(column, false)" class="easy-csv-fullscreen-backdrop"></div>
-                                }
-                            </CascadingValue>
-                        </CascadingValue>
-                    </MudPopover>
+                    @StrategyBucketPopover(column, anchorOrigin, transformOrigin, fullCsv: false)
                 </MudTh>
             }
             @if (Stepper.TagsAndReferencesLocation == ColumnLocation.End)
@@ -220,7 +195,8 @@
     internal static Color[] DefaultColors = [Color.Primary, Color.Secondary, Color.Success, Color.Error, Color.Tertiary, Color.Dark, Color.Warning];
 
     [Parameter] public Func<IGrouping<int, (int ReferenceCsvId, int ReferenceRowId)>, string>? FormatReferenceText { get; set; } 
-    [Parameter] public RenderFragment<string>? ProcessingOptions { get; set; }
+    [Parameter] public RenderFragment<string>? ColumnOptions { get; set; }
+    [Parameter] public RenderFragment? FullCsvOptions { get; set; }
     [Parameter] public CsvProcessingStepper Stepper { get; set; } = null!;
     [Parameter] public bool Busy { get; set; } 
     [Parameter] public IEasyCsv? EasyCsv
@@ -237,10 +213,10 @@
 
     private Dictionary<ReferenceGroup, bool> _referencesOpen = new();
     private Dictionary<ReferenceGroup, bool> _referencesBackDropsOpen = new();
-    private Dictionary<string, bool> _popOverDict = new ();
+    private Dictionary<string, bool> _columnPopOverDict = new ();
     private string[] _searchColumns = [];
     private string[] _searchTags = [];
-    private Dictionary<string, StrategyBucket> _strategyBuckets = new();
+    private Dictionary<string, StrategyBucket> _columnStrategyBuckets = new();
     private Dictionary<string, Color> _tagColors = new();
     private IEasyCsv? _easyCsv;
     private string? _sq;
@@ -291,8 +267,8 @@
 
     private void OnEasyCsvChanged()
     {
-        _popOverDict.Clear();
-        _strategyBuckets.Clear();
+        _columnPopOverDict.Clear();
+        _columnStrategyBuckets.Clear();
         _referencesBackDropsOpen.Clear();
         _referencesOpen.Clear();
         var columnNames = EasyCsv?.ColumnNames();
@@ -315,17 +291,18 @@
 
     internal void TogglePopover(string column)
     {
-        bool value = _popOverDict[column];
+        bool value = _columnPopOverDict[column];
         if (value)
         {
-            _popOverDict[column] = false;
+            _columnPopOverDict[column] = false;
         }
-        else if (!_popOverDict.Values.Any(x => x)) _popOverDict[column] = true;
+        else if (!_columnPopOverDict.Values.Any(x => x)) _columnPopOverDict[column] = true;
     }
+
     internal void TogglePopover(string column, bool open)
     {
-        if (!open) _popOverDict[column] = open;
-        else if (!_popOverDict.Values.Any(x => x)) _popOverDict[column] = true;
+        if (!open) _columnPopOverDict[column] = open;
+        else if (!_columnPopOverDict.Values.Any(x => x)) _columnPopOverDict[column] = true;
     }
 
     private void RemoveTag(CsvRow row, int tagsColumnIndex, string tag)
@@ -382,20 +359,112 @@
         return null;
     }
 
-    private RenderFragment? ToolBarContent()
+    private RenderFragment ToolBarContent()
     {
-        if (!Stepper.UseToolbar) return null;
         var columnNames = EasyCsv?.ColumnNames();
-        if (columnNames == null) return null;
         return @<div class="csv-processing-toolbar">
-                   <MudTextField Disabled="Busy" T="string" Class="csv-processing-toolbar-search-field" DebounceInterval="Stepper.SearchDebounceInterval" Immediate="true" Label="Search Csv"
-                                 HelperText="Value to search for" HelperTextOnFocus Variant="Variant.Outlined" Value="_sq" ValueChanged="x => SetSearchQuery(x)" 
-                                 Clearable OnClearButtonClick="x => SetSearchQuery(null)"/>
-                   <CascadingValue TValue="CsvProcessingStepper" Value="@Stepper" IsFixed="true"  >
-                       <MultiColumnSelect Disabled="Busy" InitializeWithStrategyBucketColumnName="false" Label="Columns To Search" @bind-ColumnNames="_searchColumns" SelectAll="true" SelectAllText="Search All Columns" ></MultiColumnSelect>
-                       <MultiTagSelect Disabled="Busy" Label="Tag Filter" @bind-Tags="_searchTags" HideNoTags="true" ></MultiTagSelect>
-                   </CascadingValue>
+                   <div class="csv-processing-toolbar-atlas">
+                       <div class="csv-processing-toolbar-atlas-item" style="margin-bottom: 7px" >
+                           Click <span class="mx-2" ><MudIcon Icon="@Stepper.ViewFullCsvOperationsIcon"></MudIcon></span>to view&nbsp;<b>full csv</b>&nbsp;strategies
+                       </div>
+                       <div class="csv-processing-toolbar-atlas-item" >
+                           Click <span class="mx-2" ><MudIcon Icon="@Stepper.ViewColumnOperationsIcon"></MudIcon></span>to view&nbsp;<b>column</b>&nbsp;strategies
+                       </div>
+                   </div>
+                   @if (Stepper.UseSearchBar && columnNames != null)
+                   {
+                       <div class="csv-processing-toolbar-options">
+                           <div class="csv-processing-toolbar-full-csv-operations-button">
+                               <MudIconButton Disabled="Busy" Icon="@Stepper.ViewFullCsvOperationsIcon" OnClick="_ => TogglePopover(InternalColumnNames.FullCsvOperations)"></MudIconButton>
+                               @StrategyBucketPopover(InternalColumnNames.FullCsvOperations, Origin.BottomLeft, Origin.TopRight, true)
+                           </div>
+                           <MudTextField Disabled="Busy" T="string" Class="csv-processing-toolbar-search-field" DebounceInterval="Stepper.SearchDebounceInterval" Immediate="true" Label="Search Csv"
+                                         HelperText="Value to search for" HelperTextOnFocus Variant="Variant.Outlined" Value="_sq" ValueChanged="x => SetSearchQuery(x)"
+                                         Clearable OnClearButtonClick="x => SetSearchQuery(null)"/>
+                           <CascadingValue TValue="CsvProcessingStepper" Value="@Stepper" IsFixed="true">
+                               <MultiColumnSelect Disabled="Busy" InitializeWithStrategyBucketColumnName="false" Label="Columns To Search" @bind-ColumnNames="_searchColumns" SelectAll="true" SelectAllText="Search All Columns"></MultiColumnSelect>
+                               <MultiTagSelect Disabled="Busy" Label="Tag Filter" @bind-Tags="_searchTags" HideNoTags="true"></MultiTagSelect>
+                           </CascadingValue>
+                       </div>
+                   }
+                   else
+                   {
+                       <div class="csv-processing-toolbar-full-csv-operations-button">
+                           <MudIconButton Disabled="Busy" Icon="@Stepper.ViewFullCsvOperationsIcon" OnClick="_ => TogglePopover(InternalColumnNames.FullCsvOperations)"></MudIconButton>
+                           @StrategyBucketPopover(InternalColumnNames.FullCsvOperations, Origin.BottomLeft, Origin.TopRight, true)
+                       </div>
+                   }
                </div>;
+    }
+
+    private RenderFragment StrategyBucketPopover(string column, Origin anchorOrigin, Origin transformOrigin, bool fullCsv)
+    {
+        _columnPopOverDict.TryAdd(column, false);
+        if (!_columnStrategyBuckets.ContainsKey(column))
+        {
+            _columnStrategyBuckets.Add(column, new StrategyBucket(column, InvokeStateHasChanged));
+        }
+        _columnStrategyBuckets[column].SetOrigins(anchorOrigin, transformOrigin);
+        return @<MudPopover Open="_columnPopOverDict[column]" Style="@($"max-height:{Stepper.MaxStrategySelectHeight}")" Class="csv-processing-popover"
+                            OverflowBehavior="OverflowBehavior.FlipAlways" AnchorOrigin="anchorOrigin" TransformOrigin="transformOrigin">
+                   <CascadingValue TValue="CsvProcessingStepper" Value="Stepper" IsFixed="true">
+                       <CascadingValue TValue="StrategyBucket" Value="_columnStrategyBuckets[column]" IsFixed="true">
+                           <MudList Clickable="true" Style="z-index: inherit">
+                               <MudListSubheader>
+                                   <div style="display: flex; flex-direction: row; justify-content: space-between">
+                                       <MudText Class="mt-4" Typo="Typo.h5">
+                                           @if (fullCsv)
+                                           {
+                                               @:Full Csv Strategies
+                                           }
+                                           else
+                                           {
+                                               @:Column Strategies&nbsp;
+                                               @if (Stepper.ShowColumnNameInStrategySelect)
+                                               {
+                                                   @:(@column)
+                                               }
+                                           }
+                                       </MudText>
+                                       <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="x => TogglePopover(column, false)"></MudIconButton>
+                                   </div>
+                               </MudListSubheader>
+                               @if (Stepper.SearchBar)
+                               {
+                                   <MudListItem>
+                                       <MudTextField T="string" Disabled="_columnStrategyBuckets[column].IsAnySelected()" Immediate="true" Placeholder="Search strategies" Variant="Variant.Outlined" Value="_columnStrategyBuckets[column].SearchQuery"
+                                                     ValueChanged="_columnStrategyBuckets[column].SetSearchQuery"
+                                                     Clearable="true" OnClearButtonClick="() => _columnStrategyBuckets[column].SetSearchQuery(string.Empty)"></MudTextField>
+                                   </MudListItem>
+                               }
+                               @if (fullCsv)
+                               {
+                                   if (FullCsvOptions != null)
+                                   {
+                                       @FullCsvOptions
+                                   }
+                               }
+                               else if (ColumnOptions != null)
+                               {
+                                   @ColumnOptions(column)
+                               }
+                               @if (_columnStrategyBuckets[column].IsAnySelected() || Stepper.RunOperationNoneSelectedBehaviour == RunOperationNoneSelectedBehaviour.Disabled)
+                               {
+                                   <MudListItem>
+                                       <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between;">
+                                           <div></div>
+                                           <MudButton Disabled="!_columnStrategyBuckets[column].StrategySelectedAndRunAllowed()" Variant="Variant.Filled" Color="Color.Info" OnClick="x => _columnStrategyBuckets[column].StrategyPicked()">Run Operation</MudButton>
+                                       </div>
+                                   </MudListItem>
+                               }
+                           </MudList>
+                           @if (_columnPopOverDict[column] && Stepper.CloseBehaviour is CloseBehaviour.ClickAway or CloseBehaviour.CloseButtonAndClickAway)
+                           {
+                               <div @onclick="() => TogglePopover(column, false)" class="easy-csv-fullscreen-backdrop"></div>
+                           }
+                       </CascadingValue>
+                   </CascadingValue>
+               </MudPopover>;
     }
 
     private RenderFragment? ReferencesDataCell(int referenceColumnIndex, CsvRow row)

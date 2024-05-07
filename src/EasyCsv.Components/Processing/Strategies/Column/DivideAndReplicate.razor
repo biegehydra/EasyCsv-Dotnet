@@ -17,7 +17,7 @@
 {
     [Parameter] public bool Immediate { get; set; } = true;
     [Parameter] public override string? DisplayName { get; set; } = "Divide And Replicate";
-    [Parameter] public override string? DescriptionStr { get; set; } = "Splits the values in a column on a specified delimiter into parts and then creates a copy of the row for each part";
+    [Parameter] public override string? DescriptionStr { get; set; } = "Will split the values in $column_name, on a specified delimiter, into parts and then create a copy of the row for each part";
     [Parameter] public override RenderFragment<string>? Description { get; set; }
 
     private static readonly Dictionary<string, string> ExampleOptions = new Dictionary<string, string>()

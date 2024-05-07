@@ -22,7 +22,7 @@
 @code
 {
     [Parameter] public override string? DisplayName { get; set; } = "Reference Compare And Tag";
-    [Parameter] public override string? DescriptionStr { get; set; } = "Compare all the values in a column in the csv being processing to all the values in the column of a reference csv. On any exact matches, the specified tag will be added to the row, and a link to the reference table will be created.";
+    [Parameter] public override string? DescriptionStr { get; set; } = "Will compare all the values in $column_name in the Working Csv to all the values in the selected column of the reference csv. On any exact matches, the specified tag will be added to the row, and a link to the reference table will be created.";
     [Parameter] public override RenderFragment<string>? Description { get; set; }
     [Parameter] public bool Immediate { get; set; } = true;
 

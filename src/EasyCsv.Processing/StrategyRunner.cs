@@ -133,11 +133,11 @@ public class StrategyRunner
         return new OperationResult(true);
     }
 
-    public async ValueTask<OperationResult> RunCsvStrategy(ICsvProcessor csvProcessor, ICollection<int>? filteredRowIds)
+    public async ValueTask<OperationResult> RunCsvStrategy(IFullCsvProcessor fullCsvProcessor, ICollection<int>? filteredRowIds)
     {
         if (CurrentCsv == null) return new OperationResult(false, "Component not initialized yet.");
         var clone = CurrentCsv.Clone();
-        var operationResult = await csvProcessor.ProcessCsv(clone, filteredRowIds);
+        var operationResult = await fullCsvProcessor.ProcessCsv(clone, filteredRowIds);
         if (operationResult.Success)
         {
             AddToTimeline(clone);

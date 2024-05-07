@@ -9,6 +9,7 @@ using EasyCsv.Core.Extensions;
 namespace EasyCsv.Processing.Strategies;
 public class TagAndReferenceMatchesStrategy : ICsvReferenceProcessor
 {
+    public bool OperatesOnlyOnFilteredRows => true;
     public string ColumnName { get; }
     public string ReferenceColumnName { get; }
     public int ReferenceCsvId { get; }

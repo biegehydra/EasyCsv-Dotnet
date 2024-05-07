@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EasyCsv.Processing;
 
-public interface IFindDedupesOperation
+public interface IFindDedupesOperation : ICsvProcessor
 {
     public string? ColumnName { get; }
     public bool MultiSelect { get; }
@@ -43,7 +43,7 @@ public interface ICsvColumnDeleteEvaluator : IColumnOperation
     public ValueTask<OperationDeleteResult> EvaluateDelete<TCell>(TCell cell) where TCell : ICell;
 }
 
-public interface ICsvRowDeleteEvaluator
+public interface ICsvRowDeleteEvaluator : ICsvProcessor
 {
     public string? ColumnName { get; }
     /// <summary>
@@ -59,7 +59,7 @@ public interface ICsvReferenceProcessor : IReferenceOperation
 }
 
 
-public interface ICsvProcessor
+public interface IFullCsvProcessor : ICsvProcessor
 {
     /// <summary>
     /// This function will be called for each row in the csv.
@@ -69,9 +69,14 @@ public interface ICsvProcessor
 }
 
 
-public interface ICsvMerger
+public interface ICsvMerger : ICsvProcessor
 {
     public ValueTask<IEasyCsv> Merge(IEasyCsv baseCsv, IEasyCsv additionalCsv);
+}
+
+public interface ICsvProcessor
+{
+    public bool OperatesOnlyOnFilteredRows { get; }
 }
 
 public interface ICell
@@ -80,11 +85,11 @@ public interface ICell
     public object? Value { get; set; }
 }
 
-public interface IColumnOperation
+public interface IColumnOperation : ICsvProcessor
 {
     public string ColumnName { get; }
 }
-public interface IReferenceOperation
+public interface IReferenceOperation : ICsvProcessor
 {
     public int ReferenceCsvId { get; }
 }

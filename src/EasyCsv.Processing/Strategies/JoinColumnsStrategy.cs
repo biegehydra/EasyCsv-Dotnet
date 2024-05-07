@@ -7,8 +7,9 @@ using EasyCsv.Core;
 using EasyCsv.Core.Extensions;
 
 namespace EasyCsv.Processing.Strategies;
-public class JoinColumnsStrategy : ICsvProcessor
+public class JoinColumnsStrategy : IFullCsvProcessor
 {
+    public bool OperatesOnlyOnFilteredRows => true;
     private readonly string[] _columnsToJoin;
     private readonly string _delimiter;
     private readonly bool _joinIfNotAllPresent;

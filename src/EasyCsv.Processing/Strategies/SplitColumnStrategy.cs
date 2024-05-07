@@ -8,8 +8,9 @@ using EasyCsv.Core.Extensions;
 
 namespace EasyCsv.Processing.Strategies;
 
-public class SplitColumnStrategy : ICsvProcessor
+public class SplitColumnStrategy : IFullCsvProcessor
 {
+    public bool OperatesOnlyOnFilteredRows => true;
     private readonly string[] _newColumnNames;
     private readonly string _columnToSplit;
     private readonly bool _removeSplitColumn;

@@ -7,7 +7,7 @@
 }
 @if (CsvProcessor.Runner?.CurrentCsv != null)
 {
-    <StrategyItem DisplayName="@DisplayName" Description="Description" DescriptionStr="@DescriptionStr" ExampleOptions="_exampleOptions" BeforeCsvExample="_beforeExample"
+    <StrategyItem DisplayName="@DisplayName" OnlyOperatesOnFilteredRows="OnlyOperatesOnFilteredRows" Description="Description" DescriptionStr="@DescriptionStr" ExampleOptions="_exampleOptions" BeforeCsvExample="_beforeExample"
                   AfterCsvExample="_afterExample" AllowRun="AllowRun" StrategyPicked="RunCombineColumns">
         <Options>
             <MudListItem>

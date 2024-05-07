@@ -59,7 +59,7 @@ public partial class CsvProcessingStepper
     [Parameter] public bool OpenDownloadWithAllColumnsSelected { get; set; } = true; 
     [Parameter] public bool AutoSelectAllColumnsToSearch { get; set; } = true; 
     public StrategyRunner? Runner { get; private set; }
-    private CsvProcessingTable? _csvProcessingTable { get; set; }
+    internal CsvProcessingTable? CsvProcessingTable { get; private set; }
     private int _initialRowCount;
 
     protected override void OnParametersSet()
@@ -88,7 +88,7 @@ public partial class CsvProcessingStepper
     public async ValueTask<AggregateOperationDeleteResult> PerformColumnEvaluateDelete(ICsvColumnDeleteEvaluator evaluateDelete)
     {
         if (Runner == null) return _runnerNullAggregateDelete;
-        if (_csvProcessingTable == null) return _processingTableNullAggregateDelete;
+        if (CsvProcessingTable == null) return _processingTableNullAggregateDelete;
         var filteredRowIds = FilteredRowIds();
         var aggregateOperationDeleteResult = await Runner.PerformColumnEvaluateDelete(evaluateDelete, filteredRowIds);
         CheckAddedCsvsAfterOperation(aggregateOperationDeleteResult);
@@ -100,7 +100,7 @@ public partial class CsvProcessingStepper
     public async ValueTask<AggregateOperationDeleteResult> PerformRowEvaluateDelete(ICsvRowDeleteEvaluator evaluateDelete)
     {
         if (Runner == null) return _runnerNullAggregateDelete;
-        if (_csvProcessingTable == null) return _processingTableNullAggregateDelete;
+        if (CsvProcessingTable == null) return _processingTableNullAggregateDelete;
         var filteredRowIds = FilteredRowIds();
         var aggregateOperationDeleteResult = await Runner.RunRowEvaluateDelete(evaluateDelete, filteredRowIds);
         CheckAddedCsvsAfterOperation(aggregateOperationDeleteResult);
@@ -112,7 +112,7 @@ public partial class CsvProcessingStepper
     public async ValueTask<OperationResult> PerformDedupe(IFindDedupesOperation findDedupesOperation, int[]? referenceCsvIds)
     {
         if (Runner?.CurrentCsv == null || DialogService == null) return _runnerNull;
-        if (_csvProcessingTable == null) return _processingTableNull;
+        if (CsvProcessingTable == null) return _processingTableNull;
         _mustSelectRow = findDedupesOperation.MustSelectRow;
         _multiSelect = findDedupesOperation.MultiSelect;
         _columnName = findDedupesOperation.ColumnName;
@@ -219,7 +219,7 @@ public partial class CsvProcessingStepper
     public async ValueTask<OperationResult> PerformReferenceStrategy(ICsvReferenceProcessor csvReferenceProcessor)
     {
         if (Runner == null) return _runnerNull;
-        if (_csvProcessingTable == null) return _processingTableNull;
+        if (CsvProcessingTable == null) return _processingTableNull;
         var filteredRowIds = FilteredRowIds();
         var operationResult = await Runner.RunReferenceStrategy(csvReferenceProcessor, filteredRowIds);
         OnAfterOperation(operationResult);
@@ -230,7 +230,7 @@ public partial class CsvProcessingStepper
     public async ValueTask<OperationResult> PerformColumnStrategy(ICsvColumnProcessor columnProcessor)
     {
         if (Runner == null) return _runnerNull;
-        if (_csvProcessingTable == null) return _processingTableNull;
+        if (CsvProcessingTable == null) return _processingTableNull;
         var filteredRowIds = FilteredRowIds();
         var operationResult = await Runner.RunColumnStrategy(columnProcessor, filteredRowIds);
         OnAfterOperation(operationResult, skipSuccessSnackbar: true);
@@ -241,7 +241,7 @@ public partial class CsvProcessingStepper
     public async ValueTask<OperationResult> PerformRowStrategy(ICsvRowProcessor rowProcessor)
     {
         if (Runner == null) return _runnerNull;
-        if (_csvProcessingTable == null) return _processingTableNull;
+        if (CsvProcessingTable == null) return _processingTableNull;
         var filteredRowIds = FilteredRowIds();
         var operationResult = await Runner.RunRowStrategy(rowProcessor, filteredRowIds);
         OnAfterOperation(operationResult, skipSuccessSnackbar: true);
@@ -249,12 +249,12 @@ public partial class CsvProcessingStepper
         return operationResult;
     }
 
-    public async ValueTask<OperationResult> PerformCsvStrategy(ICsvProcessor csvProcessor)
+    public async ValueTask<OperationResult> PerformCsvStrategy(IFullCsvProcessor fullCsvProcessor)
     {
         if (Runner == null) return _runnerNull;
-        if (_csvProcessingTable == null) return _processingTableNull;
+        if (CsvProcessingTable == null) return _processingTableNull;
         var filteredRowIds = FilteredRowIds();
-        var operationResult = await Runner.RunCsvStrategy(csvProcessor, filteredRowIds);
+        var operationResult = await Runner.RunCsvStrategy(fullCsvProcessor, filteredRowIds);
         OnAfterOperation(operationResult);
         await InvokeAsync(StateHasChanged);
         return operationResult;
@@ -268,11 +268,11 @@ public partial class CsvProcessingStepper
 
     private HashSet<int>? FilteredRowIds()
     {
-        if (_csvProcessingTable == null) return null;
+        if (CsvProcessingTable == null) return null;
         HashSet<int>? filteredIndexes = null;
-        if (_csvProcessingTable.IsFiltered())
+        if (CsvProcessingTable.IsFiltered())
         {
-            filteredIndexes = _csvProcessingTable.FilteredRowIndexes();
+            filteredIndexes = CsvProcessingTable.FilteredRowIndexes();
         }
         return filteredIndexes;
     }

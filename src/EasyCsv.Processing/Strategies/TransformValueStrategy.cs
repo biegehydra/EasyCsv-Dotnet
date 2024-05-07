@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 namespace EasyCsv.Processing.Strategies;
 public class TransformValueStrategy : ICsvColumnProcessor
 {
+    public bool OperatesOnlyOnFilteredRows => true;
     public string ColumnName { get; }
     private readonly Func<object?, object?> _transformValue;
     public TransformValueStrategy(string columnName, Func<object?, object?> transformValue)

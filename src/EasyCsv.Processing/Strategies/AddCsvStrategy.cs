@@ -5,10 +5,11 @@ using EasyCsv.Core;
 using EasyCsv.Core.Extensions;
 
 namespace EasyCsv.Processing.Strategies;
-public class AddCsvStrategy : ICsvProcessor
+public class AddFullCsvStrategy : IFullCsvProcessor
 {
+    public bool OperatesOnlyOnFilteredRows => false;
     private readonly IEasyCsv _csvToAdd;
-    public AddCsvStrategy(IEasyCsv csvToAdd)
+    public AddFullCsvStrategy(IEasyCsv csvToAdd)
     {
         _csvToAdd = csvToAdd ?? throw new ArgumentException("CsvToAdd can't be null.", nameof(csvToAdd));
     }

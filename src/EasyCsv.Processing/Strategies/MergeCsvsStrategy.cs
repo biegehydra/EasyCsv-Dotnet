@@ -9,6 +9,7 @@ using EasyCsv.Core.Extensions;
 namespace EasyCsv.Processing.Strategies;
 public class MergeCsvsStrategy : ICsvMerger
 {
+    public bool OperatesOnlyOnFilteredRows => false;
     private readonly MergeConfig _mergeConfig;
     public MergeCsvsStrategy(MergeConfig mergeConfig)
     {

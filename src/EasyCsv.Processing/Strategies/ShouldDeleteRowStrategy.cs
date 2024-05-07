@@ -5,6 +5,7 @@ using EasyCsv.Core;
 namespace EasyCsv.Processing.Strategies;
 public class ShouldDeleteRowStrategy : ICsvRowDeleteEvaluator
 {
+    public bool OperatesOnlyOnFilteredRows => true;
     public string ColumnName { get; }
     private readonly Func<CsvRow, bool> _shouldDeleteFunc;
     public ShouldDeleteRowStrategy(string columnName, Func<CsvRow, bool> shouldDeleteFunc)

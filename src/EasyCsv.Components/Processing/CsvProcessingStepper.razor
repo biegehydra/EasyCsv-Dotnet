@@ -138,7 +138,7 @@
             </div>
             <br />
             <br />
-            <CsvProcessingTable @ref="_csvProcessingTable" Busy="@Busy" ColumnOptions="ColumnStrategies" FullCsvOptions="FullCsvStrategies"  Stepper="this" EasyCsv="Runner.CurrentCsv" />
+            <CsvProcessingTable @ref="CsvProcessingTable" Busy="@Busy" ColumnOptions="ColumnStrategies" FullCsvOptions="FullCsvStrategies"  Stepper="this" EasyCsv="Runner.CurrentCsv" />
         }
     </ChildContent>
     <ErrorContent>
@@ -243,7 +243,7 @@
         {
             csvName = "N/A";
         }
-        var addCsvStrategy = new AddCsvStrategy(csv!);
+        var addCsvStrategy = new AddFullCsvStrategy(csv!);
         var result = await PerformCsvStrategy(addCsvStrategy);
         if (result.Success && !string.IsNullOrWhiteSpace(csvName))
         {

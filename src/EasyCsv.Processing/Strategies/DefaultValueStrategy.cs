@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 namespace EasyCsv.Processing.Strategies;
 public class DefaultValueStrategy : ICsvColumnProcessor
 {
+    public bool OperatesOnlyOnFilteredRows => true;
     public string ColumnName { get; }
     private readonly object? _defaultValue;
     private readonly Func<object?, bool> _shouldOverride;

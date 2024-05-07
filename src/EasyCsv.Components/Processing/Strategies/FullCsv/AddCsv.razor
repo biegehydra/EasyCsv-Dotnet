@@ -36,7 +36,10 @@
 {
     <MudDialog @bind-IsVisible="_isAddDataDialogVisible" Class="csv-processing-add-popup" Style="min-width: 1000px;">
         <TitleContent>
-            <MudText Class="mb-2" Typo="Typo.h5"><b>Map Columns To Working Csv</b></MudText>
+            <div style="display: flex; flex-direction: row; gap: 10px; justify-content: space-between;" >
+                <MudText Class="mb-2" Typo="Typo.h5"><b>Map Columns To Working Csv</b></MudText>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="() => { _isAddDataDialogVisible = false; }"></MudIconButton>
+            </div>
         </TitleContent>
         <DialogContent>
             <CsvTableHeaderMatcher @ref="_tableHeaderMatcher" ExpectedHeaderThStr="Current Header" AutoMatch="AutoMatching.Lenient" ExpectedHeaders="_expectedHeaders" Frozen="_busyReadCsv" Csv="_csvToAdd"/>

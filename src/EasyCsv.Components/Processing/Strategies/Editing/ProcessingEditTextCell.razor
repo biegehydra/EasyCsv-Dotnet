@@ -1,0 +1,22 @@
+﻿<MudTd Class="extra-dense">
+    <MudTextField T="string" Value="_newValue" ValueChanged="ValueChanged" Variant="Variant.Filled" Placeholder="@ColumnName"/>
+</MudTd>
+@code {
+    [Parameter, EditorRequired] public CsvRow Row { get; set; } = null!;
+    [Parameter, EditorRequired] public string ColumnName { get; set; } = null!;
+    private string? _newValue;
+    protected override void OnInitialized()
+    {
+        if (Row == null || string.IsNullOrWhiteSpace(ColumnName))
+        {
+            throw new Exception("ProcessingEditTextField: Row and column name cannot be null");
+        }
+        _newValue = Row[ColumnName]?.ToString();
+    }
+
+    private void ValueChanged(string obj)
+    {
+        _newValue = obj;
+        Row[ColumnName] = _newValue;
+    }
+}

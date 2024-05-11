@@ -1,4 +1,5 @@
 ﻿@namespace EasyCsv.Components.Internal
+@using EasyCsv.Components.Processing.Strategies.Editing
 
 <style>
     .mud-input-control-input-container:has(.mud-input-outlined) {
@@ -62,6 +63,10 @@
         
     }
 
+    .csv-processing-toolbar-forward-back-container {
+        
+    }
+
     .csv-processing-toolbar-full-csv-operations-button {
 
     }
@@ -96,6 +101,10 @@
         z-index: 1000; /* This should be lower than the popover's z-index but higher than most other elements on your page */
         background-color: rgba(0, 0, 0, 0); /* You can adjust the opacity as needed */
     }
+
+    .csv-processing-table .mud-table-cell input[type="text"] {
+        padding: 15px 12px 10px;
+    }
 </style>
 
 @if (EasyCsv?.CsvContent != null && EasyCsv.ColumnNames() != null && ColumnOptions != null) 
@@ -119,7 +128,12 @@
     }
 
     <MudTable T="CsvRow" Class="csv-processing-table" FixedHeader="true" RowsPerPage="10" Items="GetFilteredRows()"
-              Striped Bordered Dense Hover Elevation="2" ToolBarContent="@ToolBarContent()" >
+              Striped Bordered Dense Hover Elevation="2" ToolBarContent="@ToolBarContent()" EditTrigger="Stepper.EditTrigger" 
+              EditButtonPosition="Stepper.EditButtonPosition" CanCancelEdit="Stepper.CanCancelEdit" CancelEditIcon="@Stepper.CancelEditIcon"
+              CancelEditTooltip="@Stepper.CancelEditTooltip" CommitEditIcon="@Stepper.CommitEditIcon" CommitEditTooltip="@Stepper.CommitEditTooltip"
+              IsEditRowSwitchingBlocked="Stepper.IsEditRowSwitchingBlocked" OnCancelEditClick="@Stepper.OnCancelEditClick" OnCommitEditClick="@Stepper.OnCommitEditClick"
+              ReadOnly="@Stepper.ReadOnly" OnPreviewEditClick="OnPreviewEdit" RowEditCancel="x => OnCancelEdit(x)" RowEditCommit="x => OnConfirmEdit(x)"
+              RowEditPreview="@Stepper.RowEditPreview" ApplyButtonPosition="@Stepper.ApplyButtonPosition" RowEditingTemplate="RowEditTemplate(tagsColumnIndex, referenceColumnIndex)" >
         <HeaderContent>
             @if (Stepper.TagsAndReferencesLocation == ColumnLocation.Beginning)
             {
@@ -215,11 +229,13 @@
 
     private readonly record struct ReferenceGroup(CsvRow Row, int ReferenceGroupIndex);
 
+    private CsvRow? _rowBeingEdited;
     private Dictionary<ReferenceGroup, bool> _referencesOpen = new();
     private Dictionary<ReferenceGroup, bool> _referencesBackDropsOpen = new();
     private Dictionary<string, bool> _columnPopOverDict = new ();
     private string[] SearchColumns { get; set; } = [];
     private string[] _searchTags = [];
+    private Dictionary<string, ColumnValueType> _columnValueTypes = [];
     private Dictionary<string, StrategyBucket> _columnStrategyBuckets = new();
     private Dictionary<string, Color> _tagColors = new();
     private IEasyCsv? _easyCsv;
@@ -307,7 +323,7 @@
         else if (!_columnPopOverDict.Values.Any(x => x)) _columnPopOverDict[column] = true;
     }
 
-    internal void TogglePopover(string column, bool open)
+    private void TogglePopover(string column, bool open)
     {
         if (!open) _columnPopOverDict[column] = open;
         else if (!_columnPopOverDict.Values.Any(x => x)) _columnPopOverDict[column] = true;
@@ -341,9 +357,57 @@
         return $"Ref Csv: {grouping.Key + 1}, {rows}: {string.Join(" | ", grouping.Select(x => x.RowIndex + 1))}";
     }
 
-    internal Task InvokeStateHasChanged()
+    private Task InvokeStateHasChanged()
     {
         return InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnPreviewEdit(object obj)
+    {
+        if (obj is not CsvRow row) return;
+        _rowBeingEdited = row.Clone();
+        if (Stepper?.OnPreviewEditClick != null)
+        {
+            await Stepper.OnPreviewEditClick.InvokeAsync();
+        }
+    }
+
+    private Task OnCancelEdit(object obj)
+    {
+        _rowBeingEdited = null;
+        return Stepper.OnCancelEditClick.InvokeAsync();
+    }
+
+    private Task OnConfirmEdit(object obj)
+    {
+        if (_rowBeingEdited == null || Stepper?.Runner == null || obj is not CsvRow row) return Task.CompletedTask;
+        if (_rowBeingEdited.ValuesEqual(row) == false)
+        {
+            Stepper.Runner.EditRow(row, _rowBeingEdited);
+            StateHasChanged();
+            return Stepper.OnCommitEditClick.InvokeAsync();
+        }
+        return Task.CompletedTask;
+    }
+
+    private RenderFragment EditCell(CsvRow row, int columnIndex)
+    {
+        if (_rowBeingEdited == null) return @<MudTd></MudTd>;
+        var columnName = row.KeyAt(columnIndex);
+        var valueType = _columnValueTypes.GetValueOrDefault(columnName, ColumnValueType.Text);
+        switch (valueType)
+        {
+            case ColumnValueType.Text:
+                return @<ProcessingEditTextCell ColumnName="@columnName" Row="_rowBeingEdited" />;
+            case ColumnValueType.DateTime:
+                return @<ProcessingEditDateTimeCell ColumnName="@columnName" Row="_rowBeingEdited" />;
+            case ColumnValueType.Integer:
+                return @<ProcessingEditIntegerField ColumnName="@columnName" Row="_rowBeingEdited" />;
+            case ColumnValueType.Decimal:
+                return @<ProcessingEditDecimalField ColumnName="@columnName" Row="_rowBeingEdited" />;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
     }
 
     private RenderFragment? TagDataCell(int tagsColumnIndex, CsvRow row)
@@ -369,6 +433,8 @@
 
     private RenderFragment ToolBarContent()
     {
+        bool isPreviousEdit = Utils.IsValidIndex(Stepper.Runner?.CurrentRowEditIndex, Stepper.Runner?.CurrentRowEdits?.Count ?? -1);
+        bool isNextEdit = Utils.IsValidIndex(Stepper.Runner?.CurrentRowEditIndex + 1, Stepper.Runner?.CurrentRowEdits?.Count ?? -1);
         var columnNames = EasyCsv?.ColumnNames();
         return @<div class="csv-processing-toolbar">
                    <div class="csv-processing-toolbar-atlas">
@@ -382,8 +448,23 @@
                    @if (Stepper.UseSearchBar && columnNames != null)
                    {
                        <div class="csv-processing-toolbar-options">
+                           <div class="csv-processing-toolbar-forward-back-container" >
+                               @if (isPreviousEdit)
+                               {
+                                   var _class = !isNextEdit ? "forward-edit mr-7" : "forward-edit";
+                                   <MudTooltip Text="Go back edit" RootClass="@_class" Delay="700" >
+                                       <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ArrowBackIos" OnClick="x => Stepper.Runner.GoBackEdit()" ></MudIconButton>
+                                   </MudTooltip>
+                               }
+                               @if (isNextEdit)
+                               {
+                                   <MudTooltip Text="Go forward edit" Delay="700">
+                                       <MudIconButton Class="back-edit" Size="Size.Small" Icon="@Icons.Material.Filled.ArrowForwardIos" OnClick="x => Stepper.Runner.GoForwardEdit()" ></MudIconButton>
+                                   </MudTooltip>
+                               }
+                           </div>
                            <div class="csv-processing-toolbar-full-csv-operations-button">
-                               <MudTooltip Delay="750" Text="View Full Csv Strategies" >
+                               <MudTooltip Delay="750" Text="View Full Csv Strategies">
                                    <MudIconButton Disabled="Busy" Icon="@Stepper.ViewFullCsvOperationsIcon" OnClick="_ => TogglePopover(InternalColumnNames.FullCsvOperations)"></MudIconButton>
                                </MudTooltip>
                                @StrategyBucketPopover(InternalColumnNames.FullCsvOperations, Origin.BottomLeft, Origin.TopRight, true)
@@ -400,13 +481,54 @@
                    else
                    {
                        <div class="csv-processing-toolbar-full-csv-operations-button">
-                           <MudTooltip Delay="750" Text="View Full Csv Strategies" >
+                           <div class="csv-processing-toolbar-forward-back-container" >
+                               @if (Utils.IsValidIndex(Stepper.Runner?.CurrentRowEditIndex, Stepper.Runner?.CurrentRowEdits?.Count ?? -1))
+                               {
+                                   <MudIconButton Class="forward-edit" Size="Size.Small" Icon="@Icons.Material.Filled.ArrowBackIos" OnClick="x => Stepper.Runner.GoBackEdit()" ></MudIconButton>
+                               }
+                               @if (Utils.IsValidIndex(Stepper.Runner?.CurrentRowEditIndex + 1, Stepper.Runner?.CurrentRowEdits?.Count ?? -1))
+                               {
+                                   <MudIconButton Class="back-edit" Size="Size.Small" Icon="@Icons.Material.Filled.ArrowForwardIos" OnClick="x => Stepper.Runner.GoForwardEdit()" ></MudIconButton>
+                               }
+                           </div>
+                           <MudTooltip Delay="750" Text="View Full Csv Strategies">
                                <MudIconButton Disabled="Busy" Icon="@Stepper.ViewFullCsvOperationsIcon" OnClick="_ => TogglePopover(InternalColumnNames.FullCsvOperations)"></MudIconButton>
                            </MudTooltip>
                            @StrategyBucketPopover(InternalColumnNames.FullCsvOperations, Origin.BottomLeft, Origin.TopRight, true)
                        </div>
                    }
                </div>;
+    }
+
+    private RenderFragment<CsvRow>? RowEditTemplate(int tagsColumnIndex, int referenceColumnIndex)
+    {
+        if (!Stepper.EnableRowEditing)
+        {
+            return null;
+        }
+
+        return row =>
+        {
+            return @<text>
+                        @if (Stepper.TagsAndReferencesLocation == ColumnLocation.Beginning)
+                        {
+                            @TagDataCell(tagsColumnIndex, row)
+                            @ReferencesDataCell(referenceColumnIndex, row)
+                        }
+                        @for (int i = 0; i < row.Count; i++)
+                        {
+                            if (i != tagsColumnIndex && i != referenceColumnIndex)
+                            {
+                                @EditCell(row, i)
+                            }
+                        }
+                        @if (Stepper.TagsAndReferencesLocation == ColumnLocation.End)
+                        {
+                            @ReferencesDataCell(referenceColumnIndex, row)
+                            @TagDataCell(tagsColumnIndex, row)
+                        }
+                    </text>;
+        };
     }
 
     private RenderFragment StrategyBucketPopover(string column, Origin anchorOrigin, Origin transformOrigin, bool fullCsv)

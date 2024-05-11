@@ -1,0 +1,24 @@
+﻿<MudTd Class="extra-dense">
+    <MudNumericField T="decimal?" Value="_newValue" ValueChanged="ValueChanged" Variant="Variant.Filled" Placeholder="@ColumnName" />
+</MudTd>
+@code {
+    [Parameter, EditorRequired] public CsvRow Row { get; set; } = null!;
+    [Parameter, EditorRequired] public string ColumnName { get; set; } = null!;
+    private decimal? _newValue;
+    protected override void OnInitialized()
+    {
+        if (Row == null || string.IsNullOrWhiteSpace(ColumnName))
+        {
+            throw new Exception("ProcessingEditTextField: Row and column name cannot be null");
+        }
+        if (decimal.TryParse(Row[ColumnName]?.ToString(), NumberStyles.Any, CultureInfo.CurrentCulture, out var value))
+        {
+            _newValue = value;
+        }
+    }
+    private void ValueChanged(decimal? obj)
+    {
+        _newValue = obj;
+        Row[ColumnName] = _newValue.ToString();
+    }
+}

@@ -1,6 +1,8 @@
-﻿using EasyCsv.Core;
+﻿using System;
+using EasyCsv.Core;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using EasyCsv.Core.Extensions;
@@ -10,21 +12,36 @@ namespace EasyCsv.Processing;
 public class StrategyRunner
 {
     private int _currentIndex = -1;
+    private int _currentEditIndex = -1;
     public int CurrentIndex => _currentIndex;
-    public IEasyCsv? CurrentCsv => IsCacheIndexValid(_currentIndex) ? _cachedCsvs[_currentIndex] : null;
-    public HashSet<string>? CurrentTags => Utils.IsValidIndex(_currentIndex, _tagsCache.Count) ? _tagsCache[_currentIndex] : null;
+    public int? CurrentRowEditIndex => Utils.IsValidIndex(_currentIndex, _steps.Count) ? _steps[_currentIndex].CurrentRowEditIndex.Value : null;
+    public IEasyCsv? CurrentCsv => IsCacheIndexValid(_currentIndex) ? _steps[_currentIndex].Csv : null;
+    public HashSet<string>? CurrentTags => Utils.IsValidIndex(_currentIndex, _steps.Count) ? _steps[_currentIndex].Tags : null;
+    internal List<RowEdit>? CurrentRowEdits => Utils.IsValidIndex(_currentIndex, _steps.Count) ? _steps[_currentIndex].RowEdits : null;
     private readonly List<(IEasyCsv Csv, string FileName)> _referenceCsvs = new();
     public IReadOnlyList<(IEasyCsv Csv, string FileName)> ReferenceCsvs => _referenceCsvs;
-    public IReadOnlyList<IEasyCsv> CachedCsvs => _cachedCsvs;
-    private readonly List<IEasyCsv> _cachedCsvs = new();
-    private readonly List<HashSet<string>> _tagsCache = new();
-    public IReadOnlyList<ICollection<string>> TagsCache => _tagsCache;
+    public IReadOnlyList<IEasyCsv> CachedCsvs() => _steps.Select(x => x.Csv).ToArray();
+    public IReadOnlyList<IReadOnlyCollection<string>> CachedTags() => _steps.Select(x => x.Tags).ToArray();
+    internal readonly List<(IEasyCsv Csv, HashSet<string> Tags, List<RowEdit> RowEdits, CurrentRowEditIndex CurrentRowEditIndex)> _steps = new();
 
     public StrategyRunner(IEasyCsv baseCsv)
     {
-        _cachedCsvs.Add(baseCsv.Clone());
+        var clone = baseCsv.Clone();
+        _steps.Add((clone, AllUniqueTags(clone), new List<RowEdit>(), new CurrentRowEditIndex()));
         SetCurrentIndexSafe(0);
-        _tagsCache.Add(AllUniqueTags());
+    }
+
+    public void EditRow(CsvRow beforeRow, CsvRow afterRow)
+    {
+        if (CurrentCsv == null) return;
+        int index = CurrentCsv.CsvContent.IndexOf(beforeRow);
+        if (index < 0) return;
+        while (_steps[_currentIndex].CurrentRowEditIndex.Value != _steps[_currentIndex].RowEdits.Count - 1)
+        {
+            _steps[_currentIndex].RowEdits.Remove(_steps[_currentIndex].RowEdits[_steps[_currentIndex].RowEdits.Count - 1]);
+        }
+        _steps[_currentIndex].RowEdits.Add(new RowEdit(index, beforeRow, afterRow));
+        GoForwardEdit();
     }
 
     public async ValueTask<AggregateOperationDeleteResult> PerformColumnEvaluateDelete(ICsvColumnDeleteEvaluator evaluateDelete, ICollection<int>? filteredRowIds)
@@ -161,26 +178,19 @@ public class StrategyRunner
         //       ^
         // Then we want to remove 4 and 5, like so
         // 1->2->3->6
-        while (_currentIndex != _cachedCsvs.Count - 1)
+        while (_currentIndex != _steps.Count - 1)
         {
-#if NETSTANDARD2_0
-            _cachedCsvs.Remove(_cachedCsvs[_cachedCsvs.Count - 1]);
-            _tagsCache.Remove(_tagsCache[_tagsCache.Count - 1]);
-#else
-            _cachedCsvs.RemoveAt(_cachedCsvs.Count-1);
-            _tagsCache.RemoveAt(_tagsCache.Count-1);
-#endif
+            _steps.Remove(_steps[_steps.Count - 1]);
         }
-        _cachedCsvs.Add(csv);
-        SetCurrentIndexSafe(_cachedCsvs.Count - 1);
-        _tagsCache.Add(AllUniqueTags());
+        _steps.Add((csv, AllUniqueTags(csv), new List<RowEdit>(), new CurrentRowEditIndex()));
+        SetCurrentIndexSafe(_steps.Count - 1);
     }
 
-    internal HashSet<string> AllUniqueTags()
+    private HashSet<string> AllUniqueTags(IEasyCsv? easyCsv)
     {
         var uniqueTags = new HashSet<string>();
-        if (CurrentCsv?.CsvContent == null) return uniqueTags;
-        foreach (var row in CurrentCsv.CsvContent)
+        if (easyCsv == null!) return uniqueTags;
+        foreach (var row in easyCsv.CsvContent)
         {
             var tags = row.Tags();
             if (tags != null)
@@ -192,6 +202,44 @@ public class StrategyRunner
             }
         }
         return uniqueTags;
+    }
+    // Current Row Edit is the one we are currently after
+    public bool GoForwardEdit()
+    {
+        if (Utils.IsValidIndex(CurrentRowEditIndex + 1, CurrentRowEdits?.Count ?? -1))
+        {
+            var nextRowEdit = CurrentRowEdits![CurrentRowEditIndex!.Value + 1];
+#if DEBUG
+            var equals = CurrentCsv!.CsvContent[nextRowEdit.RowIndex].ValuesEqual(nextRowEdit.BeforeRow);
+            if (!equals)
+            {
+                throw new Exception("Should've equalled Before Row");
+            }
+#endif
+            CurrentCsv!.CsvContent[nextRowEdit.RowIndex] = nextRowEdit.AftereRow;
+            _steps[_currentIndex].CurrentRowEditIndex.Value += 1;
+            return true;
+        }
+        return false;
+    }
+
+    public bool GoBackEdit()
+    {
+        if (Utils.IsValidIndex(CurrentRowEditIndex, CurrentRowEdits?.Count ?? -1))
+        {
+            var currentRowEdit = CurrentRowEdits![CurrentRowEditIndex!.Value];
+#if DEBUG
+            var equals = CurrentCsv!.CsvContent[currentRowEdit.RowIndex].ValuesEqual(currentRowEdit.AftereRow);
+            if (!equals)
+            {
+                throw new Exception("Should've equalled After Row");
+            }
+#endif
+            CurrentCsv!.CsvContent[currentRowEdit.RowIndex] = currentRowEdit.BeforeRow;
+            _steps[_currentIndex].CurrentRowEditIndex.Value -= 1;
+            return true;
+        }
+        return false;
     }
 
     public bool GoBackStep()
@@ -219,7 +267,7 @@ public class StrategyRunner
     public bool IsCacheIndexValid([NotNullWhen(true)] int? index)
 #endif
     {
-        return Utils.IsValidIndex(index, _cachedCsvs.Count);
+        return Utils.IsValidIndex(index, _steps.Count);
     }
 
 #if NETSTANDARD2_0
@@ -230,6 +278,17 @@ public class StrategyRunner
     {
         return Utils.IsValidIndex(index, ReferenceCsvs.Count);
     }
+}
+internal class RowEdit(int rowIndex, CsvRow beforeRow, CsvRow aftereRow)
+{
+    public int RowIndex { get; } = rowIndex;
+    public CsvRow BeforeRow { get; } = beforeRow;
+    public CsvRow AftereRow { get; } = aftereRow;
+}
+
+internal class CurrentRowEditIndex
+{
+    public int Value { get; set; } = -1;
 }
 
 public readonly struct RowCell : ICell

@@ -1,12 +1,12 @@
 ﻿@namespace EasyCsv.Components
 @inherits StrategyBucketItemBase
 
-@if (CsvProcessor?.Runner?.CurrentCsv != null)
+@if (CsvProcessor?.Runner?.CurrentCsvColumnNames != null)
 {
     <MudSelect Immediate="Immediate" Disabled="Disabled" Label="@Label" T="string" MultiSelection="true" MultiSelectionTextFunc="@(MultiSelectionTextFunc)"
                SelectedValues="ColumnNames" SelectedValuesChanged="x => ColumnNames = x?.ToArray() ?? []" Variant="@Variant" Style="min-width: 300px;"
                Clearable="true" OnClearButtonClick="x => ColumnNames = []" SelectAll="@SelectAll" SelectAllText="@SelectAllText">
-        @foreach (var value in CsvProcessor.Runner.CurrentCsv.ColumnNames()!.Where(x => x.Equals(InternalColumnNames.Tags, StringComparison.OrdinalIgnoreCase) == false))
+        @foreach (var value in CsvProcessor.Runner.CurrentCsvColumnNames.Where(x => x.Equals(InternalColumnNames.Tags, StringComparison.OrdinalIgnoreCase) == false))
         {
             <MudSelectItem Value="value">@value</MudSelectItem>
         }
@@ -53,7 +53,7 @@
     {
         if (InitializeWithAllColumnNames)
         {
-            var columnNames = CsvProcessor?.Runner?.CurrentCsv?.ColumnNames();
+            var columnNames = CsvProcessor?.Runner?.CurrentCsvColumnNames;
             if (columnNames?.Length > 0)
             {
                 ColumnNames = columnNames;
@@ -65,7 +65,7 @@
         }
         else if (AutoMatchColumns != null)
         {
-            var columnNames = CsvProcessor?.Runner?.CurrentCsv?.ColumnNames();
+            var columnNames = CsvProcessor?.Runner?.CurrentCsvColumnNames;
             if (columnNames?.Length > 0 && AutoMatchColumns(columnNames) is {Length: > 0} matchedColumns)
             {
                 List<string> toSet = new();
@@ -84,7 +84,7 @@
     private string MultiSelectionTextFunc(List<string> x)
     {
         if (x == null!) return "";
-        var columnNames = CsvProcessor?.Runner?.CurrentCsv?.ColumnNames();
+        var columnNames = CsvProcessor?.Runner?.CurrentCsvColumnNames;
         if (x.Count == columnNames?.Length && AllColumnsSelectedText != null)
         {
             return AllColumnsSelectedText(columnNames);

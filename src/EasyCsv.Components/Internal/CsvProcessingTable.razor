@@ -107,19 +107,19 @@
     }
 </style>
 
-@if (EasyCsv?.CsvContent != null && EasyCsv.ColumnNames() != null && ColumnOptions != null) 
+@if (Stepper?.Runner is {CurrentCsv: not null, CurrentCsvColumnNames: not null} && ColumnOptions != null) 
 {
-    int tagsColumnIndex = EasyCsv.ColumnNames()?.IndexOf(InternalColumnNames.Tags) ?? -1;
-    int referenceColumnIndex = EasyCsv.ColumnNames()?.IndexOf(InternalColumnNames.References) ?? -1;
-    string[] columnNames = EasyCsv.ColumnNames()!;
-    @foreach (var test in _referencesBackDropsOpen)
+    string[] columnNames = Stepper.Runner.CurrentCsvColumnNames!;
+    int tagsColumnIndex = columnNames.IndexOf(InternalColumnNames.Tags);
+    int referenceColumnIndex = columnNames.IndexOf(InternalColumnNames.References);
+    @foreach (var backDrop in _referencesBackDropsOpen)
     {
-        <MudPopover @onclick="() => { _referencesBackDropsOpen[test.Key] = false; _referencesOpen[test.Key] = false; }" Class="easy-csv-fullscreen-backdrop" Open="_referencesOpen[test.Key]">
+        <MudPopover @onclick="() => { _referencesBackDropsOpen[backDrop.Key] = false; _referencesOpen[backDrop.Key] = false; }" Class="easy-csv-fullscreen-backdrop" Open="_referencesOpen[backDrop.Key]">
             <ChildContent>
                 @{
-                    @if (_referencesBackDropsOpen[test.Key] != true)
+                    @if (_referencesBackDropsOpen[backDrop.Key] != true)
                     {
-                        _referencesBackDropsOpen[test.Key] = true;
+                        _referencesBackDropsOpen[backDrop.Key] = true;
                         StateHasChanged();
                     }
                 }
@@ -255,17 +255,17 @@
     {
         if (IsFiltered())
         {
-            var tagsColumnIndex = EasyCsv?.ColumnNames()?.IndexOf(x => x == InternalColumnNames.Tags) ?? -1;
-            return EasyCsv?.CsvContent.Where(x => x.AnyColumnContainsValues(SearchColumns, _sq) && (tagsColumnIndex < 0 || x.MatchesIncludeTagsAndExcludeTags(tagsColumnIndex, _searchTags, null))) ?? Enumerable.Empty<CsvRow>();
+            var tagsColumnIndex = Stepper?.Runner?.CurrentCsvColumnNames?.IndexOf(x => x == InternalColumnNames.Tags) ?? -1;
+            return Stepper?.Runner?.CurrentCsv?.CsvContent.Where(x => x.AnyColumnContainsValues(SearchColumns, _sq) && (tagsColumnIndex < 0 || x.MatchesIncludeTagsAndExcludeTags(tagsColumnIndex, _searchTags, null))) ?? Enumerable.Empty<CsvRow>();
         }
-        return EasyCsv?.CsvContent ?? Enumerable.Empty<CsvRow>();
+        return Stepper?.Runner?.CurrentCsv?.CsvContent ?? Enumerable.Empty<CsvRow>();
     }
 
     [Pure]
     internal HashSet<int> FilteredRowIndexes()
     {
-        var tagsColumnIndex = EasyCsv?.ColumnNames()?.IndexOf(x => x == InternalColumnNames.Tags) ?? -1;
-        return EasyCsv?.CsvContent
+        var tagsColumnIndex = Stepper?.Runner?.CurrentCsvColumnNames?.IndexOf(x => x == InternalColumnNames.Tags) ?? -1;
+        return Stepper?.Runner?.CurrentCsv?.CsvContent
             .Select((row, index) => (row, index))
             .Where(x => x.row.AnyColumnContainsValues(SearchColumns, _sq))
             .Where(x => tagsColumnIndex < 0 || x.row.MatchesIncludeTagsAndExcludeTags(tagsColumnIndex, _searchTags, null))
@@ -301,7 +301,7 @@
         _columnStrategyBuckets.Clear();
         _referencesBackDropsOpen.Clear();
         _referencesOpen.Clear();
-        var columnNames = EasyCsv?.ColumnNames();
+        var columnNames = Stepper?.Runner?.CurrentCsv?.ColumnNames();
         if (Stepper?.AutoSelectAllColumnsToSearch == true && columnNames != null)
         {
             SearchColumns = columnNames;
@@ -463,7 +463,7 @@
     {
         bool isPreviousEdit = Utils.IsValidIndex(Stepper.Runner?.CurrentRowEditIndex, Stepper.Runner?.CurrentReversibleEdits?.Count ?? -1);
         bool isNextEdit = Utils.IsValidIndex(Stepper.Runner?.CurrentRowEditIndex + 1, Stepper.Runner?.CurrentReversibleEdits?.Count ?? -1);
-        var columnNames = EasyCsv?.ColumnNames();
+        var columnNames = Stepper?.Runner?.CurrentCsvColumnNames;
         return @<div class="csv-processing-toolbar">
                    <div class="csv-processing-toolbar-atlas">
                        <div class="csv-processing-toolbar-atlas-item" style="margin-bottom: 7px" >

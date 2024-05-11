@@ -36,7 +36,7 @@
             <br />
             <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: baseline;">
                 @{
-                    var columnsNames = Runner.CurrentCsv.ColumnNames();
+                    var columnsNames = Runner.CurrentCsvColumnNames;
                 }
                 <div style="display: flex; flex-direction: row; padding: 0 15px; gap: 50px;">
                     <div style="display: flex; flex-direction: column; gap: 15px;" >
@@ -152,10 +152,7 @@
         }
     </ErrorContent>
 </ErrorBoundary>
-@{
-    string[]? columnNames;
-}
-@if (Runner?.CurrentCsv != null && (columnNames = Runner.CurrentCsv.ColumnNames()) != null)
+@if (Runner is {CurrentCsv: not null, CurrentCsvColumnNames: not null})
 {
     <MudDialog @bind-IsVisible="_isDownloadDialogVisible" Class="csv-processing-download-popup" Style="min-width: 600px;">
         <TitleContent>
@@ -177,7 +174,7 @@
                                   HelperText="Value to search for" HelperTextOnFocus Variant="Variant.Outlined" @bind-Value="_sq"
                                   Clearable OnClearButtonClick="x => _sq = null"/>
                     <MultiColumnSelect @bind-ColumnNames="_searchColumns" Label="Columns To Search" SelectAll="true" SelectAllText="Search All Columns"></MultiColumnSelect>
-                    @if (columnNames.Contains(InternalColumnNames.Tags))
+                    @if (Runner.CurrentCsvColumnNames.Contains(InternalColumnNames.Tags))
                     {
                         <MudText Typo="Typo.h6">Tags Filter (Optional)</MudText>
                         <MultiTagSelect @bind-Tags="_includeTags" DisabledTags="_excludeTags" Label="Include Tags"></MultiTagSelect>

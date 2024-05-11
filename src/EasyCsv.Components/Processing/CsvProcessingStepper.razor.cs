@@ -43,6 +43,7 @@ public partial class CsvProcessingStepper
     [Parameter] public bool EnableRowDeleting { get; set; } = false;
     [Parameter] public bool ShowColumnNameInStrategySelect { get; set; } = true;
     [Parameter] public bool ShowAddReferenceCsv { get; set; } = true;
+    [Parameter] public bool EnableChangeColumnValueType { get; set; } = true;
     [Parameter] public RunOperationNoneSelectedBehaviour RunOperationNoneSelectedBehaviour { get; set; } = RunOperationNoneSelectedBehaviour.Hidden;
     [Parameter] public ColumnLocation TagsAndReferencesLocation { get; set; } = ColumnLocation.Beginning;
     [Parameter] public ResolveDuplicatesAutoSelect ResolveDuplicatesAutoSelect { get; set; } = ResolveDuplicatesAutoSelect.None;

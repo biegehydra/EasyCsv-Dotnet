@@ -1,0 +1,25 @@
+﻿<MudTd Class="extra-dense">
+    <MudDatePicker Variant="Variant.Filled" Placeholder="@ColumnName" Date="_newValue"  ></MudDatePicker>
+</MudTd>
+@code {
+    [Parameter, EditorRequired] public CsvRow Row { get; set; } = null!;
+    [Parameter, EditorRequired] public string ColumnName { get; set; } = null!;
+    private DateTime? _newValue;
+    protected override void OnInitialized()
+    {
+        if (Row == null || string.IsNullOrWhiteSpace(ColumnName))
+        {
+            throw new Exception("ProcessingEditTextField: Row and column name cannot be null");
+        }
+        if (DateTime.TryParse(Row[ColumnName]?.ToString(), out var dateTime))
+        {
+            _newValue = dateTime;
+        }
+    }
+
+    private void ValueChanged(DateTime? obj)
+    {
+        _newValue = obj;
+        Row[ColumnName] = _newValue.ToString();
+    }
+}

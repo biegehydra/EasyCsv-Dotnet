@@ -377,5 +377,10 @@ namespace EasyCsv.Core
             }
             this[InternalColumnNames.References] = string.Join(",", newReferences);
         }
+
+        public bool ValuesEqual(CsvRow other)
+        {
+            return Count == other.Count && Keys.All(key => ContainsKey(key) && Equals(this[key], other[key]));
+        }
     }
 }

@@ -7,6 +7,9 @@ using EasyCsv.Processing;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using Microsoft.JSInterop;
+using Microsoft.AspNetCore.Components.Web;
+using MudBlazorFix;
+using System.Windows.Input;
 
 namespace EasyCsv.Components;
 
@@ -36,6 +39,7 @@ public partial class CsvProcessingStepper
     [Parameter] public CloseBehaviour CloseBehaviour { get; set; } = Enums.CloseBehaviour.CloseButtonAndClickAway;
     [Parameter] public bool HideOtherStrategiesOnSelect { get; set; } = true;
     [Parameter] public bool SearchBar { get; set; } = true;
+    [Parameter] public bool EnableRowEditing { get; set; } = true;
     [Parameter] public bool ShowColumnNameInStrategySelect { get; set; } = true;
     [Parameter] public bool ShowAddReferenceCsv { get; set; } = true;
     [Parameter] public RunOperationNoneSelectedBehaviour RunOperationNoneSelectedBehaviour { get; set; } = RunOperationNoneSelectedBehaviour.Hidden;
@@ -355,4 +359,105 @@ public partial class CsvProcessingStepper
             .Select(x => x.index)
             .ToHashSet() ?? new HashSet<int>();
     }
+
+
+
+    #region Editing
+
+    /// <summary>Locks Inline Edit mode, if true.</summary>
+    [Parameter]
+    [Category("Editing")]
+    public bool ReadOnly { get; set; }
+
+    /// <summary>Button commit edit click event.</summary>
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnCommitEditClick { get; set; }
+
+    /// <summary>Button cancel edit click event.</summary>
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnCancelEditClick { get; set; }
+
+    /// <summary>
+    /// Event is called before the item is modified in inline editing.
+    /// </summary>
+    [Parameter]
+    public EventCallback<object> OnPreviewEditClick { get; set; }
+
+    /// <summary>Tooltip for the CommitEdit Button.</summary>
+    [Parameter]
+    [Category("Editing")]
+    public string? CommitEditTooltip { get; set; }
+
+    /// <summary>Tooltip for the CancelEdit Button.</summary>
+    [Parameter]
+    [Category("Editing")]
+    public string? CancelEditTooltip { get; set; }
+
+    /// <summary>Sets the Icon of the CommitEdit Button.</summary>
+    [Parameter]
+    [Category("Editing")]
+    public string CommitEditIcon { get; set; } = Icons.Material.Filled.Check;
+
+    /// <summary>Sets the Icon of the CancelEdit Button.</summary>
+    [Parameter]
+    [Category("Editing")]
+    public string CancelEditIcon { get; set; } = Icons.Material.Filled.Cancel;
+
+    /// <summary>
+    /// Define if Cancel button is present or not for inline editing.
+    /// </summary>
+    [Parameter]
+    [Category("Editing")]
+    public bool CanCancelEdit { get; set; } = true;
+
+    /// <summary>
+    /// Set the positon of the CommitEdit and CancelEdit button, if <see cref="P:MudBlazor.MudTableBase.IsEditable" /> IsEditable is true. Defaults to the end of the row
+    /// </summary>
+    [Parameter]
+    [Category("Editing")]
+    public TableApplyButtonPosition ApplyButtonPosition { get; set; } = TableApplyButtonPosition.StartAndEnd;
+
+    /// <summary>
+    /// Set the positon of the StartEdit button, if <see cref="P:MudBlazor.MudTableBase.IsEditable" /> IsEditable is true. Defaults to the end of the row
+    /// </summary>
+    [Parameter]
+    [Category("Editing")]
+    public TableEditButtonPosition EditButtonPosition { get; set; } = TableEditButtonPosition.StartAndEnd;
+
+    /// <summary>Defines how a table row edit will be triggered</summary>
+    [Parameter]
+    [Category("Editing")]
+    public TableEditTrigger EditTrigger { get; set; } = TableEditTrigger.EditButton;
+
+    /// <summary>
+    /// Defines the edit button that will be rendered when EditTrigger.EditButton
+    /// </summary>
+    [Parameter]
+    [Category("Editing")]
+    public RenderFragment<EditButtonContext>? EditButtonContent { get; set; }
+
+    /// <summary>
+    /// The method is called before the item is modified in inline editing.
+    /// </summary>
+    [Parameter]
+    [Category("Editing")]
+    public Action<object>? RowEditPreview { get; set; }
+
+    /// <summary>
+    /// The method is called when the edition of the item has been committed in inline editing.
+    /// </summary>
+    [Parameter]
+    [Category("Editing")]
+    public Action<object>? RowEditCommit { get; set; }
+
+    /// <summary>
+    /// The method is called when the edition of the item has been canceled in inline editing.
+    /// </summary>
+    [Parameter]
+    [Category("Editing")]
+    public Action<object>? RowEditCancel { get; set; }
+
+    [Parameter] [Category("Editing")] public bool IsEditRowSwitchingBlocked { get; set; } = true;
+
+    #endregion
 }

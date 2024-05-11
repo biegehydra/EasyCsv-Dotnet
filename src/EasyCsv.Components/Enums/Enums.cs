@@ -45,6 +45,17 @@ public enum DefaultValueType
     TriStateCheckBox
 }
 
+public enum ColumnValueType
+{
+    [Description("The input will be MudTextField.")]
+    Text,
+    [Description("The input will be MudDatePicker.")]
+    DateTime,
+    [Description("The input will be a MudNumericalField.")]
+    Integer,
+    Decimal
+}
+
 public enum ResolveDuplicatesAutoSelect
 {
     [Description("Do not auto select any row.")]

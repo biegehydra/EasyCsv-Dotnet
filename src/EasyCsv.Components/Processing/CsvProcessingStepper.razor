@@ -13,7 +13,6 @@
         gap: 8px;
         align-items: center;
     }
-
 </style>
 
 <ErrorBoundary >
@@ -25,7 +24,8 @@
                 <div style="display: flex; gap: 20px; flex-direction: row;">
                     @if (Runner.IsCacheIndexValid(Runner.CurrentIndex - 1))
                     {
-                        <MudButton Disabled="@Busy" OnClick="_ => GoBackStep()" Variant="Variant.Filled" Color="Color.Secondary">Go Back Step</MudButton>
+                        var style = !Runner.IsCacheIndexValid(Runner.CurrentIndex + 1) ? "margin-right: 180px;" : null;
+                        <MudButton Disabled="@Busy" Style="@style" OnClick="_ => GoBackStep()" Variant="Variant.Filled" Color="Color.Secondary">Go Back Step</MudButton>
                     }
                     @if (Runner.IsCacheIndexValid(Runner.CurrentIndex + 1))
                     {
@@ -68,7 +68,7 @@
                         </div>
                         <div class="csv-file-container">
                             <MudChip Color="Color.Dark" Text="@EasyCsvFileName"/>
-                            @Runner?.CachedCsvs[0].RowCount()&nbsp;rows&nbsp;
+                            @Runner?._steps[0].Csv.RowCount()&nbsp;rows&nbsp;
                             <MudTooltip RootClass="csv-file-container" Text="Initial Csv">
                                 <MudIcon Color="Color.Primary" Icon="@Icons.Material.Filled.Star"></MudIcon>
                             </MudTooltip>

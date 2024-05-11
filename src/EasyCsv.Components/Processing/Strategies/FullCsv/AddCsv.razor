@@ -61,7 +61,7 @@
     [Parameter] public ExpectedHeaderConfig ExpectedHeaderConfig { get; set; } = new(DefaultValueType.Text, false, null, AutoMatching.Lenient);
     [Parameter] public override bool OnlyOperatesOnFilteredRows { get; set; } = false;
 
-    private bool AllowRun => _csvToAdd != null && _tableHeaderMatcher != null;
+    private bool AllowRun => _mappedCsv != null && _tableHeaderMatcher != null;
     private CsvTableHeaderMatcher? _tableHeaderMatcher;
     private bool _isAddDataDialogVisible;
     private IEasyCsv? _csvToAdd;

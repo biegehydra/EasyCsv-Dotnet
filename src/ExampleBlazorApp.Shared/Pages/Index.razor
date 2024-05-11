@@ -95,7 +95,7 @@ else
 
     private async Task GetTestCsv()
     {
-        _easyCsv = await EasyCsvFactory.FromUrlAsync(NavigationManager.BaseUri + "person_data.csv", 5);
+        _easyCsv = await EasyCsvFactory.FromUrlAsync(NavigationManager.BaseUri + "_content/ExampleBlazorApp.Shared/person_data.csv", 5);
     }
 
     private async Task GetRecords()

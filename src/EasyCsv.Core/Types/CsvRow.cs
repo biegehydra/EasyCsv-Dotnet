@@ -347,10 +347,28 @@ namespace EasyCsv.Core
                 this[InternalColumnNames.Tags] = string.Join(",", existingTags);
             }
         }
+        public void AddProcessingTag(int tagsColumnIndex, string tag)
+        {
+            var existingTags = ProcessingTags(tagsColumnIndex)?.ToHashSet() ?? new HashSet<string>();
+            bool added = existingTags.Add(tag);
+            if (added)
+            {
+                this[InternalColumnNames.Tags] = string.Join(",", existingTags);
+            }
+        }
 
         public void AddProcessingReference(int referenceCsvId, int referenceRowId)
         {
             var existingReferences = ProcessingReferences()?.ToHashSet() ?? new HashSet<(int CsvIndex, int RowIndex)>();
+            if (existingReferences.Add((referenceCsvId, referenceRowId)))
+            {
+                this[InternalColumnNames.References] = string.Join(",", existingReferences);
+            }
+        }
+
+        public void AddProcessingReference(int referencesColumnIndex, int referenceCsvId, int referenceRowId)
+        {
+            var existingReferences = ProcessingReferences(referencesColumnIndex)?.ToHashSet() ?? new HashSet<(int CsvIndex, int RowIndex)>();
             if (existingReferences.Add((referenceCsvId, referenceRowId)))
             {
                 this[InternalColumnNames.References] = string.Join(",", existingReferences);

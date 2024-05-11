@@ -17,30 +17,28 @@ public class StrategyRunner
     public int? CurrentRowEditIndex => Utils.IsValidIndex(_currentIndex, _steps.Count) ? _steps[_currentIndex].CurrentRowEditIndex.Value : null;
     public IEasyCsv? CurrentCsv => IsCacheIndexValid(_currentIndex) ? _steps[_currentIndex].Csv : null;
     public HashSet<string>? CurrentTags => Utils.IsValidIndex(_currentIndex, _steps.Count) ? _steps[_currentIndex].Tags : null;
-    internal List<ModifyRowEdit>? CurrentRowEdits => Utils.IsValidIndex(_currentIndex, _steps.Count) ? _steps[_currentIndex].RowEdits : null;
+    internal List<IReversibleEdit>? CurrentReversibleEdits => Utils.IsValidIndex(_currentIndex, _steps.Count) ? _steps[_currentIndex].ReversibleEdits : null;
     private readonly List<(IEasyCsv Csv, string FileName)> _referenceCsvs = new();
     public IReadOnlyList<(IEasyCsv Csv, string FileName)> ReferenceCsvs => _referenceCsvs;
     public IReadOnlyList<IEasyCsv> CachedCsvs() => _steps.Select(x => x.Csv).ToArray();
     public IReadOnlyList<IReadOnlyCollection<string>> CachedTags() => _steps.Select(x => x.Tags).ToArray();
-    internal readonly List<(IEasyCsv Csv, HashSet<string> Tags, List<ModifyRowEdit> RowEdits, CurrentRowEditIndex CurrentRowEditIndex)> _steps = new();
+    internal readonly List<(IEasyCsv Csv, HashSet<string> Tags, List<IReversibleEdit> ReversibleEdits, CurrentRowEditIndex CurrentRowEditIndex)> _steps = new();
 
     public StrategyRunner(IEasyCsv baseCsv)
     {
         var clone = baseCsv.Clone();
-        _steps.Add((clone, AllUniqueTags(clone), new List<ModifyRowEdit>(), new CurrentRowEditIndex()));
+        _steps.Add((clone, AllUniqueTags(clone), new List<IReversibleEdit>(), new CurrentRowEditIndex()));
         SetCurrentIndexSafe(0);
     }
 
     public void AddReversibleEdit(IReversibleEdit reversibleEdit)
     {
         if (CurrentCsv == null) return;
-        int index = CurrentCsv.CsvContent.IndexOf(beforeRow);
-        if (index < 0) return;
-        while (_steps[_currentIndex].CurrentRowEditIndex.Value != _steps[_currentIndex].RowEdits.Count - 1)
+        while (_steps[_currentIndex].CurrentRowEditIndex.Value != _steps[_currentIndex].ReversibleEdits.Count - 1)
         {
-            _steps[_currentIndex].RowEdits.Remove(_steps[_currentIndex].RowEdits[_steps[_currentIndex].RowEdits.Count - 1]);
+            _steps[_currentIndex].ReversibleEdits.Remove(_steps[_currentIndex].ReversibleEdits[_steps[_currentIndex].ReversibleEdits.Count - 1]);
         }
-        _steps[_currentIndex].RowEdits.Add(new ModifyRowEdit(index, beforeRow, afterRow));
+        _steps[_currentIndex].ReversibleEdits.Add(reversibleEdit);
         GoForwardEdit();
     }
 
@@ -182,7 +180,7 @@ public class StrategyRunner
         {
             _steps.Remove(_steps[_steps.Count - 1]);
         }
-        _steps.Add((csv, AllUniqueTags(csv), new List<ModifyRowEdit>(), new CurrentRowEditIndex()));
+        _steps.Add((csv, AllUniqueTags(csv), new List<IReversibleEdit>(), new CurrentRowEditIndex()));
         SetCurrentIndexSafe(_steps.Count - 1);
     }
 
@@ -206,9 +204,9 @@ public class StrategyRunner
     // Current Row Edit is the one we are currently after
     public bool GoForwardEdit()
     {
-        if (Utils.IsValidIndex(CurrentRowEditIndex + 1, CurrentRowEdits?.Count ?? -1))
+        if (Utils.IsValidIndex(CurrentRowEditIndex + 1, CurrentReversibleEdits?.Count ?? -1))
         {
-            var nextRowEdit = CurrentRowEdits![CurrentRowEditIndex!.Value + 1];
+            var nextRowEdit = CurrentReversibleEdits![CurrentRowEditIndex!.Value + 1];
             nextRowEdit.DoEdit(CurrentCsv!);
             _steps[_currentIndex].CurrentRowEditIndex.Value += 1;
             return true;
@@ -218,9 +216,9 @@ public class StrategyRunner
 
     public bool GoBackEdit()
     {
-        if (Utils.IsValidIndex(CurrentRowEditIndex, CurrentRowEdits?.Count ?? -1))
+        if (Utils.IsValidIndex(CurrentRowEditIndex, CurrentReversibleEdits?.Count ?? -1))
         {
-            var currentRowEdit = CurrentRowEdits![CurrentRowEditIndex!.Value];
+            var currentRowEdit = CurrentReversibleEdits![CurrentRowEditIndex!.Value];
             currentRowEdit.UndoEdit(CurrentCsv!);
             _steps[_currentIndex].CurrentRowEditIndex.Value -= 1;
             return true;
@@ -293,19 +291,157 @@ public class ModifyRowEdit(int rowIndex, CsvRow beforeRow, CsvRow aftereRow) : I
         csv!.CsvContent[RowIndex] = BeforeRow;
     }
 }
-public class AddTagEdit(int rowIndex, string tagToAdd) : IReversibleEdit
+public class AddTagEdit : IReversibleEdit
 {
-    public int RowIndex { get; } = rowIndex;
-    public string TagToAdd { get; } = tagToAdd;
+    public AddTagEdit(int rowIndex, string tagToAdd, int tagColumnIndex = -1)
+    {
+        RowIndex = rowIndex;
+        TagToAdd = tagToAdd;
+        TagColumnIndex = tagColumnIndex;
+    }
+    public int RowIndex { get; }
+    public string TagToAdd { get; }
+    public int TagColumnIndex { get; }
     public void DoEdit(IEasyCsv csv)
     {
-        csv!.CsvContent[RowIndex].AddProcessingTag(tagToAdd);
+        csv!.CsvContent[RowIndex].AddProcessingTag(TagToAdd);
     }
     public void UndoEdit(IEasyCsv csv)
     {
-        csv!.CsvContent[RowIndex].RemoveProcessingTag(tagToAdd);
+        csv!.CsvContent[RowIndex].RemoveProcessingTag(TagToAdd);
     }
 }
+public class DeleteRowEdit : IReversibleEdit
+{
+    private readonly CsvRow _row;
+
+    public DeleteRowEdit(int rowIndex, CsvRow row)
+    {
+        _row = row;
+        RowIndex = rowIndex;
+    }
+
+    public int RowIndex { get; }
+    public void DoEdit(IEasyCsv csv)
+    {
+        csv!.CsvContent.RemoveAt(RowIndex);
+    }
+    public void UndoEdit(IEasyCsv csv)
+    {
+        csv!.CsvContent.Insert(RowIndex, _row);
+    }
+}
+
+public class RemoveTagEdit : IReversibleEdit
+{
+    public RemoveTagEdit(int rowIndex, string tagToRemove, int tagColumnIndex = -1)
+    {
+        RowIndex = rowIndex;
+        TagToRemove = tagToRemove;
+        TagColumnIndex = tagColumnIndex;
+    }
+
+    public int RowIndex { get; }
+    public string TagToRemove { get; }
+    public int TagColumnIndex { get; }
+    public void DoEdit(IEasyCsv csv)
+    {
+        if (TagColumnIndex >= 0)
+        {
+            csv!.CsvContent[RowIndex].RemoveProcessingTag(TagToRemove);
+        }
+        else
+        {
+            csv!.CsvContent[RowIndex].RemoveProcessingTag(TagColumnIndex, TagToRemove);
+        }
+    }
+    public void UndoEdit(IEasyCsv csv)
+    {
+        if (TagColumnIndex >= 0)
+        {
+            csv!.CsvContent[RowIndex].AddProcessingTag(TagToRemove);
+        }
+        else
+        {
+            csv!.CsvContent[RowIndex].AddProcessingTag(TagColumnIndex, TagToRemove);
+        }
+    }
+}
+public class RemoveReferenceEdit : IReversibleEdit
+{
+    public RemoveReferenceEdit(int rowIndex, int referenceCsvId, int referenceRowId, int referencesColumnIndex = -1)
+    {
+        RowIndex = rowIndex;
+        ReferenceCsvId = referenceCsvId;
+        ReferencesColumnIndex = referencesColumnIndex;
+        ReferenceRowId = referenceRowId;
+    }
+
+    public int RowIndex { get; }
+    public int ReferenceCsvId { get; }
+    public int ReferencesColumnIndex { get; }
+    public int ReferenceRowId { get; }
+    public void DoEdit(IEasyCsv csv)
+    {
+        if (ReferencesColumnIndex >= 0)
+        {
+            csv!.CsvContent[RowIndex].RemoveProcessingReference(ReferencesColumnIndex, ReferenceCsvId, ReferenceRowId);
+        }
+        else
+        {
+            csv!.CsvContent[RowIndex].RemoveProcessingReference(ReferenceCsvId, ReferenceRowId);
+        }
+    }
+    public void UndoEdit(IEasyCsv csv)
+    {
+        if (ReferencesColumnIndex >= 0)
+        {
+            csv!.CsvContent[RowIndex].AddProcessingReference(ReferencesColumnIndex, ReferenceCsvId, ReferenceRowId);
+        }
+        else
+        {
+            csv!.CsvContent[RowIndex].AddProcessingReference(ReferenceCsvId, ReferenceRowId);
+        }
+    }
+}
+public class AddReferenceEdit : IReversibleEdit
+{
+    public AddReferenceEdit(int rowIndex, int referenceCsvId, int referenceRowId, int referencesColumnIndex = -1)
+    {
+        RowIndex = rowIndex;
+        ReferenceCsvId = referenceCsvId;
+        ReferencesColumnIndex = referencesColumnIndex;
+        ReferenceRowId = referenceRowId;
+    }
+
+    public int RowIndex { get; }
+    public int ReferenceCsvId { get; }
+    public int ReferencesColumnIndex { get; }
+    public int ReferenceRowId { get; }
+    public void DoEdit(IEasyCsv csv)
+    {
+        if (ReferencesColumnIndex >= 0)
+        {
+            csv!.CsvContent[RowIndex].AddProcessingReference(ReferencesColumnIndex, ReferenceCsvId, ReferenceRowId);
+        }
+        else
+        {
+            csv!.CsvContent[RowIndex].AddProcessingReference(ReferenceCsvId, ReferenceRowId);
+        }
+    }
+    public void UndoEdit(IEasyCsv csv)
+    {
+        if (ReferencesColumnIndex >= 0)
+        {
+            csv!.CsvContent[RowIndex].RemoveProcessingReference(ReferencesColumnIndex, ReferenceCsvId, ReferenceRowId);
+        }
+        else
+        {
+            csv!.CsvContent[RowIndex].RemoveProcessingReference(ReferenceCsvId, ReferenceRowId);
+        }
+    }
+}
+
 public interface IReversibleEdit
 {
     void DoEdit(IEasyCsv csv);

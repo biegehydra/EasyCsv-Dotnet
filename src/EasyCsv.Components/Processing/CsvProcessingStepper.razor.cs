@@ -40,6 +40,7 @@ public partial class CsvProcessingStepper
     [Parameter] public bool HideOtherStrategiesOnSelect { get; set; } = true;
     [Parameter] public bool SearchBar { get; set; } = true;
     [Parameter] public bool EnableRowEditing { get; set; } = true;
+    [Parameter] public bool EnableRowDeleting { get; set; } = false;
     [Parameter] public bool ShowColumnNameInStrategySelect { get; set; } = true;
     [Parameter] public bool ShowAddReferenceCsv { get; set; } = true;
     [Parameter] public RunOperationNoneSelectedBehaviour RunOperationNoneSelectedBehaviour { get; set; } = RunOperationNoneSelectedBehaviour.Hidden;

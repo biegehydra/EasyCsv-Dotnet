@@ -20,9 +20,8 @@ public class JoinColumnsStrategy : IFullCsvProcessor
     {
         if (columnsToJoin.Length == 0) throw new ArgumentException("Columns to join must be specified.");
         if (string.IsNullOrWhiteSpace(newColumnName)) throw new ArgumentException("New column name must be specified");
-        if (string.IsNullOrWhiteSpace(delimiter)) throw new ArgumentException("Delimiter name must be specified");
         _columnsToJoin = columnsToJoin;
-        _delimiter = delimiter;
+        _delimiter = delimiter ?? throw new ArgumentException("Delimiter cannot be null");
         _joinIfNotAllPresent = joinIfNotAllPresent;
         _removeJoinedColumns = removeJoinedColumns;
         _newColumnName = newColumnName;

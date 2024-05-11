@@ -14,7 +14,7 @@ public class ShouldDeleteRowStrategy : ICsvRowDeleteEvaluator
         _shouldDeleteFunc = shouldDeleteFunc;
     }
 
-    public ValueTask<OperationDeleteResult> EvaluateDelete(CsvRow row)
+    public ValueTask<OperationDeleteResult> EvaluateDelete(CsvRow row, int rowIndex)
     {
         if (_shouldDeleteFunc(row))
         {

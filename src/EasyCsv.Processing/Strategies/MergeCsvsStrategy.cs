@@ -15,7 +15,7 @@ public class MergeCsvsStrategy : ICsvMerger
     {
         _mergeConfig = mergeConfig ?? throw new ArgumentException("Merge config cannot be null", nameof(mergeConfig));
     }
-    public async ValueTask<IEasyCsv> Merge(IEasyCsv baseCsv, IEasyCsv additionalCsv)
+    public async ValueTask<IEasyCsv> Merge(IEasyCsv baseCsv, IEasyCsv otherCsv)
     {
         var columnNames = baseCsv.ColumnNames();
         if (columnNames == null) return baseCsv;
@@ -24,7 +24,7 @@ public class MergeCsvsStrategy : ICsvMerger
         {
             x.AddColumns(newColumns.ToDictionary(y => y, y => (object?) null), ExistingColumnHandling.Keep);
             var allColumnNames = x.ColumnNames()!;
-            foreach (var additionalRow in additionalCsv.CsvContent)
+            foreach (var additionalRow in otherCsv.CsvContent)
             {
                 var newRow = new Dictionary<string, object?>(allColumnNames.Length);
                 foreach (var baseColumnName in allColumnNames)

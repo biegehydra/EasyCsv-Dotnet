@@ -176,7 +176,7 @@ namespace EasyCsv.Core
             return false;
         }
 
-        public bool RemoveReference(int referencesColumnIndex, int referenceCsvId, int referenceRowId)
+        public bool RemoveProcessingReference(int referencesColumnIndex, int referenceCsvId, int referenceRowId)
         {
             if (!Utils.IsValidIndex(referencesColumnIndex, Count)) return false;
             string? value = ValueAt(referencesColumnIndex)?.ToString();
@@ -192,14 +192,14 @@ namespace EasyCsv.Core
             return false;
         }
 
-        public bool RemoveReference(int referenceCsvId, int referenceRowId)
+        public bool RemoveProcessingReference(int referenceCsvId, int referenceRowId)
         {
             int referenceColumnIndex = Keys.IndexOf(InternalColumnNames.References);
-            return RemoveReference(referenceColumnIndex, referenceCsvId, referenceRowId);
+            return RemoveProcessingReference(referenceColumnIndex, referenceCsvId, referenceRowId);
         }
 
 
-        public bool RemoveTag(int tagsColumnIndex, string tag)
+        public bool RemoveProcessingTag(int tagsColumnIndex, string tag)
         {
             if (!Utils.IsValidIndex(tagsColumnIndex, Values.Count)) return false;
             var tags = ValueAt(tagsColumnIndex)?.ToString()?.Split([","], StringSplitOptions.RemoveEmptyEntries);
@@ -213,19 +213,19 @@ namespace EasyCsv.Core
             return false;
         }
 
-        public bool RemoveTag(string tag)
+        public bool RemoveProcessingTag(string tag)
         {
             int tagsColumnIndex = Keys.IndexOf(InternalColumnNames.Tags);
-            return RemoveTag(tagsColumnIndex, tag);
+            return RemoveProcessingTag(tagsColumnIndex, tag);
         }
 
-        public bool ContainsTag(int tagsColumnIndex, string tag)
+        public bool ContainsProcessingTag(int tagsColumnIndex, string tag)
         {
             if (string.IsNullOrWhiteSpace(tag)) return false;
             return ValueAt(tagsColumnIndex)?.ToString()?.Contains(tag) == true;
         }
 
-        public bool ContainsAnyTag(int tagsColumnIndex, IEnumerable<string> tags)
+        public bool ContainsAnyProcessingTag(int tagsColumnIndex, IEnumerable<string> tags)
         {
             if (tags == null!) return false;
             string? strValue = ValueAt(tagsColumnIndex)?.ToString();
@@ -265,7 +265,7 @@ namespace EasyCsv.Core
             return !any;
         }
 
-        public string[]? Tags(int tagsColumnIndex)
+        public string[]? ProcessingTags(int tagsColumnIndex)
         {
             if (!Utils.IsValidIndex(tagsColumnIndex, Count)) return null;
             string? value = ValueAt(tagsColumnIndex)?.ToString();
@@ -278,13 +278,13 @@ namespace EasyCsv.Core
             return split;
         }
 
-        public string[]? Tags()
+        public string[]? ProcessingTags()
         {
             int tagsColumnIndex = Keys.IndexOf(InternalColumnNames.Tags);
-            return Tags(tagsColumnIndex);
+            return ProcessingTags(tagsColumnIndex);
         }
 
-        public (int CsvIndex, int RowIndex)[]? References(int referencesColumnIndex)
+        public (int CsvIndex, int RowIndex)[]? ProcessingReferences(int referencesColumnIndex)
         {
             if (!Utils.IsValidIndex(referencesColumnIndex, Count)) return null;
             string? value = ValueAt(referencesColumnIndex)?.ToString();
@@ -292,10 +292,10 @@ namespace EasyCsv.Core
             var split = value.Split([","], StringSplitOptions.RemoveEmptyEntries);
             return split.Select(ParseIntegers).ToArray();
         }
-        public (int CsvIndex, int RowIndex)[]? References()
+        public (int CsvIndex, int RowIndex)[]? ProcessingReferences()
         {
             int referenceColumnIndex = Keys.IndexOf(InternalColumnNames.References);
-            return References(referenceColumnIndex);
+            return ProcessingReferences(referenceColumnIndex);
         }
 
         private static (int Left, int Right) ParseIntegers(string input)
@@ -340,7 +340,7 @@ namespace EasyCsv.Core
         }
         public void AddProcessingTag(string tag)
         {
-            var existingTags = Tags()?.ToHashSet() ?? new HashSet<string>();
+            var existingTags = ProcessingTags()?.ToHashSet() ?? new HashSet<string>();
             bool added = existingTags.Add(tag);
             if (added)
             {
@@ -350,7 +350,7 @@ namespace EasyCsv.Core
 
         public void AddProcessingReference(int referenceCsvId, int referenceRowId)
         {
-            var existingReferences = References()?.ToHashSet() ?? new HashSet<(int CsvIndex, int RowIndex)>();
+            var existingReferences = ProcessingReferences()?.ToHashSet() ?? new HashSet<(int CsvIndex, int RowIndex)>();
             if (existingReferences.Add((referenceCsvId, referenceRowId)))
             {
                 this[InternalColumnNames.References] = string.Join(",", existingReferences);

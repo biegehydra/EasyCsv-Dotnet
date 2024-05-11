@@ -331,12 +331,12 @@
 
     private void RemoveTag(CsvRow row, int tagsColumnIndex, string tag)
     {
-        row.RemoveTag(tagsColumnIndex, tag);
+        row.RemoveProcessingTag(tagsColumnIndex, tag);
     }
 
     private void RemoveReference(CsvRow row, int referencesColumnIndex, int referenceCsvId, int referenceRowId)
     {
-        row.RemoveReference(referencesColumnIndex, referenceCsvId, referenceRowId);
+        row.RemoveProcessingReference(referencesColumnIndex, referenceCsvId, referenceRowId);
     }
 
     private void RemoveReference(CsvRow row, string tag, int tagsIndex)
@@ -607,7 +607,7 @@
         {
             var anchorOrigin = Stepper.TagsAndReferencesLocation == ColumnLocation.Beginning ? Origin.BottomRight : Origin.BottomLeft;
             var transformOrigin = Stepper.TagsAndReferencesLocation == ColumnLocation.Beginning ? Origin.TopLeft : Origin.TopRight;
-            var references = row.References(referenceColumnIndex);
+            var references = row.ProcessingReferences(referenceColumnIndex);
             return @<MudTd Class="extra-dense">
                        @if (references?.Any() == true && Stepper.Runner?.ReferenceCsvs.Count > 0)
                        {

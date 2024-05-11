@@ -23,7 +23,7 @@ public class TagRowsStrategy : IFullCsvProcessor
             x.AddColumn(InternalColumnNames.Tags, null, ExistingColumnHandling.Keep);
             foreach (var row in x.CsvContent.FilterByIndexes(filteredRowIds))
             {
-                var existingTags = row.Tags()?.ToList() ?? [];
+                var existingTags = row.ProcessingTags()?.ToList() ?? [];
                 _addTagsFunc(row, existingTags);
                 row[InternalColumnNames.Tags] = string.Join(",", existingTags.Distinct());
             }

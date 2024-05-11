@@ -25,7 +25,7 @@ public class TagRowsAsyncStrategy : IFullCsvProcessor
             x.AddColumn(InternalColumnNames.Tags, null, ExistingColumnHandling.Keep);
             foreach (var row in x.CsvContent.FilterByIndexes(filteredRowIndexes))
             {
-                var existingTags = row.Tags()?.ToList() ?? [];
+                var existingTags = row.ProcessingTags()?.ToList() ?? [];
                 await _addTagsFunc(row, existingTags);
                 row[InternalColumnNames.Tags] = string.Join(",", existingTags.Distinct());
             }

@@ -251,7 +251,7 @@
     private Dictionary<string, Color> _tagColors = new();
     private IEasyCsv? _easyCsv;
     private string? _sq;
-    private string _popOverWidthPixels => Stepper?.EnableChangeColumnValueType == true ? "600px" : "500px";
+    private string _popOverWidthPixels => Stepper?.EnableChangeEditColumnValueType == true ? "600px" : "500px";
 
     public IEnumerable<CsvRow> GetFilteredRows()
     {
@@ -312,7 +312,7 @@
         if (columnNames != null)
         {
             _columnValueTypes = _columnValueTypes.Where(x => columnNames.Contains(x.Key)).ToDictionary(x => x.Key, x => x.Value);
-            Array.ForEach(columnNames, x => _columnValueTypes.TryAdd(x, ColumnValueType.Text));
+            Array.ForEach(columnNames, x => _columnValueTypes.TryAdd(x, Stepper!.DefaultColumnValueType));
             _cachedAllValues = _cachedAllValues.Where(x => columnNames.Contains(x.Key)).ToDictionary(x => x.Key, x => x.Value);
         }
         if (Stepper?.AutoSelectAllColumnsToSearch == true && columnNames != null)
@@ -435,7 +435,7 @@
     {
         if (_rowBeingEdited == null) return @<MudTd></MudTd>;
         var columnName = row.KeyAt(columnIndex);
-        var valueType = _columnValueTypes.GetValueOrDefault(columnName, ColumnValueType.Text);
+        var valueType = _columnValueTypes.GetValueOrDefault(columnName, Stepper.DefaultColumnValueType);
         switch (valueType)
         {
             case ColumnValueType.Text:
@@ -622,8 +622,9 @@
                                            <MudTextField T="string" Disabled="_columnStrategyBuckets[column].IsAnySelected()" Immediate="true" Label="Search strategies" Variant="Variant.Outlined" Value="_columnStrategyBuckets[column].SearchQuery"
                                                          ValueChanged="_columnStrategyBuckets[column].SetSearchQuery"
                                                          Clearable="true" OnClearButtonClick="() => _columnStrategyBuckets[column].SetSearchQuery(string.Empty)" />
-                                           @if (Stepper.EnableChangeColumnValueType)
+                                           @if (Stepper.EnableRowEditing && Stepper.EnableChangeEditColumnValueType)
                                            {
+                                               _columnValueTypes.TryAdd(column, Stepper.DefaultColumnValueType);
                                                <ColumnValueTypeSelect Style="max-width: 210px;" Label="Editing Type" ColumnValueType="@_columnValueTypes[column]" ColumnValueTypeChanged="x => SetColumnValueType(column, x)" ></ColumnValueTypeSelect>
                                            }
                                        </div>

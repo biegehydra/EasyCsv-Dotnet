@@ -49,12 +49,12 @@ public enum ColumnValueType
 {
     [Description("The input will be MudTextField.")]
     Text,
+    Select,
     [Description("The input will be MudDatePicker.")]
     DateTime,
     [Description("The input will be a MudNumericalField.")]
     Integer,
-    Decimal,
-    Select
+    Decimal
 }
 
 public enum ResolveDuplicatesAutoSelect

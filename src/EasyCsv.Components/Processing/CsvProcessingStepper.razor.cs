@@ -40,10 +40,10 @@ public partial class CsvProcessingStepper
     [Parameter] public bool HideOtherStrategiesOnSelect { get; set; } = true;
     [Parameter] public bool SearchBar { get; set; } = true;
     [Parameter] public bool EnableRowEditing { get; set; } = true;
-    [Parameter] public bool EnableRowDeleting { get; set; } = false;
+    [Parameter] public bool EnableRowDeleting { get; set; } = true;
     [Parameter] public bool ShowColumnNameInStrategySelect { get; set; } = true;
     [Parameter] public bool ShowAddReferenceCsv { get; set; } = true;
-    [Parameter] public bool EnableChangeColumnValueType { get; set; } = true;
+    [Parameter] public bool EnableChangeEditColumnValueType { get; set; } = true;
     [Parameter] public RunOperationNoneSelectedBehaviour RunOperationNoneSelectedBehaviour { get; set; } = RunOperationNoneSelectedBehaviour.Hidden;
     [Parameter] public ColumnLocation TagsAndReferencesLocation { get; set; } = ColumnLocation.Beginning;
     [Parameter] public ResolveDuplicatesAutoSelect ResolveDuplicatesAutoSelect { get; set; } = ResolveDuplicatesAutoSelect.None;
@@ -64,6 +64,7 @@ public partial class CsvProcessingStepper
     [Parameter] public bool AutoControlExpandOptionsOnSelect { get; set; } = true;
     [Parameter] public bool OpenDownloadWithAllColumnsSelected { get; set; } = true; 
     [Parameter] public bool AutoSelectAllColumnsToSearch { get; set; } = true; 
+    [Parameter] public ColumnValueType DefaultColumnValueType { get; set; } = ColumnValueType.Text; 
     public StrategyRunner? Runner { get; private set; }
     internal CsvProcessingTable? CsvProcessingTable { get; private set; }
     private int _initialRowCount;

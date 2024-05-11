@@ -5,7 +5,7 @@
 {
     throw new ArgumentException("EasyCsv: Attempted to render strategy options not within CsvProcessingStepper", nameof(CsvProcessingStepper));
 }
-<StrategyItem DisplayName="@DisplayName" DescriptionStr="@DescriptionStr" Description="Description" BeforeCsvExample="BeforeExample" AfterCsvExample="AfterExample" ExampleOptions="ExampleOptions" AllowRun="AllowRun" StrategyPicked="DivideAndReplicate">
+<StrategyItem DisplayName="@DisplayName" DescriptionStr="@DescriptionStr" Description="Description" AllowRun="AllowRun" StrategyPicked="DivideAndReplicate">
     <Options>
         <MudListItem>
             <ReferenceCsvSelect  Immediate="@Immediate" Disabled="context" @bind-ReferenceCsvId="_referenceCsvId"></ReferenceCsvSelect>
@@ -25,33 +25,6 @@
     [Parameter] public override string? DescriptionStr { get; set; } = "Will compare all the values in $column_name in the Working Csv to all the values in the selected column of the reference csv. On any exact matches, the specified tag will be added to the row, and a link to the reference table will be created.";
     [Parameter] public override RenderFragment<string>? Description { get; set; }
     [Parameter] public bool Immediate { get; set; } = true;
-
-    private static readonly Dictionary<string, string> ExampleOptions = new Dictionary<string, string>()
-    {
-        {"Delimiter", "-"}
-    };
-
-    private static readonly Dictionary<string, string>[] BeforeExample =
-    [
-        new Dictionary<string, string>()
-        {
-            {"Column1", "value1"},
-            {"ColumnToDivideAndReplicate", "value2-value3"},
-        },
-    ];
-    private static readonly Dictionary<string, string>[] AfterExample =
-    [
-        new Dictionary<string, string>()
-        {
-            {"Column1", "value1"},
-            {"ColumnToDivideAndReplicate", "value2"},
-        },
-        new Dictionary<string, string>()
-        {
-            {"Column1", "value1"},
-            {"ColumnToDivideAndReplicate", "value3"},
-        }
-    ];
 
     private bool AllowRun => !string.IsNullOrWhiteSpace(StrategyBucket.ColumnName) && !string.IsNullOrWhiteSpace(_referenceColumnName) && _referenceCsvId is >= 0;
     private string? _referenceColumnName;

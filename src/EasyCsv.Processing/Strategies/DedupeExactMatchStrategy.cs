@@ -5,7 +5,7 @@ using EasyCsv.Core;
 using EasyCsv.Core.Extensions;
 
 namespace EasyCsv.Processing.Strategies;
-public class FindDedupesExactMatchColumnStrategy : IFindDedupesOperation
+public class FindDupesExactMatchColumnStrategy : IFindDupesOperation
 {
     public bool OperatesOnlyOnFilteredRows => true;
     public string ColumnName { get; }
@@ -19,7 +19,7 @@ public class FindDedupesExactMatchColumnStrategy : IFindDedupesOperation
     public Func<CsvRow[], CsvRow[]?>? AutoSelectRows { get; }
 
 
-    public FindDedupesExactMatchColumnStrategy(string columnName, bool mustSelectRow, Func<CsvRow[], CsvRow?>? autoSelectRow, Func<CsvRow[], CsvRow[]?>? autoSelectRows, bool multiSelect = true, Func<string?, string?>? duplicateValuePresenter = null, IEqualityComparer<string>? comparer = null)
+    public FindDupesExactMatchColumnStrategy(string columnName, bool mustSelectRow, Func<CsvRow[], CsvRow?>? autoSelectRow, Func<CsvRow[], CsvRow[]?>? autoSelectRows, bool multiSelect = true, Func<string?, string?>? duplicateValuePresenter = null, IEqualityComparer<string>? comparer = null)
     {
         if (string.IsNullOrWhiteSpace(columnName)) throw new ArgumentException("Column name can't be empty", nameof(columnName));
         ColumnName = columnName;

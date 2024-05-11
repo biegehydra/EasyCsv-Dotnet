@@ -34,10 +34,10 @@ public class StrategyRunner
         var clone = CurrentCsv.Clone();
         List<int> rowsToDelete = new List<int>();
         int i = -1;
-        foreach (var row in clone.CsvContent.FilterByIndexes(filteredRowIds))
+        foreach (var (row, index) in clone.CsvContent.FilterByIndexesWithOriginalIndex(filteredRowIds))
         {
             i++;
-            var operationResult = await evaluateDelete.EvaluateDelete(new RowCell(row, evaluateDelete.ColumnName));
+            var operationResult = await evaluateDelete.EvaluateDelete(new RowCell(row, evaluateDelete.ColumnName, index));
             if (operationResult.Delete)
             {
                 rowsToDelete.Add(i);
@@ -62,10 +62,10 @@ public class StrategyRunner
         var clone = CurrentCsv.Clone();
         List<int> rowsToDelete = new List<int>();
         int i = -1;
-        foreach (var row in clone.CsvContent.FilterByIndexes(filteredRowIds))
+        foreach (var (row, index) in clone.CsvContent.FilterByIndexesWithOriginalIndex(filteredRowIds))
         {
             i++;
-            var operationResult = await evaluateDelete.EvaluateDelete(row);
+            var operationResult = await evaluateDelete.EvaluateDelete(row, index);
             if (operationResult.Delete)
             {
                 rowsToDelete.Add(i);
@@ -104,9 +104,9 @@ public class StrategyRunner
     {
         if (CurrentCsv == null) return new OperationResult(false, "Component not initialized yet.");
         var clone = CurrentCsv.Clone();
-        foreach (var row in clone.CsvContent.FilterByIndexes(filteredRowIds))
+        foreach (var (row, index) in clone.CsvContent.FilterByIndexesWithOriginalIndex(filteredRowIds))
         {
-            var operationResult = await columnProcessor.ProcessCell(new RowCell(row, columnProcessor.ColumnName));
+            var operationResult = await columnProcessor.ProcessCell(new RowCell(row, columnProcessor.ColumnName, index));
             if (operationResult.Success == false)
             {
                 return operationResult;
@@ -121,9 +121,9 @@ public class StrategyRunner
     {
         if (CurrentCsv == null) return new OperationResult(false, "Component not initialized yet.");
         var clone = CurrentCsv.Clone();
-        foreach (var row in clone.CsvContent.FilterByIndexes(filteredRowIds))
+        foreach (var (row, index) in clone.CsvContent.FilterByIndexesWithOriginalIndex(filteredRowIds))
         {
-            var operationResult = await rowProcessor.ProcessRow(row);
+            var operationResult = await rowProcessor.ProcessRow(row, index);
             if (operationResult.Success == false)
             {
                 return operationResult;
@@ -235,12 +235,16 @@ public class StrategyRunner
 public readonly struct RowCell : ICell
 {
     private CsvRow CsvRow { get; }
+
+    public int RowIndex { get; }
+
     public string ColumnName { get; }
 
-    public RowCell(CsvRow csvRow, string columnName)
+    public RowCell(CsvRow csvRow, string columnName, int rowIndex)
     {
         CsvRow = csvRow;
         ColumnName = columnName;
+        RowIndex = rowIndex;
     }
 
     public object? Value

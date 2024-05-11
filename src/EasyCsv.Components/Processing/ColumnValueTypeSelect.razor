@@ -1,0 +1,34 @@
+﻿@namespace EasyCsv.Components
+@inherits StrategyBucketItemBase
+<MudSelect T="ColumnValueType" Immediate="Immediate" Disabled="Disabled" Label="@Label" HelperText="@HelperText" @bind-Value="ColumnValueType" 
+           Variant="@Variant" Style="@Style">
+    @foreach (var value in Enum.GetValues<ColumnValueType>())
+    {
+        <MudSelectItem Value="value">@value</MudSelectItem>
+    }
+</MudSelect>
+
+@code {
+    [Parameter] public EventCallback<ColumnValueType> ColumnValueTypeChanged { get; set; }
+    private ColumnValueType _columnValueType = ColumnValueType.Text;
+    [Parameter]
+    public ColumnValueType ColumnValueType
+    {
+        get => _columnValueType;
+        set
+        {
+            if (_columnValueType == value)
+            {
+                return;
+            }
+            _columnValueType = value;
+            ColumnValueTypeChanged.InvokeAsync(value);
+        }
+    }
+    [Parameter] public bool Immediate { get; set; } = true;
+    [Parameter] public string? Style { get; set; } 
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public string Label { get; set; } = "Column Value Type";
+    [Parameter] public string? HelperText { get; set; }
+    [Parameter] public Variant Variant { get; set; } = Variant.Outlined;
+}

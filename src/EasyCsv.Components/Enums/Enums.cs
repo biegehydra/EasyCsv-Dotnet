@@ -53,7 +53,8 @@ public enum ColumnValueType
     DateTime,
     [Description("The input will be a MudNumericalField.")]
     Integer,
-    Decimal
+    Decimal,
+    Select
 }
 
 public enum ResolveDuplicatesAutoSelect

@@ -1,5 +1,5 @@
 ﻿<MudTd Class="extra-dense">
-    <MudDatePicker Variant="Variant.Filled" Placeholder="@ColumnName" Date="_newValue"  ></MudDatePicker>
+    <MudDatePicker Variant="Variant.Filled" Placeholder="@ColumnName" Date="_newValue" DateChanged="ValueChanged"  ></MudDatePicker>
 </MudTd>
 @code {
     [Parameter, EditorRequired] public CsvRow Row { get; set; } = null!;

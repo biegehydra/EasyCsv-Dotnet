@@ -19,7 +19,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EasyCsv.Components\EasyCsv.Components.csproj" />
-    <ProjectReference Include="..\EasyCsv.Tests\EasyCsv.Tests.Parsing\EasyCsv.Tests.Processing.csproj" />
   </ItemGroup>
 
 </Project>

@@ -16,18 +16,19 @@ public class StrategyRunner
     public int CurrentIndex => _currentIndex;
     public int? CurrentRowEditIndex => Utils.IsValidIndex(_currentIndex, _steps.Count) ? _steps[_currentIndex].CurrentRowEditIndex.Value : null;
     public IEasyCsv? CurrentCsv => IsCacheIndexValid(_currentIndex) ? _steps[_currentIndex].Csv : null;
+    public string[]? CurrentCsvColumnNames => IsCacheIndexValid(_currentIndex) ? _steps[_currentIndex].ColumnNames : null;
     public HashSet<string>? CurrentTags => Utils.IsValidIndex(_currentIndex, _steps.Count) ? _steps[_currentIndex].Tags : null;
     internal List<IReversibleEdit>? CurrentReversibleEdits => Utils.IsValidIndex(_currentIndex, _steps.Count) ? _steps[_currentIndex].ReversibleEdits : null;
     private readonly List<(IEasyCsv Csv, string FileName)> _referenceCsvs = new();
     public IReadOnlyList<(IEasyCsv Csv, string FileName)> ReferenceCsvs => _referenceCsvs;
     public IReadOnlyList<IEasyCsv> CachedCsvs() => _steps.Select(x => x.Csv).ToArray();
     public IReadOnlyList<IReadOnlyCollection<string>> CachedTags() => _steps.Select(x => x.Tags).ToArray();
-    internal readonly List<(IEasyCsv Csv, HashSet<string> Tags, List<IReversibleEdit> ReversibleEdits, CurrentRowEditIndex CurrentRowEditIndex)> _steps = new();
+    internal readonly List<(IEasyCsv Csv, string[] ColumnNames, HashSet<string> Tags, List<IReversibleEdit> ReversibleEdits, CurrentRowEditIndex CurrentRowEditIndex)> _steps = new();
 
     public StrategyRunner(IEasyCsv baseCsv)
     {
         var clone = baseCsv.Clone();
-        _steps.Add((clone, AllUniqueTags(clone), new List<IReversibleEdit>(), new CurrentRowEditIndex()));
+        _steps.Add((clone, clone.ColumnNames()!, AllUniqueTags(clone), new List<IReversibleEdit>(), new CurrentRowEditIndex()));
         SetCurrentIndexSafe(0);
     }
 
@@ -180,7 +181,7 @@ public class StrategyRunner
         {
             _steps.Remove(_steps[_steps.Count - 1]);
         }
-        _steps.Add((csv, AllUniqueTags(csv), new List<IReversibleEdit>(), new CurrentRowEditIndex()));
+        _steps.Add((csv, csv.ColumnNames()!, AllUniqueTags(csv), new List<IReversibleEdit>(), new CurrentRowEditIndex()));
         SetCurrentIndexSafe(_steps.Count - 1);
     }
 

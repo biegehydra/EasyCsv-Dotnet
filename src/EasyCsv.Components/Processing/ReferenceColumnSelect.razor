@@ -7,7 +7,7 @@
         @{
             string[]? referenceColumnNames;
         }
-        @if (CsvProcessor.Runner.IsReferenceIndexValid(ReferenceCsvId) && (referenceColumnNames = CsvProcessor.Runner.ReferenceCsvs[ReferenceCsvId.Value].Csv.ColumnNames()) != null)
+        @if (CsvProcessor.Runner.IsReferenceIndexValid(ReferenceCsvId) && (referenceColumnNames = CsvProcessor.Runner.ReferenceCsvs[ReferenceCsvId!.Value].Csv.ColumnNames()) != null)
         {
             @foreach (var referenceColumnName in referenceColumnNames)
             {
@@ -55,7 +55,7 @@
         if (!_initialized && AutoMatchColumn != null && CsvProcessor.Runner?.IsReferenceIndexValid(ReferenceCsvId) == true)
         {
             _initialized = true;
-            var referenceColumnNames = CsvProcessor.Runner.ReferenceCsvs[ReferenceCsvId.Value].Csv.ColumnNames();
+            var referenceColumnNames = CsvProcessor.Runner.ReferenceCsvs[ReferenceCsvId!.Value].Csv.ColumnNames();
             if (referenceColumnNames?.Length > 0 && AutoMatchColumn(referenceColumnNames) is { } matchedColumn && referenceColumnNames.Contains(matchedColumn))
             {
                 ReferenceColumnName = matchedColumn;

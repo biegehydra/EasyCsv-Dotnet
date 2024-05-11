@@ -352,7 +352,7 @@ public partial class CsvProcessingStepper
 
     private HashSet<int> GetFilteredRowIndexesForDownload()
     {
-        var tagsColumnIndex = Runner?.CurrentCsv?.ColumnNames()?.IndexOf(x => x == InternalColumnNames.Tags) ?? -1;
+        var tagsColumnIndex = Runner?.CurrentCsvColumnNames?.IndexOf(x => x == InternalColumnNames.Tags) ?? -1;
         return Runner?.CurrentCsv?.CsvContent
             .Select((row, index) => (row, index))
             .Where(x => x.row.AnyColumnContainsValues(_searchColumns, _sq))

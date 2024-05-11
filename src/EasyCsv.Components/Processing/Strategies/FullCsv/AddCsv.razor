@@ -71,7 +71,7 @@
 
     private void BeginAddCsv(CsvUploadedArgs args)
     {
-        var columnNames = CsvProcessor?.Runner?.CurrentCsv?.ColumnNames();
+        var columnNames = CsvProcessor?.Runner?.CurrentCsvColumnNames;
         if (columnNames?.Length > 0)
         {
             _csvToAdd = args.Csv;

@@ -28,9 +28,16 @@
     </FullCsvStrategies>
 </CsvProcessingStepper>
 @code {
-    [Parameter] public ISnackbar? Snackbar { get; set; }
+    [Inject] public NavigationManager NavigationManager { get; set; }
+    [Inject] public ISnackbar? Snackbar { get; set; }
     private CsvProcessingStepper _csvProcessor = null!;
-    private readonly IEasyCsv _easyCsv = EasyCsvFactory.FromFile("C:\\Users\\sweed\\Downloads\\AppendJob.csv", int.MaxValue, Config);
+    private IEasyCsv _easyCsv;
+    protected override async Task OnInitializedAsync()
+    {
+        _easyCsv = await EasyCsvFactory.FromUrlAsync(NavigationManager.BaseUri + "_content/ExampleBlazorApp.Shared/person_data.csv", 5)!;
+
+    }
+
     private static readonly Dictionary<string, string>[] _beforeExample =
     [
         new Dictionary<string, string>()

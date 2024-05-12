@@ -21,25 +21,16 @@
     .csv-processing-table .mud-toolbar {
         --mud-internal-toolbar-height: 120px !important;
     }
-    .csv-processing-table .mud-th {
-        border-color: lightgray;
-        border-top: 1px;
-        border-right: 1px;
-        border-bottom: 1px;
-        border-style: inset;
-    }
 
     .mud-table-dense.csv-processing-table .mud-tr:first-child:has(.mud-th) {
         border-left: 1px;
     }
 
     .csv-processing-table-th-name {
-
     }
 
 
     .csv-processing-table-th-button {
-
     }
 
 
@@ -157,10 +148,11 @@
                 var anchorOrigin = i >= mid ? Origin.BottomLeft : Origin.BottomRight;
                 var transformOrigin = i >= mid ? Origin.TopRight : Origin.TopLeft;
                 var column = columnNames[i];
+                string? cursorStyle = Stepper.EnableSorting ? "cursor: pointer; user-select: none;" : null;
                 if (i == tagsColumnIndex || i == referenceColumnIndex) continue;
                 <MudTh Class="csv-processing-table-th">
                     <div style="display: flex; flex-direction: row; gap: 10px; align-items: center;">
-                        <div class="csv-processing-table-th-name">
+                        <div @onclick="() => OnColumnNameClick(column)" @onclick:stopPropagation="Stepper.EnableSorting" style="@cursorStyle" class="csv-processing-table-th-name">
                             @column
                         </div>
                         <div class="csv-processing-table-th-button">
@@ -400,6 +392,50 @@
         return InvokeAsync(StateHasChanged);
     }
 
+    private string? _currentSortedColumn;
+    private SortDirection _currentSortDirection = SortDirection.Ascending;
+    private async Task OnColumnNameClick(string columnName)
+    {
+        if (Stepper?.Runner?.CurrentCsv == null || !Stepper.EnableSorting) return;
+        if (_currentSortedColumn == columnName)
+        {
+            _currentSortDirection = _currentSortDirection == SortDirection.Ascending 
+                ? SortDirection.Descending 
+                : _currentSortDirection == SortDirection.Descending 
+                    ? SortDirection.None
+                    : SortDirection.Ascending;
+            if (_currentSortDirection == SortDirection.None)
+            {
+                Stepper.Runner.SortCurrentBackToOriginalOrder();
+            }
+            else
+            {
+                bool ascending = _currentSortDirection == SortDirection.Ascending;
+                await Stepper.Runner.CurrentCsv.MutateAsync(x =>
+                {
+                    x.SortCsv(columnName, ascending);
+                }, saveChanges: false);
+
+            }
+        }
+        else
+        {
+            _currentSortedColumn = columnName;
+            _currentSortDirection = SortDirection.Ascending;
+            await Stepper.Runner.CurrentCsv.MutateAsync(x =>
+            {
+                x.SortCsv(columnName, ascending: true);
+            }, saveChanges: false);
+        }
+    }
+
+    private enum SortDirection
+    {
+        Ascending,
+        Descending,
+        None
+    }
+
     private async Task OnPreviewEdit(object obj)
     {
         if (obj is not CsvRow row) return;
@@ -423,7 +459,8 @@
         {
             int rowIndex = Stepper.Runner.CurrentCsv!.CsvContent.IndexOf(row);
             if (rowIndex < 0) return Task.CompletedTask;
-            var modifyRowEdit = new ModifyRowEdit(rowIndex, row, _rowBeingEdited);
+            var rowClone = row.Clone();
+            var modifyRowEdit = new ModifyRowEdit(rowIndex, rowClone, _rowBeingEdited);
             Stepper.Runner.AddReversibleEdit(modifyRowEdit);
             StateHasChanged();
             return Stepper.OnCommitEditClick.InvokeAsync();
@@ -641,7 +678,7 @@
                                {
                                    @ColumnOptions(column)
                                }
-                               @if (_columnStrategyBuckets[column].IsAnySelected() || Stepper.RunOperationNoneSelectedBehaviour == RunOperationNoneSelectedBehaviour.Disabled)
+                               @if (_columnStrategyBuckets[column].IsAnySelected() || Stepper.RunOperationNoneSelectedVisibility == RunOperationNoneSelectedVisibility.Disabled)
                                {
                                    <MudListItem>
                                        <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between;">

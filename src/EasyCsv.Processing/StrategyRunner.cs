@@ -18,17 +18,17 @@ public class StrategyRunner
     public IEasyCsv? CurrentCsv => IsCacheIndexValid(_currentIndex) ? _steps[_currentIndex].Csv : null;
     public string[]? CurrentCsvColumnNames => IsCacheIndexValid(_currentIndex) ? _steps[_currentIndex].ColumnNames : null;
     public HashSet<string>? CurrentTags => Utils.IsValidIndex(_currentIndex, _steps.Count) ? _steps[_currentIndex].Tags : null;
+    internal Dictionary<CsvRow, int>? CurrentOriginalRowIndexes => Utils.IsValidIndex(_currentIndex, _steps.Count) ? _steps[_currentIndex].OriginalRowIndexes : null;
     internal List<IReversibleEdit>? CurrentReversibleEdits => Utils.IsValidIndex(_currentIndex, _steps.Count) ? _steps[_currentIndex].ReversibleEdits : null;
     private readonly List<(IEasyCsv Csv, string FileName)> _referenceCsvs = new();
     public IReadOnlyList<(IEasyCsv Csv, string FileName)> ReferenceCsvs => _referenceCsvs;
     public IReadOnlyList<IEasyCsv> CachedCsvs() => _steps.Select(x => x.Csv).ToArray();
     public IReadOnlyList<IReadOnlyCollection<string>> CachedTags() => _steps.Select(x => x.Tags).ToArray();
-    internal readonly List<(IEasyCsv Csv, string[] ColumnNames, HashSet<string> Tags, List<IReversibleEdit> ReversibleEdits, CurrentRowEditIndex CurrentRowEditIndex)> _steps = new();
-
+    internal readonly List<(IEasyCsv Csv, string[] ColumnNames, HashSet<string> Tags, List<IReversibleEdit> ReversibleEdits, Dictionary<CsvRow, int> OriginalRowIndexes, CurrentRowEditIndex CurrentRowEditIndex)> _steps = new();
     public StrategyRunner(IEasyCsv baseCsv)
     {
-        var clone = baseCsv.Clone();
-        _steps.Add((clone, clone.ColumnNames()!, AllUniqueTags(clone), new List<IReversibleEdit>(), new CurrentRowEditIndex()));
+        var clone = baseCsv.Clone(); 
+        _steps.Add((clone, clone.ColumnNames()!, AllUniqueTags(clone), new List<IReversibleEdit>(), OriginalRowIndexes(clone), new CurrentRowEditIndex()));
         SetCurrentIndexSafe(0);
     }
 
@@ -181,8 +181,27 @@ public class StrategyRunner
         {
             _steps.Remove(_steps[_steps.Count - 1]);
         }
-        _steps.Add((csv, csv.ColumnNames()!, AllUniqueTags(csv), new List<IReversibleEdit>(), new CurrentRowEditIndex()));
+        _steps.Add((csv, csv.ColumnNames()!, AllUniqueTags(csv), new List<IReversibleEdit>(),  OriginalRowIndexes(csv), new CurrentRowEditIndex()));
         SetCurrentIndexSafe(_steps.Count - 1);
+    }
+
+    public void SortCurrentBackToOriginalOrder()
+    {
+        if (CurrentCsv == null) return;
+        var originalRowIndexes = CurrentOriginalRowIndexes!;
+        CurrentCsv.CsvContent.Sort((one, two) =>
+        {
+            if (!originalRowIndexes.TryGetValue(one, out var indexX))
+            {
+                indexX = int.MaxValue;
+            }
+
+            if (!originalRowIndexes.TryGetValue(two, out var indexY))
+            {
+                indexY = int.MaxValue;
+            }
+            return indexX.CompareTo(indexY);
+        });
     }
 
     private HashSet<string> AllUniqueTags(IEasyCsv? easyCsv)
@@ -202,6 +221,14 @@ public class StrategyRunner
         }
         return uniqueTags;
     }
+
+    private Dictionary<CsvRow, int> OriginalRowIndexes(IEasyCsv? easyCsv)
+    {
+        var originalIndexes = new Dictionary<CsvRow, int>();
+        if (easyCsv == null!) return originalIndexes;
+        return easyCsv.CsvContent.Select((x, i) => (x, i)).ToDictionary(x => x.x, x => x.i);
+    }
+
     // Current Row Edit is the one we are currently after
     public bool GoForwardEdit()
     {
@@ -264,32 +291,39 @@ public class StrategyRunner
         return Utils.IsValidIndex(index, ReferenceCsvs.Count);
     }
 }
-public class ModifyRowEdit(int rowIndex, CsvRow beforeRow, CsvRow aftereRow) : IReversibleEdit
+public class ModifyRowEdit : IReversibleEdit
 {
-    public int RowIndex { get; } = rowIndex;
-    public CsvRow BeforeRow { get; } = beforeRow;
-    public CsvRow AftereRow { get; } = aftereRow;
+    public ModifyRowEdit(int rowIndex, CsvRow rowClone, CsvRow rowAfterOperation)
+    {
+        RowIndex = rowIndex;
+        RowClone = rowClone;
+        RowAfterOperation = rowAfterOperation;
+    }
+
+    public int RowIndex { get; }
+    public CsvRow RowClone { get; }
+    public CsvRow RowAfterOperation { get; }
     public void DoEdit(IEasyCsv csv)
     {
 #if DEBUG
-        var equals = csv!.CsvContent[RowIndex].ValuesEqual(BeforeRow);
+        var equals = csv.CsvContent[RowIndex].ValuesEqual(RowClone);
         if (!equals)
         {
             throw new Exception("Should've equalled Before Row");
         }
 #endif
-        csv!.CsvContent[RowIndex] = AftereRow;
+        RowAfterOperation.MapValuesTo(csv.CsvContent[RowIndex]);
     }
     public void UndoEdit(IEasyCsv csv)
     {
 #if DEBUG
-        var equals = csv!.CsvContent[RowIndex].ValuesEqual(AftereRow);
+        var equals = csv.CsvContent[RowIndex].ValuesEqual(RowAfterOperation);
         if (!equals)
         {
             throw new Exception("Should've equalled After Row");
         }
 #endif
-        csv!.CsvContent[RowIndex] = BeforeRow;
+        RowClone.MapValuesTo(csv.CsvContent[RowIndex]);
     }
 }
 public class AddTagEdit : IReversibleEdit

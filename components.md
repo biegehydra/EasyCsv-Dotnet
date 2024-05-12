@@ -40,7 +40,7 @@ public class TagRowsStrategy : IFullCsvProcessor
                 _addTagsFunc(row, existingTags);
                 row[InternalColumnNames.Tags] = string.Join(",", existingTags.Distinct());
             }
-        });
+        }, saveChanges: false); // Note saveChanges shouldn't be called when performing operation to increase speed
         return new OperationResult(true);
     }
 }

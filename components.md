@@ -116,7 +116,7 @@ All you need to do this give your strategy a `DisplayName` and define a `<Option
 `AllowRun` controls whether the `RunOperation` button is disabled or not. When the "Run Operation" button is clicked, the StrategyPicked callback is called (calling RunDivideAndReplicate here)
  with the column name of the StrategyBucket this component is rendered in.
 
-Once your done write your options components, just put them in the `COlumnStrategies` or `FullCsvStrategies` section of the CsvProcessingStepper. Note, when a full csv strategy is picked, the column name will be `InternalColumnNames.FullCsvOperations` or "_FullCsvOperations"
+Once your done write your `StrategyItem` wrappers, just put them in the `<COlumnStrategies>` or `<FullCsvStrategies>` section of the CsvProcessingStepper. Note, when a full csv strategy is picked, the column name will be `InternalColumnNames.FullCsvOperations` or "_FullCsvOperations" in the `StrategyPicked` callback
 
  ```
 <CsvProcessingStepper @ref="_csvProcessor" EasyCsv="_easyCsv" EasyCsvFileName="Example.csv">
@@ -126,8 +126,6 @@ Once your done write your options components, just put them in the `COlumnStrate
         <DivideAndReplicate />
         <TagAndReferenceMatches />
         <DeleteOnEmptyColumn />
-        <StrategyItem DisplayName="Tag Invalid Email" DescriptionStr="Tag all rows with an invalid email in $column_name"
-                      BeforeCsvExample="_beforeExample" AfterCsvExample="_afterExample" StrategyPicked="OnTagPicked" />
     </ColumnStrategies>
     <FullCsvStrategies>
         <AddCsv />
@@ -135,6 +133,44 @@ Once your done write your options components, just put them in the `COlumnStrate
     </FullCsvStrategies>
 </CsvProcessingStepper>
 ```
+
+
+### Reversible Edits
+In addition to operations, which should be used for complex types because they require **cloning the entire csv**, `IReversibleEdit`'s can be used to alter the working csv in place.
+```
+public interface IReversibleEdit
+{
+    void DoEdit(IEasyCsv csv);
+    void UndoEdit(IEasyCsv csv);
+}
+```
+For example, this is the ModifyRowEdit class. The `DoEdit` and `UndoEdit` methods provide the working csv, but do not require you to use them
+```
+public class ModifyRowEdit : IReversibleEdit
+{
+    public ModifyRowEdit(CsvRow row, CsvRow rowClone, CsvRow rowAfterOperation)
+    {
+        Row = row;
+        RowClone = rowClone;
+        RowAfterOperation = rowAfterOperation;
+    }
+
+    public CsvRow Row { get; }
+    public CsvRow RowClone { get; }
+    public CsvRow RowAfterOperation { get; }
+    public void DoEdit(IEasyCsv csv)
+    {
+        RowAfterOperation.MapValuesTo(Row);
+    }
+    public void UndoEdit(IEasyCsv csv)
+    {
+        RowClone.MapValuesTo(Row);
+    }
+}
+```
+Note how I provide a reference to the original row. **Within a step, CsvRow references are maintainted**, the same is not true across steps. The reason to provide the row instead of the row index, is because at any given point it time, you don't know how the csv will be sorted. 
+
+After calling `CsvProcessingStepper.AddReversibleEdit(IReversibleEdit reversibleEdit)`, `CsvProcessingTable.ApplyCurrentColumnSort()` will be called to ensure row order is maintained. Row ordering should be maintained through `IReversibleEdit`'s because the `StrategyRunner` stores a `Dictionary<CsvRow, int>` holding the original index of each row.
 
 ## CsvFileInput
 

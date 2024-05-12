@@ -446,7 +446,7 @@
                 return @<ProcessingEditIntegerField ColumnName="@columnName" Row="_rowBeingEdited" />;
             case ColumnValueType.Decimal:
                 return @<ProcessingEditDecimalField ColumnName="@columnName" Row="_rowBeingEdited" />;
-            case ColumnValueType.Select:
+            case ColumnValueType.SelectFromAll:
                 if (!_cachedAllValues.TryGetValue(columnName, out var allValues))
                 {
                     allValues = Stepper?.Runner?.CurrentCsv?.CsvContent?.Select(x => x[columnName]?.ToString()).Distinct().ToArray() ?? [];

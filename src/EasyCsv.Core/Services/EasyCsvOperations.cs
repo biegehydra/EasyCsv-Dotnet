@@ -211,7 +211,7 @@ namespace EasyCsv.Core
                     {
                         if (string.IsNullOrWhiteSpace(record[columnName]?.ToString()))
                         {
-
+                            record[columnName] = defaultValue;
                         }
                         continue;
                     }
@@ -245,30 +245,30 @@ namespace EasyCsv.Core
             {
                 foreach (KeyValuePair<string, object?> pair in defaultValues)
                 {
-                    string key = pair.Key;
+                    string columnName = pair.Key;
                     if (existingColumnHandling == ExistingColumnHandling.Override)
                     {
-                        record[key] = pair.Value;
+                        record[columnName] = pair.Value;
                         continue;
                     }
-                    if (record.ContainsKey(key))
+                    if (record.ContainsKey(columnName))
                     {
                         if (existingColumnHandling == ExistingColumnHandling.Keep) continue;
                         if (existingColumnHandling == ExistingColumnHandling.ReplaceNullOrWhiteSpace)
                         {
-                            if (string.IsNullOrWhiteSpace(record[key]?.ToString()))
+                            if (string.IsNullOrWhiteSpace(record[columnName]?.ToString()))
                             {
-
+                                record[columnName] = pair.Value;
                             }
                             continue;
                         }
                         if (existingColumnHandling == ExistingColumnHandling.ThrowException)
                         {
-                            throw new ArgumentException($"Column with name '{key}' already exists.");
+                            throw new ArgumentException($"Column with name '{columnName}' already exists.");
                         }
                         else throw new ArgumentException("Unreachable");
                     }
-                    record.Add(key, pair.Value);
+                    record.Add(columnName, pair.Value);
                 }
             }
             return this;

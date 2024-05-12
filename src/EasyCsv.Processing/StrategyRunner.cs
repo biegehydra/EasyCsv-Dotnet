@@ -75,8 +75,12 @@ public class StrategyRunner
             }
         }
 
-        var deleteRowsEdit = new DeleteRowsEdit(rowsToDelete);
-        AddReversibleEdit(deleteRowsEdit);
+        if (rowsToDelete.Count > 0)
+        {
+            var deleteRowsEdit = new DeleteRowsEdit(rowsToDelete);
+            AddReversibleEdit(deleteRowsEdit);
+        }
+
         string message = $"Deleted {rowsToDelete.Count} rows";
         return new AggregateOperationDeleteResult(true, rowsToDelete.Count, message);
     }
@@ -100,8 +104,12 @@ public class StrategyRunner
             }
         }
 
-        var deleteRowsEdit = new DeleteRowsEdit(rowsToDelete);
-        AddReversibleEdit(deleteRowsEdit);
+        if (rowsToDelete.Count > 0)
+        {
+            var deleteRowsEdit = new DeleteRowsEdit(rowsToDelete);
+            AddReversibleEdit(deleteRowsEdit);
+        }
+
         string message = $"Deleted {rowsToDelete.Count} rows";
         return new AggregateOperationDeleteResult(true, rowsToDelete.Count, message);
     }

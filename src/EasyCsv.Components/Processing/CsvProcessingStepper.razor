@@ -252,16 +252,20 @@
         {
             csvName = "N/A";
         }
-        var addCsvStrategy = new AddFullCsvStrategy(csv!);
-        var result = await PerformCsvStrategy(addCsvStrategy);
-        if (result.Success && !string.IsNullOrWhiteSpace(csvName))
+
+        var operationResult = Runner.AddRows(csv.CsvContent);
+        if (operationResult.Success)
         {
-            var existingEntryIndex = _addedCsvsWithStepIndexAdded.IndexOf(x => x.IndexAdded == Runner.CurrentIndex - 1);
-            if (existingEntryIndex >= 0)
+            _addedCsvsWithStepIndexAdded.Add((csvName, csv.RowCount(),  Runner.CurrentIndex));
+            await CsvProcessingTable!.InvokeStateHasChanged();
+            if (UseSearchBar)
             {
-                _addedCsvsWithStepIndexAdded.RemoveAt(existingEntryIndex);
+                Snackbar?.Add(operationResult.Message, Severity.Success);
             }
-            _addedCsvsWithStepIndexAdded.Add((csvName, csv.RowCount(),  Runner.CurrentIndex - 1));
+        }
+        else if (UseSearchBar)
+        {
+            Snackbar?.Add(operationResult.Message, Severity.Error);
         }
     }
 
@@ -269,7 +273,7 @@
     {
         if (Runner == null || !operationResult.Success) return;
         // Before Operation (Edge Case)
-        // AddedCsvs: ("fileName1", 1), ("fileName2", 2)
+        // AddedCsvs: ("fileName1", 1), ("fileName3", 3)
         // Current Index: 2, Max Index: 5
 
         // After Operation (Edge Case)
@@ -277,7 +281,7 @@
         // Current Index: 3, Max Index: 3
         for (int i = _addedCsvsWithStepIndexAdded.Count-1; i > 0; i--)
         {
-            if (_addedCsvsWithStepIndexAdded[i].IndexAdded >= Runner.CurrentIndex - 1)
+            if (_addedCsvsWithStepIndexAdded[i].IndexAdded >= Runner.CurrentIndex)
             {
                 _addedCsvsWithStepIndexAdded.RemoveAt(i);
             }

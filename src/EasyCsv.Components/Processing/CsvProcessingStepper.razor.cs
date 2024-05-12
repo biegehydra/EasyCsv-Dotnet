@@ -98,9 +98,8 @@ public partial class CsvProcessingStepper
         if (CsvProcessingTable == null) return _processingTableNullAggregateDelete;
         var filteredRowIds = FilteredRowIds(evaluateDelete);
         var aggregateOperationDeleteResult = await Runner.PerformColumnEvaluateDelete(evaluateDelete, filteredRowIds);
-        CheckAddedCsvsAfterOperation(aggregateOperationDeleteResult);
         AddAggregateDeleteOperationResultSnackbar(aggregateOperationDeleteResult);
-        await InvokeAsync(StateHasChanged);
+        await CsvProcessingTable.InvokeStateHasChanged();
         return aggregateOperationDeleteResult;
     }
 
@@ -110,9 +109,8 @@ public partial class CsvProcessingStepper
         if (CsvProcessingTable == null) return _processingTableNullAggregateDelete;
         var filteredRowIds = FilteredRowIds(evaluateDelete);
         var aggregateOperationDeleteResult = await Runner.RunRowEvaluateDelete(evaluateDelete, filteredRowIds);
-        CheckAddedCsvsAfterOperation(aggregateOperationDeleteResult);
         AddAggregateDeleteOperationResultSnackbar(aggregateOperationDeleteResult);
-        await InvokeAsync(StateHasChanged);
+        await CsvProcessingTable.InvokeStateHasChanged();
         return aggregateOperationDeleteResult;
     }
 
@@ -127,6 +125,7 @@ public partial class CsvProcessingStepper
         _autoSelectRows = findDupesOperation.AutoSelectRows;
         _duplicateRowsResolveVisible = true;
         await InvokeAsync(StateHasChanged);
+        List<CsvRow> rowsToDelete = new ();
         try
         {
             var filteredRowIds = FilteredRowIds(findDupesOperation);
@@ -134,7 +133,6 @@ public partial class CsvProcessingStepper
                 .Where(x => referenceCsvIds?.Contains(x.i) == true).ToArray();
             int kept = 0;
             int deleted = 0;
-            var clone = Runner.CurrentCsv.Clone();
             await foreach (var duplicateGroup in findDupesOperation.YieldReturnDupes(Runner.CurrentCsv,
                                filteredRowIds, referenceCsvs))
             {
@@ -166,7 +164,7 @@ public partial class CsvProcessingStepper
                         if (resolvedRows.RowsToKeep.All(x => x.RowToKeep != possibleDuplicate.Item2))
                         {
                             deleted++;
-                            await clone.MutateAsync(x => x.DeleteRow(possibleDuplicate.Item2), false);
+                            rowsToDelete.Add(possibleDuplicate.Item2);
                         }
                         else
                         {
@@ -196,7 +194,7 @@ public partial class CsvProcessingStepper
                         if (duplicate.Item2 != resolvedRows.RowToKeep)
                         {
                             deleted++;
-                            await clone.MutateAsync(x => x.DeleteRow(duplicate.Item2), false);
+                            rowsToDelete.Add(duplicate.Item2);
                         }
                         else
                         {
@@ -208,8 +206,8 @@ public partial class CsvProcessingStepper
 
             if (deleted > 0)
             {
-                await clone.CalculateContentBytesAndStrAsync();
-                Runner.AddToTimeline(clone);
+                var deleteRowsEdit = new DeleteRowsEdit(rowsToDelete);
+                Runner.AddReversibleEdit(deleteRowsEdit);
             }
 
             var operationResult = new OperationResult(true, $"Dedupe operation complete - {deleted+kept} rows evaluated | {deleted} rows deleted | {kept} rows kept");

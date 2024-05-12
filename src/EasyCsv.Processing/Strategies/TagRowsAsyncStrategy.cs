@@ -29,7 +29,7 @@ public class TagRowsAsyncStrategy : IFullCsvProcessor
                 await _addTagsFunc(row, existingTags);
                 row[InternalColumnNames.Tags] = string.Join(",", existingTags.Distinct());
             }
-        });
+        }, saveChanges: false);
         return new OperationResult(true);
     }
 }

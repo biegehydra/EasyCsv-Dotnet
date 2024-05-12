@@ -45,7 +45,7 @@ public class DivideAndReplicateStrategy : IFullCsvProcessor
                     }
                 }
             }
-        });
+        }, saveChanges: false);
         return new OperationResult(true, $"Replicated {deletedCount} rows into {replicatedCount}");
     }
 }

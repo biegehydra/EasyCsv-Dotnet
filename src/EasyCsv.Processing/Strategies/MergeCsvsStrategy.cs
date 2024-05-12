@@ -47,7 +47,7 @@ public class MergeCsvsStrategy : ICsvMerger
 
                 x.CsvContent.Add(new CsvRow(newRow, true));
             }
-        });
+        }, saveChanges: false);
         return baseCsv;
     }
 }

@@ -49,7 +49,7 @@ public class SplitColumnStrategy : IFullCsvProcessor
                 {
                     x.RemoveColumn(_columnToSplit);
                 }
-            });
+            }, saveChanges: false);
             return new OperationResult(true, $"Split succeeded on {rowsSplit} rows");
         }
         return new OperationResult(false, $"Csv didn't contain column to split: '{_columnToSplit}'");

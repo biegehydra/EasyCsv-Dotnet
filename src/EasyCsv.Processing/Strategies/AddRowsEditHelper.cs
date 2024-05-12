@@ -4,7 +4,7 @@ using EasyCsv.Core.Extensions;
 using Enumerable = System.Linq.Enumerable;
 
 namespace EasyCsv.Processing.Strategies;
-internal static class AddRowsHelper
+internal static class AddRowsEditHelper
 {
     public static (OperationResult, List<CsvRow>) CreateSameStructureRows(ICollection<CsvRow> rowsToAdd, IEasyCsv csv)
     {

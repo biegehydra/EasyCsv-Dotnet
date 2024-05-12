@@ -1,6 +1,6 @@
 ﻿@namespace EasyCsv.Components.Internal
 @using EasyCsv.Components.Processing.Strategies.Editing
-
+App
 <style>
     .mud-input-control-input-container:has(.mud-input-outlined) {
         margin-top: 0px !important;
@@ -417,7 +417,7 @@
         }
     }
 
-    private void ApplyCurrentColumnSort()
+    internal void ApplyCurrentColumnSort()
     {
         if (Stepper?.Runner?.CurrentCsv == null) return;
         if (_currentSortedColumn == null || _currentSortDirection == SortDirection.None)

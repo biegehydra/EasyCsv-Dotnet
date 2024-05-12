@@ -61,7 +61,7 @@ public class TagAndReferenceMatchesStrategy : ICsvReferenceProcessor
                     }
                 }
             }
-        });
+        }, saveChanges: false);
         return new OperationResult(true, $"{matched} records matched and tagged.");
     }
 }

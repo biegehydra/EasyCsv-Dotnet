@@ -59,7 +59,7 @@ public class JoinColumnsStrategy : IFullCsvProcessor
                     var columnsToRemove = toJoin.Where(y => y != _newColumnName);
                     x.RemoveColumns(columnsToRemove);
                 }
-            });
+            }, saveChanges: false);
             return new OperationResult(true, $"Joined: {string.Join(", ", toJoin)}");
         }
         return new OperationResult(false, $"Columns to join were not present in csv. To join: {string.Join(", ", _columnsToJoin)}");

@@ -33,7 +33,7 @@ public class StrategyRunner
     public OperationResult AddRows(ICollection<CsvRow> rowsToAdd)
     {
         if (rowsToAdd?.Count is not > 0 || CurrentCsv == null) return new OperationResult(false, "Rows to add was empty or the current csv is null.");
-        var (operationResult, rowsPreparedToAdd) = AddRowsHelper.CreateSameStructureRows(rowsToAdd, CurrentCsv!);
+        var (operationResult, rowsPreparedToAdd) = AddRowsEditHelper.CreateSameStructureRows(rowsToAdd, CurrentCsv!);
         if (!operationResult.Success || rowsPreparedToAdd.Count == 0) return operationResult;
         var addRowsEdit = new AddRowsEdit(rowsPreparedToAdd);
         AddReversibleEdit(addRowsEdit);

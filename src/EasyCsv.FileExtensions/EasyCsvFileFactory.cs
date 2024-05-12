@@ -39,7 +39,7 @@ namespace EasyCsv.Files
         /// <returns><code>ICsvService</code></returns>
         public static IEasyCsv? FromFormFile(IFormFile file, EasyCsvConfiguration? config = null)
         {
-            var easyCsv = new Core.EasyCsvInternal(file.OpenReadStream(), UserConfigOrGlobalConfig(config));
+            var easyCsv = new EasyCsvInternal(file.OpenReadStream(), UserConfigOrGlobalConfig(config));
             return NullOrEasyCsv(easyCsv);
 
         }

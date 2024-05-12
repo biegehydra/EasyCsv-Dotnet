@@ -1,5 +1,5 @@
 ﻿namespace EasyCsv.Components.Enums;
-public enum RunOperationNoneSelectedBehaviour
+public enum RunOperationNoneSelectedVisibility
 {
     Hidden,
     Disabled

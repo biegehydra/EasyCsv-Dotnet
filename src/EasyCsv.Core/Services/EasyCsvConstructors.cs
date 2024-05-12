@@ -21,9 +21,11 @@ namespace EasyCsv.Core
         }
 
         internal EasyCsvInternal(string fileContent, EasyCsvConfiguration config)
-            : this(Encoding.UTF8.GetBytes(fileContent), config)
         {
-
+            ContentBytes = Encoding.UTF8.GetBytes(fileContent);
+            ContentStr = fileContent;
+            Config = config;
+            CreateCsvContent();
         }
 
         internal EasyCsvInternal(Stream fileContentStream, EasyCsvConfiguration config, bool calculateContentByteAndStr = true)

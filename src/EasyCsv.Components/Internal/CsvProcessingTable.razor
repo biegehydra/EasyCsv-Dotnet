@@ -622,7 +622,7 @@
                                            <MudTextField T="string" Disabled="_columnStrategyBuckets[column].IsAnySelected()" Immediate="true" Label="Search strategies" Variant="Variant.Outlined" Value="_columnStrategyBuckets[column].SearchQuery"
                                                          ValueChanged="_columnStrategyBuckets[column].SetSearchQuery"
                                                          Clearable="true" OnClearButtonClick="() => _columnStrategyBuckets[column].SetSearchQuery(string.Empty)" />
-                                           @if (Stepper.EnableRowEditing && Stepper.EnableChangeEditColumnValueType)
+                                           @if (!fullCsv && Stepper.EnableRowEditing && Stepper.EnableChangeEditColumnValueType)
                                            {
                                                _columnValueTypes.TryAdd(column, Stepper.DefaultColumnValueType);
                                                <ColumnValueTypeSelect Style="max-width: 210px;" Label="Editing Type" ColumnValueType="@_columnValueTypes[column]" ColumnValueTypeChanged="x => SetColumnValueType(column, x)" ></ColumnValueTypeSelect>

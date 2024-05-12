@@ -1,13 +1,6 @@
 ﻿<MudTd>
     <MudAutocomplete Immediate="Immediate" Disabled="Disabled" Label="@Label" T="string?" Value="_newValue" ValueChanged="ValueChanged" Clearable="true" OnClearButtonClick="x => ValueChanged(null)"
-                     Variant="@Variant" Style="min-width: 250px;" SearchFunc="SearchFunc" ToStringFunc="x => x!">
-        @if (AllValues != null!)
-        {
-            @foreach (var value in AllValues)
-            {
-                <MudSelectItem T="string" Value="@value">@value</MudSelectItem>
-            }
-        }
+                     Variant="@Variant" Style="min-width: 250px;" SearchFunc="SearchFunc" ToStringFunc="x => x!" MaxItems="@MaxItems" BeforeItemsTemplate="BeforeItemsTemplate()" >
     </MudAutocomplete>
 </MudTd>
 
@@ -17,6 +10,7 @@
     [Parameter] public string?[] AllValues { get; set; } = [];
     [Parameter] public bool Immediate { get; set; } = true;
     [Parameter] public bool Disabled { get; set; }
+    [Parameter] public int MaxItems { get; set; } = 50;
     [Parameter] public string Label { get; set; } = "Select From All Values";
     [Parameter] public Variant Variant { get; set; } = Variant.Outlined;
     private string? _newValue;
@@ -28,7 +22,7 @@
         }
         _newValue = Row[ColumnName]?.ToString();
     }
-
+    private int _itemsInLastQuery;
 
 
     private void ValueChanged(string? obj)
@@ -39,8 +33,18 @@
 
     private Task<IEnumerable<string?>> SearchFunc(string? arg)
     {
+        _itemsInLastQuery = AllValues.Count(x => !string.IsNullOrWhiteSpace(x) && (arg?.Equals(_newValue) == true || string.IsNullOrWhiteSpace(arg) ||
+                                                                             x?.Contains(arg, StringComparison.OrdinalIgnoreCase) == true));
+        StateHasChanged();
         return Task.FromResult(AllValues.Where(x => !string.IsNullOrWhiteSpace(x) && (arg?.Equals(_newValue) == true || string.IsNullOrWhiteSpace(arg) ||
-                                                                                      x?.Contains(arg, StringComparison.OrdinalIgnoreCase) == true)).Take(50));
+                                                                                   x?.Contains(arg, StringComparison.OrdinalIgnoreCase) == true)).Take(50));
     }
-
+    private RenderFragment BeforeItemsTemplate()
+    {
+        if (_itemsInLastQuery > MaxItems)
+        {
+            return @<MudAlert Severity="Severity.Info">Showing first @MaxItems of @_itemsInLastQuery items</MudAlert>;
+        }
+        return null;
+    }
 }

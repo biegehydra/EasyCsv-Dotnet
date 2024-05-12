@@ -49,7 +49,7 @@ public enum ColumnValueType
 {
     [Description("The input will be MudTextField.")]
     Text,
-    Select,
+    SelectFromAll,
     [Description("The input will be MudDatePicker.")]
     DateTime,
     [Description("The input will be a MudNumericalField.")]

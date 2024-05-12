@@ -226,6 +226,7 @@ public partial class CsvProcessingStepper
         if (CsvProcessingTable == null || Runner == null) return Task.CompletedTask;
         if (Runner.AddReversibleEdit(reversibleEdit))
         {
+            Runner.SortCurrentCsvBackToOriginalOrder();
             return CsvProcessingTable.InvokeStateHasChanged();
         }
         return Task.CompletedTask;

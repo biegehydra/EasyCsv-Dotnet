@@ -1,12 +1,177 @@
 # EasyCsv.Components
 
-EasyCsv.Components provides you with 2 components. They are available to test at this [example website](https://easycsv-components-exampleapp.s3.amazonaws.com/index.html).
+EasyCsv.Components provides you with 3 components. They are available to test at this [example website](https://d143idkvxttaq3.cloudfront.net/processing)                                                                                                         
 
 ## Installation
 
 `NuGet\Install-Package EasyCsv.Components`
 
+## CsvProcessingStepper
+
+The csv processing stepper is like a miniature version of excel/google sheets that is fully customizable to you. It's features include:
+- Editing/Deleting/Sorting rows
+- Performing complex operations with versioning
+- Adding additional csvs to working csv
+- Performing dedupe operations
+- Specifying an operation to only operate on filtered rows
+
+### Create a Processsor/Evaluator
+To create your own strategies, you must first implement one of these [Interfaces](https://github.com/biegehydra/EasyCsv-Dotnet/blob/master/src/EasyCsv.Processing/Interfaces.cs). 
+
+Take for example this `TagRowsStrategy`
+```csharp
+public class TagRowsStrategy : IFullCsvProcessor
+{
+    public bool OperatesOnlyOnFilteredRows => true;
+    private readonly Action<CsvRow, IList<string>> _addTagsFunc;
+    public TagRowsStrategy(Action<CsvRow, IList<string>> addTagsFunc)
+    {
+        _addTagsFunc = addTagsFunc;
+    }
+
+    public async ValueTask<OperationResult> ProcessCsv(IEasyCsv csv, ICollection<int>? filteredRowIds)
+    {
+        await csv.MutateAsync(x =>
+        {
+            x.AddColumn(InternalColumnNames.Tags, null, ExistingColumnHandling.Keep);
+            foreach (var row in x.CsvContent.FilterByIndexes(filteredRowIds))
+            {
+                var existingTags = row.ProcessingTags()?.ToList() ?? [];
+                _addTagsFunc(row, existingTags);
+                row[InternalColumnNames.Tags] = string.Join(",", existingTags.Distinct());
+            }
+        }, saveChanges: false); // Note saveChanges shouldn't be called when performing operation to increase speed
+        return new OperationResult(true);
+    }
+}
+```
+This strategy implements `IFullCsvProcessor` which operates on an entire csv. The reason this strategy must use the IFullCsvProcessor, is because it potentially alters the shape/structure of the csv - when it adds the `InternalColumnNames.Tags`. Note how this strategy handles changing the structure of the csv, the column is added to every row at the very beginning. This is the safest way to do it because it is up to the Processor to ensure all rows have the same structure.
+
+More examples can be found [here](https://github.com/biegehydra/EasyCsv-Dotnet/tree/master/src/EasyCsv.Processing/Strategies).
+
+### Create Component For Strategy Options
+Once you have written you strategy, to integrate it with the CsvProcessingStepper, it is recommended to write a `StrategyItem` wrapper for the strategy. Take for example the wrapper for the `DivideAndReplicate` strategy.
+
+```html
+@inherits StrategyItemBase
+<StrategyItem DisplayName="@DisplayName" OnlyOperatesOnFilteredRows="OnlyOperatesOnFilteredRows" DescriptionStr="@DescriptionStr" Description="Description" BeforeCsvExample="BeforeExample" AfterCsvExample="AfterExample" ExampleOptions="ExampleOptions" AllowRun="AllowRun" StrategyPicked="RunDivideAndReplicate">
+    <Options>
+        <MudListItem>
+            <MudTextField Disabled="context" Label="Delimiter To Divide On" Variant="Variant.Outlined" @bind-Value="_delimiter"></MudTextField>
+        </MudListItem>
+    </Options>
+</StrategyItem>
+
+@code
+{
+    [Parameter] public override string? DisplayName { get; set; } = "Divide And Replicate";
+    [Parameter] public override string? DescriptionStr { get; set; } = "Will split the values in $column_name, on a specified delimiter, into parts and then create a copy of the row for each part";
+
+    private static readonly Dictionary<string, string> ExampleOptions = new Dictionary<string, string>()
+    {
+        {"Delimiter", "-"}
+    };
+    private static readonly Dictionary<string, string>[] BeforeExample =
+    [
+        new Dictionary<string, string>()
+        {
+            {"Column1", "value1"},
+            {"ColumnToDivideAndReplicate", "value2-value3"},
+        },
+    ];
+    private static readonly Dictionary<string, string>[] AfterExample =
+    [
+        new Dictionary<string, string>()
+        {
+            {"Column1", "value1"},
+            {"ColumnToDivideAndReplicate", "value2"},
+        },
+        new Dictionary<string, string>()
+        {
+            {"Column1", "value1"},
+            {"ColumnToDivideAndReplicate", "value3"},
+        }
+    ];
+
+    private bool AllowRun => !string.IsNullOrWhiteSpace(_delimiter);
+    private string? _delimiter;
+    private async Task RunDivideAndReplicate(string columnName)
+    {
+        if (!AllowRun) return;
+        var divideAndReplicateStrategy = new DivideAndReplicateStrategy(columnName, y => y?.ToString()?.Split(_delimiter).Cast<object?>().ToArray());
+        _ = await CsvProcessor.PerformCsvStrategy(divideAndReplicateStrategy);
+    }
+}
+```
+The options inherits from `StrategyItemBase` which gives you access to the `StrategyBucket` and `CsvProcessingStepper` (CsvProcessor) that the component is being rendered in. `StrategyBucket` just holds the context for the popup you see here:
+
+![2024-05-12_13-54](https://github.com/biegehydra/EasyCsv-Dotnet/assets/84036995/ce563585-f299-4aa4-8234-c6fcd70f9938)
+
+All you need to do in your component is give your StrategyItem a `DisplayName`, optionally define an `<Options>` section, and subscribe a callback to `StrategyPicked` that will create your strategy/reversible edit and use the CsvProcessor to perform it. The `Description`, `DescriptionStr` `BeforeCsvExample`, `AfterCsvExample`, and `Example Options` are optional parameters for the UI.
+
+`AllowRun` controls whether the `RunOperation` button is disabled or not. When the "Run Operation" button is clicked, the `StrategyPicked` callback is called (calling `RunDivideAndReplicate` here)
+ with the column name of the StrategyBucket this component is rendered in.
+
+### Add Options Components To CsvProcessingStepper
+Once your done write your `StrategyItem` wrappers, just put them in the `<COlumnStrategies>` or `<FullCsvStrategies>` section of the CsvProcessingStepper. Note, when a full csv strategy is picked, the column name will be `InternalColumnNames.FullCsvOperations` or "_FullCsvOperations" in the `StrategyPicked` callback
+
+ ```
+<CsvProcessingStepper @ref="_csvProcessor" EasyCsv="_easyCsv" EasyCsvFileName="Example.csv">
+    <ColumnStrategies>
+        <FindDedupesExactMatchColumn MustSelectRow="false" />
+        <StringSplitColumn />
+        <DivideAndReplicate />
+        <TagAndReferenceMatches />
+        <DeleteOnEmptyColumn />
+    </ColumnStrategies>
+    <FullCsvStrategies>
+        <AddCsv />
+        <CombineColumns />
+    </FullCsvStrategies>
+</CsvProcessingStepper>
+```
+
+
+### Reversible Edits
+In addition to operations, which should be used for complex operations because they require **cloning the entire csv**, `IReversibleEdit`'s can be used to alter the working csv in place. Some operations, such as the `ICsvColumnProcessor`, `ICsvColumnDeleteEvaluator`, `ICsvRowDeleteEvaluator`, and `IFindDupesOperation` are automatically treated as reversible edits so those can be used in some scenarios instead of writing your own `IReversibleEdit`.
+
+```
+public interface IReversibleEdit
+{
+    void DoEdit(IEasyCsv csv);
+    void UndoEdit(IEasyCsv csv);
+}
+```
+For example, this is the ModifyRowEdit class. The `DoEdit` and `UndoEdit` methods provide the working csv, but do not require you to use them
+```
+public class ModifyRowEdit : IReversibleEdit
+{
+    public ModifyRowEdit(CsvRow row, CsvRow rowClone, CsvRow rowAfterOperation)
+    {
+        Row = row;
+        RowClone = rowClone;
+        RowAfterOperation = rowAfterOperation;
+    }
+
+    public CsvRow Row { get; }
+    public CsvRow RowClone { get; }
+    public CsvRow RowAfterOperation { get; }
+    public void DoEdit(IEasyCsv csv)
+    {
+        RowAfterOperation.MapValuesTo(Row);
+    }
+    public void UndoEdit(IEasyCsv csv)
+    {
+        RowClone.MapValuesTo(Row);
+    }
+}
+```
+Note how I provide a reference to the original row. **Within a step, CsvRow references should be maintainted**, the same is not true across steps. The reason to provide the row instead of the row index, is because at any given point it time, you don't know how the csv will be sorted. 
+
+After calling `CsvProcessingStepper.AddReversibleEdit(IReversibleEdit reversibleEdit)`, the current column sort will be applied with `CsvProcessingTable.ApplyCurrentColumnSort()` to ensure row order is maintained. Row ordering is able to be maintained because the `StrategyRunner` stores a `Dictionary<CsvRow, int>` holding the original index of each row.
+
 ## CsvFileInput
+
 
 The first is just a simple Csv input component that will automatically convert the selected `IBrowserFile` into an `IEasyCsv` and fire off an event.
 

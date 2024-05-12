@@ -395,7 +395,7 @@
                     : SortDirection.Ascending;
             if (_currentSortDirection == SortDirection.None)
             {
-                Stepper.Runner.SortCurrentBackToOriginalOrder();
+                Stepper.Runner.SortCurrentCsvBackToOriginalOrder();
             }
             else
             {
@@ -422,7 +422,7 @@
         if (Stepper?.Runner?.CurrentCsv == null) return;
         if (_currentSortedColumn == null || _currentSortDirection == SortDirection.None)
         {
-            Stepper.Runner.SortCurrentBackToOriginalOrder();
+            Stepper.Runner.SortCurrentCsvBackToOriginalOrder();
         }
         else
         {

@@ -213,7 +213,7 @@ public class StrategyRunner
         SetCurrentIndexSafe(_steps.Count - 1);
     }
 
-    public void SortCurrentBackToOriginalOrder()
+    public void SortCurrentCsvBackToOriginalOrder()
     {
         if (CurrentCsv == null) return;
         var originalRowIndexes = CurrentOriginalRowIndexes!;

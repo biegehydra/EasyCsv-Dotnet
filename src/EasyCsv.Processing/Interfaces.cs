@@ -57,7 +57,7 @@ public interface ICsvColumnProcessor : IColumnOperation
     /// </summary>
     /// <param name="cell">The current cell this processor is operating on</param>
     /// <returns>A result saying if the operation was successful. If the operation was not successful, the <see cref="StrategyRunner"/> will cancel the operation and undo any changes</returns>
-    public ValueTask<OperationResult> ProcessCell<TCell>(TCell cell) where TCell : ICell;
+    public ValueTask<OperationResult> ProcessCell<TCell>(ref TCell cell) where TCell : ICell;
 }
 public interface ICsvRowProcessor : ICsvProcessor
 {
@@ -163,10 +163,6 @@ public interface ICsvProcessor
 /// </summary>
 public interface IReadonlyCell
 {
-    /// <summary>
-    /// The index of this row in its csv
-    /// </summary>
-    public int RowIndex { get; }
     /// <summary>
     /// The column this cell is a part of
     /// </summary>

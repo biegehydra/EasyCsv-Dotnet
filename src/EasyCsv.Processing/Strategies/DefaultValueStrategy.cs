@@ -14,7 +14,7 @@ public class DefaultValueStrategy : ICsvColumnProcessor
         _shouldOverride = shouldOverride ?? (x => true);
     }
 
-    public ValueTask<OperationResult> ProcessCell<TCell>(TCell cell) where TCell : ICell
+    public ValueTask<OperationResult> ProcessCell<TCell>(ref TCell cell) where TCell : ICell
     {
         if (_shouldOverride(cell.Value))
         {

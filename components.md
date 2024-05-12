@@ -111,7 +111,7 @@ The options inherits from `StrategyItemBase` which gives you access to the `Stra
 
 ![2024-05-12_13-54](https://github.com/biegehydra/EasyCsv-Dotnet/assets/84036995/ce563585-f299-4aa4-8234-c6fcd70f9938)
 
-All you need to do this give your strategy a `DisplayName` and define a `RenderFragment Options` if needed. The `Description`, `DescriptionStr` `BeforeCsvExample`, `AfterCsvExample`, and `Example Options` are optional for UI purposes.
+All you need to do this give your strategy a `DisplayName` and define a `<Options>` section if needed. The `Description`, `DescriptionStr` `BeforeCsvExample`, `AfterCsvExample`, and `Example Options` are optional for UI purposes.
 
 `AllowRun` controls whether the `RunOperation` button is disabled or not. When the "Run Operation" button is clicked, the StrategyPicked callback is called (calling RunDivideAndReplicate here)
  with the column name of the StrategyBucket this component is rendered in.

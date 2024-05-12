@@ -13,6 +13,12 @@
         gap: 8px;
         align-items: center;
     }
+    .csv-processing-current-step-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 20px;
+    }
 </style>
 
 <ErrorBoundary >
@@ -20,7 +26,13 @@
         @if (Runner?.CurrentCsv != null && (ColumnStrategies != null || FullCsvStrategies != null))
         {
             <div style="display: flex; flex-direction: row; width: 100%; padding: 0 15px; align-items: center; justify-content: space-between" >
-                <MudText Typo="Typo.h5">Current Step: @(Runner.CurrentIndex + 1)</MudText>
+                <div class="csv-processing-current-step-container">
+                    <MudText Typo="Typo.h5">Current Step: @(Runner.CurrentIndex + 1)</MudText>
+                    @if (AfterCurrentStep != null)
+                    {
+                        @AfterCurrentStep
+                    }
+                </div>
                 <div style="display: flex; gap: 20px; flex-direction: row;">
                     @if (Runner.IsCacheIndexValid(Runner.CurrentIndex - 1))
                     {

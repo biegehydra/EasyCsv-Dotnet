@@ -62,7 +62,7 @@ public class StrategyRunner
         if (evaluateDelete == null!) return new AggregateOperationDeleteResult(false, 0, "CsvColumnDeleteEvaluator was null");
         List<CsvRow> rowsToDelete = new ();
         string columnName = evaluateDelete.ColumnName;
-        foreach (var (row, _) in CurrentCsv.CsvContent.FilterByIndexesWithOriginalIndex(filteredRowIds))
+        foreach (var row in CurrentCsv.CsvContent.FilterByIndexes(filteredRowIds))
         {
             var operationResult = await evaluateDelete.EvaluateDelete(new RowCell(columnName, row[columnName]));
             if (operationResult.Delete)
@@ -87,9 +87,9 @@ public class StrategyRunner
         if (evaluateDelete == null!) return new AggregateOperationDeleteResult(false, 0, "CsvRowDeleteEvaluator was null");
 
         List<CsvRow> rowsToDelete = new ();
-        foreach (var (row, index) in CurrentCsv.CsvContent.FilterByIndexesWithOriginalIndex(filteredRowIds))
+        foreach (var row in CurrentCsv.CsvContent.FilterByIndexes(filteredRowIds))
         {
-            var operationResult = await evaluateDelete.EvaluateDelete(row, index);
+            var operationResult = await evaluateDelete.EvaluateDelete(row);
             if (operationResult.Delete)
             {
                 rowsToDelete.Add(row);
@@ -129,7 +129,7 @@ public class StrategyRunner
         if (CurrentCsv == null) return new OperationResult(false, "Component not initialized yet.");
         var columnName = columnProcessor.ColumnName;
         List<CellEdit> cellEdits = new List<CellEdit>(CurrentCsv.CsvContent.Count / 8);
-        foreach (var (row, _) in CurrentCsv.CsvContent.FilterByIndexesWithOriginalIndex(filteredRowIds))
+        foreach (var row in CurrentCsv.CsvContent.FilterByIndexes(filteredRowIds))
         {
             object? originalValue = row[columnName];
             var rowCell = new RowCell(columnName, originalValue);
@@ -157,9 +157,9 @@ public class StrategyRunner
     {
         if (CurrentCsv == null) return new OperationResult(false, "Component not initialized yet.");
         var clone = CurrentCsv.Clone();
-        foreach (var (row, index) in clone.CsvContent.FilterByIndexesWithOriginalIndex(filteredRowIds))
+        foreach (var row in clone.CsvContent.FilterByIndexes(filteredRowIds))
         {
-            var operationResult = await rowProcessor.ProcessRow(row, index);
+            var operationResult = await rowProcessor.ProcessRow(row);
             if (operationResult.Success == false)
             {
                 return operationResult;

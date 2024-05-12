@@ -73,7 +73,7 @@ public interface ICsvRowProcessor : ICsvProcessor
     /// An operation result with a Success flag.
     /// If Success is False, the <see cref="StrategyRunner"/> will cancel the operation and rollback changes
     /// </returns>
-    public ValueTask<OperationResult> ProcessRow(CsvRow row, int rowIndex);
+    public ValueTask<OperationResult> ProcessRow(CsvRow row);
 }
 
 public interface ICsvColumnDeleteEvaluator : IColumnOperation
@@ -105,7 +105,7 @@ public interface ICsvRowDeleteEvaluator : ICsvProcessor
     /// If Delete is True, <paramref name="row"/> will be deleted.
     /// If Success is False, the <see cref="StrategyRunner"/> will cancel the operation and rollback changes
     /// </returns>
-    public ValueTask<OperationDeleteResult> EvaluateDelete(CsvRow row, int rowIndex);
+    public ValueTask<OperationDeleteResult> EvaluateDelete(CsvRow row);
 }
 
 public interface ICsvReferenceProcessor : IReferenceOperation

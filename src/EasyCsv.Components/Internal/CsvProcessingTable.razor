@@ -507,12 +507,13 @@
             var tags = row.ValueAt(tagsColumnIndex)?.ToString()?.Split(",", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
             return @<MudTd Class="extra-dense">
                        @if (tags?.Any() == true)
-                       {
+                       { 
                            <MudChipSet AllClosable="@allowDelete">
                                @foreach (var tag in tags)
                                {
+                                   Action? onClose = allowDelete ? () => RemoveTag(row, tagsColumnIndex, tag) : null;
                                    AddTag(tag);
-                                   <MudChip Text="@tag" Color="_tagColors[tag]" Size="Size.Small" OnClose="x => RemoveTag(row, tagsColumnIndex, tag)"/>
+                                   <MudChip Text="@tag" Color="_tagColors[tag]" Size="Size.Small" OnClose="@onClose"/>
                                }
                            </MudChipSet>
                        }

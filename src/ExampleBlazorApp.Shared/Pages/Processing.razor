@@ -11,30 +11,44 @@
     }
 </style>
 
-<CsvProcessingStepper @ref="_csvProcessor" EasyCsvFileName="Example.csv" EasyCsv="_easyCsv" 
-                      ResolveDuplicatesAutoSelect="ResolveDuplicatesAutoSelect.FirstRow" HideExpandUnselected="true" >
-    <ColumnStrategies>
-        <FindDedupesExactMatchColumn MustSelectRow="false" />
-        <StringSplitColumn />
-        <DivideAndReplicate />
-        <TagAndReferenceMatches />
-        <DeleteOnEmptyColumn />
-        <StrategyItem DisplayName="Tag Invalid Email" DescriptionStr="Tag all rows with an invalid email in $column_name"
-                      BeforeCsvExample="_beforeExample" AfterCsvExample="_afterExample" StrategyPicked="OnTagPicked"/>
-    </ColumnStrategies>
-    <FullCsvStrategies>
-        <AddCsv  />
-        <CombineColumns  />
-    </FullCsvStrategies>
-</CsvProcessingStepper>
+@if (_easyCsv != null)
+{
+    <CsvProcessingStepper @ref="_csvProcessor" EasyCsvFileName="Example.csv" EasyCsv="_easyCsv"
+                          ResolveDuplicatesAutoSelect="ResolveDuplicatesAutoSelect.FirstRow" HideExpandUnselected="true">
+        <ColumnStrategies>
+            <FindDedupesExactMatchColumn MustSelectRow="false" />
+            <StringSplitColumn />
+            <DivideAndReplicate />
+            <TagAndReferenceMatches />
+            <DeleteOnEmptyColumn />
+            <StrategyItem DisplayName="Tag Invalid Email" DescriptionStr="Tag all rows with an invalid email in $column_name"
+                          BeforeCsvExample="_beforeExample" AfterCsvExample="_afterExample" StrategyPicked="OnTagPicked" />
+        </ColumnStrategies>
+        <FullCsvStrategies>
+            <AddCsv />
+            <CombineColumns />
+        </FullCsvStrategies>
+        <AfterCurrentStep>
+            <MudTooltip Text="Reset if you want to upload your own csv to use with the tool." Style="max-width: 250px;">
+                <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="() => _easyCsv = null!">Reset</MudButton>
+            </MudTooltip>
+        </AfterCurrentStep>
+    </CsvProcessingStepper>
+}
+else if (_loaded)
+{
+    <CsvFileInput CsvValid="_easyCsv != null" OnCsvUpload="x => _easyCsv = x.Csv" > </CsvFileInput>
+}
 @code {
     [Inject] public NavigationManager NavigationManager { get; set; }
     [Inject] public ISnackbar? Snackbar { get; set; }
     private CsvProcessingStepper _csvProcessor = null!;
-    private IEasyCsv _easyCsv;
+    private IEasyCsv? _easyCsv;
+    private bool _loaded = false;
     protected override async Task OnInitializedAsync()
     {
         _easyCsv = await EasyCsvFactory.FromUrlAsync(NavigationManager.BaseUri + "_content/ExampleBlazorApp.Shared/person_data.csv", 5)!;
+        _loaded = true;
 
     }
 

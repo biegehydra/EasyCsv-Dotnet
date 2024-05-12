@@ -35,6 +35,7 @@ public partial class CsvProcessingStepper
     [Parameter] public RenderFragment<string>? ColumnStrategies { get; set; }
     [Parameter] public RenderFragment? FullCsvStrategies { get; set; }
     [Parameter] public RenderFragment? ErrorBoundaryContent { get; set; }
+    [Parameter] public RenderFragment? AfterCurrentStep { get; set; }
 
     [Parameter] public CloseBehaviour CloseBehaviour { get; set; } = Enums.CloseBehaviour.CloseButtonAndClickAway;
     [Parameter] public bool HideOtherStrategiesOnSelect { get; set; } = true;

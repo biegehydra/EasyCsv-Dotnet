@@ -133,7 +133,8 @@ Once your done write your `StrategyItem` wrappers, just put them in the `<COlumn
 
 
 ### Reversible Edits
-In addition to operations, which should be used for complex types because they require **cloning the entire csv**, `IReversibleEdit`'s can be used to alter the working csv in place.
+In addition to operations, which should be used for complex operations because they require **cloning the entire csv**, `IReversibleEdit`'s can be used to alter the working csv in place. Some operations, such as the `ICsvColumnProcessor`, `ICsvColumnDeleteEvaluator`, `ICsvRowDeleteEvaluator`, and `IFindDupesOperation` are automatically treated as reversible edits so those can be used in some scenarios instead of writing your own `IReversibleEdit`.
+
 ```
 public interface IReversibleEdit
 {
@@ -165,9 +166,9 @@ public class ModifyRowEdit : IReversibleEdit
     }
 }
 ```
-Note how I provide a reference to the original row. **Within a step, CsvRow references are maintainted**, the same is not true across steps. The reason to provide the row instead of the row index, is because at any given point it time, you don't know how the csv will be sorted. 
+Note how I provide a reference to the original row. **Within a step, CsvRow references should be maintainted**, the same is not true across steps. The reason to provide the row instead of the row index, is because at any given point it time, you don't know how the csv will be sorted. 
 
-After calling `CsvProcessingStepper.AddReversibleEdit(IReversibleEdit reversibleEdit)`, `CsvProcessingTable.ApplyCurrentColumnSort()` will be called to ensure row order is maintained. Row ordering should be maintained through `IReversibleEdit`'s because the `StrategyRunner` stores a `Dictionary<CsvRow, int>` holding the original index of each row.
+After calling `CsvProcessingStepper.AddReversibleEdit(IReversibleEdit reversibleEdit)`, the current column sort will be applied with `CsvProcessingTable.ApplyCurrentColumnSort()` to ensure row order is maintained. Row ordering is able to be maintained because the `StrategyRunner` stores a `Dictionary<CsvRow, int>` holding the original index of each row.
 
 ## CsvFileInput
 

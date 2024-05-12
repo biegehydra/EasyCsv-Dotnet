@@ -15,6 +15,7 @@ The csv processing stepper is like a miniature version of excel/google sheets th
 - Performing dedupe operations
 - Specifying an operation to only operate on filtered rows
 
+### Create a Processsor/Evaluator
 To create your own strategies, you must first implement one of these [Interfaces](https://github.com/biegehydra/EasyCsv-Dotnet/blob/master/src/EasyCsv.Processing/Interfaces.cs). 
 
 Take for example this `TagRowsStrategy`
@@ -48,26 +49,21 @@ This strategy implements `IFullCsvProcessor` which operates on an entire csv. Th
 
 More examples can be found [here](https://github.com/biegehydra/EasyCsv-Dotnet/tree/master/src/EasyCsv.Processing/Strategies).
 
+### Create Component For Strategy Options
 Once you have written you strategy, to integrate it with the CsvProcessingStepper, it is recommended to write a `StrategyItem` wrapper for the strategy. Take for example the wrapper for the `DivideAndReplicate` strategy.
 
 ```html
-\@inherits StrategyItemBase
-
-@if (CsvProcessor == null)
-{
-    throw new ArgumentException("EasyCsv: Attempted to render strategy options not within CsvProcessingStepper", nameof(CsvProcessingStepper));
-}
+@inherits StrategyItemBase
 <StrategyItem DisplayName="@DisplayName" OnlyOperatesOnFilteredRows="OnlyOperatesOnFilteredRows" DescriptionStr="@DescriptionStr" Description="Description" BeforeCsvExample="BeforeExample" AfterCsvExample="AfterExample" ExampleOptions="ExampleOptions" AllowRun="AllowRun" StrategyPicked="RunDivideAndReplicate">
     <Options>
         <MudListItem>
-            <MudTextField Disabled="context" Label="Delimiter To Divide On" Immediate="true" Variant="Variant.Outlined" @bind-Value="_delimiter"></MudTextField>
+            <MudTextField Disabled="context" Label="Delimiter To Divide On" Variant="Variant.Outlined" @bind-Value="_delimiter"></MudTextField>
         </MudListItem>
     </Options>
 </StrategyItem>
 
 @code
 {
-    [Parameter] public bool Immediate { get; set; } = true;
     [Parameter] public override string? DisplayName { get; set; } = "Divide And Replicate";
     [Parameter] public override string? DescriptionStr { get; set; } = "Will split the values in $column_name, on a specified delimiter, into parts and then create a copy of the row for each part";
 
@@ -102,20 +98,21 @@ Once you have written you strategy, to integrate it with the CsvProcessingSteppe
     private async Task RunDivideAndReplicate(string columnName)
     {
         if (!AllowRun) return;
-        var splitParsingStrategy = new DivideAndReplicateStrategy(columnName, y => y?.ToString()?.Split(_delimiter).Cast<object?>().ToArray());
-        _ = await CsvProcessor.PerformCsvStrategy(splitParsingStrategy);
+        var divideAndReplicateStrategy = new DivideAndReplicateStrategy(columnName, y => y?.ToString()?.Split(_delimiter).Cast<object?>().ToArray());
+        _ = await CsvProcessor.PerformCsvStrategy(divideAndReplicateStrategy);
     }
 }
 ```
-The options inherits from `StrategyItemBase` which gives you access to the `StrategyBucket` and `CsvProcessingStepper` that the component is being rendered in. `StrategyBucket` just holds the context for the popup you see here:
+The options inherits from `StrategyItemBase` which gives you access to the `StrategyBucket` and `CsvProcessingStepper` (CsvProcessor) that the component is being rendered in. `StrategyBucket` just holds the context for the popup you see here:
 
 ![2024-05-12_13-54](https://github.com/biegehydra/EasyCsv-Dotnet/assets/84036995/ce563585-f299-4aa4-8234-c6fcd70f9938)
 
-All you need to do this give your strategy a `DisplayName` and define a `<Options>` section if needed. The `Description`, `DescriptionStr` `BeforeCsvExample`, `AfterCsvExample`, and `Example Options` are optional for UI purposes.
+All you need to do in your component is give your StrategyItem a `DisplayName`, optionally define an `<Options>` section, and subscribe a callback to `StrategyPicked` that will create your strategy/reversible edit and use the CsvProcessor to perform it. The `Description`, `DescriptionStr` `BeforeCsvExample`, `AfterCsvExample`, and `Example Options` are optional parameters for the UI.
 
-`AllowRun` controls whether the `RunOperation` button is disabled or not. When the "Run Operation" button is clicked, the StrategyPicked callback is called (calling RunDivideAndReplicate here)
+`AllowRun` controls whether the `RunOperation` button is disabled or not. When the "Run Operation" button is clicked, the `StrategyPicked` callback is called (calling `RunDivideAndReplicate` here)
  with the column name of the StrategyBucket this component is rendered in.
 
+### Add Options Components To CsvProcessingStepper
 Once your done write your `StrategyItem` wrappers, just put them in the `<COlumnStrategies>` or `<FullCsvStrategies>` section of the CsvProcessingStepper. Note, when a full csv strategy is picked, the column name will be `InternalColumnNames.FullCsvOperations` or "_FullCsvOperations" in the `StrategyPicked` callback
 
  ```

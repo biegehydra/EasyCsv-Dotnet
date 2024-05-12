@@ -34,21 +34,21 @@ namespace EasyCsv.Core
             _innerDictionary = new Dictionary<string, object?>(row);
         }
 
-        public CsvRow(IEnumerable<string> headers, List<object?> values)
+        public CsvRow(IEnumerable<string> columnNames, List<object?> values)
         {
             _innerDictionary = new Dictionary<string, object?>();
             var i = 0;
-            foreach (var key in headers)
+            foreach (var columnName in columnNames)
             {
-                this[key] = values[i];
+                this[columnName] = values[i];
                 i++;
             }
         }
 
-        public object? this[string key]
+        public object? this[string columnName]
         {
-            get => _innerDictionary[key];
-            set => _innerDictionary[key] = value;
+            get => _innerDictionary[columnName];
+            set => _innerDictionary[columnName] = value;
         }
 
         public int Count => _innerDictionary.Count;
@@ -57,24 +57,24 @@ namespace EasyCsv.Core
 
         public ICollection<object?> Values => _innerDictionary.Values;
 
-        public void Add(string key, object? value)
+        public void Add(string columnName, object? value)
         {
-            _innerDictionary.Add(key, value);
+            _innerDictionary.Add(columnName, value);
         }
 
-        public bool ContainsKey(string key)
+        public bool ContainsKey(string columnName)
         {
-            return _innerDictionary.ContainsKey(key);
+            return _innerDictionary.ContainsKey(columnName);
         }
 
-        public bool Remove(string key)
+        public bool Remove(string columnName)
         {
-            return _innerDictionary.Remove(key);
+            return _innerDictionary.Remove(columnName);
         }
 
-        public bool TryGetValue(string key, out object? value)
+        public bool TryGetValue(string columnName, out object? value)
         {
-            return _innerDictionary.TryGetValue(key, out value);
+            return _innerDictionary.TryGetValue(columnName, out value);
         }
 
         public void Add(KeyValuePair<string, object?> item)
@@ -399,6 +399,18 @@ namespace EasyCsv.Core
         public bool ValuesEqual(CsvRow other)
         {
             return Count == other.Count && Keys.All(key => ContainsKey(key) && Equals(this[key], other[key]));
+        }
+
+        public void MapValuesTo(CsvRow other)
+        {
+            if (other?._innerDictionary == null!) return;
+            foreach (var kvp in _innerDictionary)
+            {
+                if (other._innerDictionary.ContainsKey(kvp.Key))
+                {
+                    other._innerDictionary[kvp.Key] = kvp.Value;
+                }
+            }
         }
     }
 }

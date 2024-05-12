@@ -9,7 +9,6 @@ using MudBlazor;
 using Microsoft.JSInterop;
 using Microsoft.AspNetCore.Components.Web;
 using MudBlazorFix;
-using System.Windows.Input;
 
 namespace EasyCsv.Components;
 
@@ -42,10 +41,11 @@ public partial class CsvProcessingStepper
     [Parameter] public bool SearchBar { get; set; } = true;
     [Parameter] public bool EnableRowEditing { get; set; } = true;
     [Parameter] public bool EnableRowDeleting { get; set; } = true;
+    [Parameter] public bool EnableSorting { get; set; } = true;
     [Parameter] public bool ShowColumnNameInStrategySelect { get; set; } = true;
     [Parameter] public bool ShowAddReferenceCsv { get; set; } = true;
     [Parameter] public bool EnableChangeEditColumnValueType { get; set; } = true;
-    [Parameter] public RunOperationNoneSelectedBehaviour RunOperationNoneSelectedBehaviour { get; set; } = RunOperationNoneSelectedBehaviour.Hidden;
+    [Parameter] public RunOperationNoneSelectedVisibility RunOperationNoneSelectedVisibility { get; set; } = RunOperationNoneSelectedVisibility.Hidden;
     [Parameter] public ColumnLocation TagsAndReferencesLocation { get; set; } = ColumnLocation.Beginning;
     [Parameter] public ResolveDuplicatesAutoSelect ResolveDuplicatesAutoSelect { get; set; } = ResolveDuplicatesAutoSelect.None;
     [Parameter] public bool AllowControlTagsAndReferencesLocation { get; set; } = true;

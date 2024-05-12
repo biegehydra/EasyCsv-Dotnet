@@ -221,6 +221,17 @@ public partial class CsvProcessingStepper
         }
     }
 
+    public Task AddReversibleEdit(IReversibleEdit reversibleEdit)
+    {
+        if (CsvProcessingTable == null || Runner == null) return Task.CompletedTask;
+        if (Runner.AddReversibleEdit(reversibleEdit))
+        {
+            CsvProcessingTable.ApplyCurrentColumnSort();
+            return CsvProcessingTable.InvokeStateHasChanged();
+        }
+        return Task.CompletedTask;
+    }
+
     public async ValueTask<OperationResult> PerformReferenceStrategy(ICsvReferenceProcessor csvReferenceProcessor)
     {
         if (Runner == null) return _runnerNull;

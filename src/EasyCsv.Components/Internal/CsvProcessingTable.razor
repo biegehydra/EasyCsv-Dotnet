@@ -1,6 +1,6 @@
 ﻿@namespace EasyCsv.Components.Internal
 @using EasyCsv.Components.Processing.Strategies.Editing
-
+App
 <style>
     .mud-input-control-input-container:has(.mud-input-outlined) {
         margin-top: 0px !important;
@@ -395,7 +395,7 @@
                     : SortDirection.Ascending;
             if (_currentSortDirection == SortDirection.None)
             {
-                Stepper.Runner.SortCurrentBackToOriginalOrder();
+                Stepper.Runner.SortCurrentCsvBackToOriginalOrder();
             }
             else
             {
@@ -417,12 +417,12 @@
         }
     }
 
-    private void ApplyCurrentColumnSort()
+    internal void ApplyCurrentColumnSort()
     {
         if (Stepper?.Runner?.CurrentCsv == null) return;
         if (_currentSortedColumn == null || _currentSortDirection == SortDirection.None)
         {
-            Stepper.Runner.SortCurrentBackToOriginalOrder();
+            Stepper.Runner.SortCurrentCsvBackToOriginalOrder();
         }
         else
         {
@@ -507,12 +507,13 @@
             var tags = row.ValueAt(tagsColumnIndex)?.ToString()?.Split(",", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
             return @<MudTd Class="extra-dense">
                        @if (tags?.Any() == true)
-                       {
+                       { 
                            <MudChipSet AllClosable="@allowDelete">
                                @foreach (var tag in tags)
                                {
+                                   Action? onClose = allowDelete ? () => RemoveTag(row, tagsColumnIndex, tag) : null;
                                    AddTag(tag);
-                                   <MudChip Text="@tag" Color="_tagColors[tag]" Size="Size.Small" OnClose="x => RemoveTag(row, tagsColumnIndex, tag)"/>
+                                   <MudChip Text="@tag" Color="_tagColors[tag]" Size="Size.Small" OnClose="@onClose"/>
                                }
                            </MudChipSet>
                        }

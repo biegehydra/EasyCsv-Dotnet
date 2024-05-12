@@ -61,9 +61,10 @@ public class StrategyRunner
         if (CurrentCsv == null) return new AggregateOperationDeleteResult(false, 0, "Component not initialized yet.");
         if (evaluateDelete == null!) return new AggregateOperationDeleteResult(false, 0, "CsvColumnDeleteEvaluator was null");
         List<CsvRow> rowsToDelete = new ();
-        foreach (var (row, index) in CurrentCsv.CsvContent.FilterByIndexesWithOriginalIndex(filteredRowIds))
+        string columnName = evaluateDelete.ColumnName;
+        foreach (var (row, _) in CurrentCsv.CsvContent.FilterByIndexesWithOriginalIndex(filteredRowIds))
         {
-            var operationResult = await evaluateDelete.EvaluateDelete(new RowCell(row, evaluateDelete.ColumnName, index));
+            var operationResult = await evaluateDelete.EvaluateDelete(new RowCell(columnName, row[columnName]));
             if (operationResult.Delete)
             {
                 rowsToDelete.Add(row);
@@ -126,17 +127,29 @@ public class StrategyRunner
     public async ValueTask<OperationResult> RunColumnStrategy(ICsvColumnProcessor columnProcessor, ICollection<int>? filteredRowIds)
     {
         if (CurrentCsv == null) return new OperationResult(false, "Component not initialized yet.");
-        var clone = CurrentCsv.Clone();
-        foreach (var (row, index) in clone.CsvContent.FilterByIndexesWithOriginalIndex(filteredRowIds))
+        var columnName = columnProcessor.ColumnName;
+        List<CellEdit> cellEdits = new List<CellEdit>(CurrentCsv.CsvContent.Count / 8);
+        foreach (var (row, _) in CurrentCsv.CsvContent.FilterByIndexesWithOriginalIndex(filteredRowIds))
         {
-            var operationResult = await columnProcessor.ProcessCell(new RowCell(row, columnProcessor.ColumnName, index));
+            object? originalValue = row[columnName];
+            var rowCell = new RowCell(columnName, originalValue);
+            var operationResult = await columnProcessor.ProcessCell(ref rowCell);
             if (operationResult.Success == false)
             {
                 return operationResult;
             }
+            if (rowCell.ValueChanged)
+            {
+                cellEdits.Add(new CellEdit(row, originalValue, rowCell.Value));
+            }
         }
 
-        AddToTimeline(clone);
+        if (cellEdits.Count > 0)
+        {
+            var columnEdit = new MakeColumnEdit(cellEdits, columnName);
+            AddReversibleEdit(columnEdit);
+        }
+
         return new OperationResult(true);
     }
 
@@ -296,6 +309,47 @@ public class StrategyRunner
 #endif
     {
         return Utils.IsValidIndex(index, ReferenceCsvs.Count);
+    }
+}
+
+public readonly record struct CellEdit
+{
+    public CellEdit(CsvRow row, object? beforeValue, object? afterValue)
+    {
+        Row = row;
+        BeforeValue = beforeValue;
+        AfterValue = afterValue;
+    }
+
+    public CsvRow Row { get; }
+    public object? BeforeValue { get; }
+    public object? AfterValue { get; }
+};
+public class MakeColumnEdit : IReversibleEdit
+{
+    private readonly ICollection<CellEdit> _cellEdits;
+    private readonly string _columnName;
+
+    public MakeColumnEdit(ICollection<CellEdit> cellEdits, string columnName)
+    {
+        _cellEdits = cellEdits;
+        _columnName = columnName;
+    }
+
+    public void DoEdit(IEasyCsv csv)
+    {
+        foreach (var cellEdit in _cellEdits)
+        {
+            cellEdit.Row[_columnName] = cellEdit.AfterValue;
+        }
+    }
+
+    public void UndoEdit(IEasyCsv csv)
+    {
+        foreach (var cellEdit in _cellEdits)
+        {
+            cellEdit.Row[_columnName] = cellEdit.BeforeValue;
+        }
     }
 }
 
@@ -559,28 +613,27 @@ internal class CurrentRowEditIndex
     public int Value { get; set; } = -1;
 }
 
-public readonly struct RowCell : ICell
+public struct RowCell : ICell
 {
-    private CsvRow CsvRow { get; }
-
-    public int RowIndex { get; }
-
     public string ColumnName { get; }
-
-    public RowCell(CsvRow csvRow, string columnName, int rowIndex)
+    internal bool ValueChanged { get; set; }
+    public RowCell(string columnName, object? value)
     {
-        CsvRow = csvRow;
         ColumnName = columnName;
-        RowIndex = rowIndex;
+        _value = value;
     }
 
+    private object? _value;
     public object? Value
     {
-        get
+        get => _value;
+        set
         {
-            CsvRow.TryGetValue(ColumnName, out object? value);
-            return value;
+            if (!EqualityComparer<object?>.Default.Equals(_value, value))
+            {
+                _value = value;
+                ValueChanged = true;
+            }
         }
-        set => CsvRow[ColumnName] = value;
     }
 }

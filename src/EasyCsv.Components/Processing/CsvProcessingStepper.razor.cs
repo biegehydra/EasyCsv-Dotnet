@@ -58,7 +58,6 @@ public partial class CsvProcessingStepper
     /// If true, operations will only run on filtered rows,
     /// otherwise they will run on every row
     /// </summary>
-    [Parameter] public bool OperateOnFilteredRows { get; set; }
     [Parameter] public Color ReferenceChipColor { get; set; } = Color.Primary;
     [Parameter] public string MaxStrategySelectHeight { get; set; } = "600px";
     [Parameter] public string DefaultDownloadFileName { get; set; } = "WorkingCsvSnapshot";

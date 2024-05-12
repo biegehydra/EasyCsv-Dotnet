@@ -6,13 +6,13 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using EasyCsv.Core.Extensions;
+using EasyCsv.Processing.Strategies;
 
 [assembly: InternalsVisibleTo("EasyCsv.Components")]
 namespace EasyCsv.Processing;
 public class StrategyRunner
 {
     private int _currentIndex = -1;
-    private int _currentEditIndex = -1;
     public int CurrentIndex => _currentIndex;
     public int? CurrentRowEditIndex => Utils.IsValidIndex(_currentIndex, _steps.Count) ? _steps[_currentIndex].CurrentRowEditIndex.Value : null;
     public IEasyCsv? CurrentCsv => IsCacheIndexValid(_currentIndex) ? _steps[_currentIndex].Csv : null;
@@ -22,8 +22,6 @@ public class StrategyRunner
     internal List<IReversibleEdit>? CurrentReversibleEdits => Utils.IsValidIndex(_currentIndex, _steps.Count) ? _steps[_currentIndex].ReversibleEdits : null;
     private readonly List<(IEasyCsv Csv, string FileName)> _referenceCsvs = new();
     public IReadOnlyList<(IEasyCsv Csv, string FileName)> ReferenceCsvs => _referenceCsvs;
-    public IReadOnlyList<IEasyCsv> CachedCsvs() => _steps.Select(x => x.Csv).ToArray();
-    public IReadOnlyList<IReadOnlyCollection<string>> CachedTags() => _steps.Select(x => x.Tags).ToArray();
     internal readonly List<(IEasyCsv Csv, string[] ColumnNames, HashSet<string> Tags, List<IReversibleEdit> ReversibleEdits, Dictionary<CsvRow, int> OriginalRowIndexes, CurrentRowEditIndex CurrentRowEditIndex)> _steps = new();
     public StrategyRunner(IEasyCsv baseCsv)
     {
@@ -32,41 +30,53 @@ public class StrategyRunner
         SetCurrentIndexSafe(0);
     }
 
-    public void AddReversibleEdit(IReversibleEdit reversibleEdit)
+    public OperationResult AddRows(ICollection<CsvRow> rowsToAdd)
     {
-        if (CurrentCsv == null) return;
+        if (rowsToAdd?.Count is not > 0 || CurrentCsv == null) return new OperationResult(false, "Rows to add was empty or the current csv is null.");
+        var (operationResult, rowsPreparedToAdd) = AddRowsHelper.CreateSameStructureRows(rowsToAdd, CurrentCsv!);
+        if (!operationResult.Success) return operationResult;
+        var addRowsEdit = new AddRowsEdit(rowsPreparedToAdd);
+        AddReversibleEdit(addRowsEdit);
+        foreach (var row in rowsPreparedToAdd)
+        {
+            CurrentOriginalRowIndexes![row] = CurrentOriginalRowIndexes.Count;
+        }
+        return operationResult;
+    }
+
+    public bool AddReversibleEdit(IReversibleEdit reversibleEdit)
+    {
+        if (CurrentCsv == null) return false;
         while (_steps[_currentIndex].CurrentRowEditIndex.Value != _steps[_currentIndex].ReversibleEdits.Count - 1)
         {
             _steps[_currentIndex].ReversibleEdits.Remove(_steps[_currentIndex].ReversibleEdits[_steps[_currentIndex].ReversibleEdits.Count - 1]);
         }
         _steps[_currentIndex].ReversibleEdits.Add(reversibleEdit);
         GoForwardEdit();
+        return true;
     }
 
     public async ValueTask<AggregateOperationDeleteResult> PerformColumnEvaluateDelete(ICsvColumnDeleteEvaluator evaluateDelete, ICollection<int>? filteredRowIds)
     {
         if (CurrentCsv == null) return new AggregateOperationDeleteResult(false, 0, "Component not initialized yet.");
         if (evaluateDelete == null!) return new AggregateOperationDeleteResult(false, 0, "CsvColumnDeleteEvaluator was null");
-        var clone = CurrentCsv.Clone();
-        List<int> rowsToDelete = new List<int>();
-        int i = -1;
-        foreach (var (row, index) in clone.CsvContent.FilterByIndexesWithOriginalIndex(filteredRowIds))
+        List<CsvRow> rowsToDelete = new ();
+        foreach (var (row, index) in CurrentCsv.CsvContent.FilterByIndexesWithOriginalIndex(filteredRowIds))
         {
-            i++;
             var operationResult = await evaluateDelete.EvaluateDelete(new RowCell(row, evaluateDelete.ColumnName, index));
             if (operationResult.Delete)
             {
-                rowsToDelete.Add(i);
+                rowsToDelete.Add(row);
             }
             if (operationResult.Success == false)
             {
                 return new AggregateOperationDeleteResult(false, 0, operationResult.Message);
             }
         }
-        await clone.MutateAsync(x => x.DeleteRows(rowsToDelete));
-        string message = $"Deleted {rowsToDelete.Count} rows";
 
-        AddToTimeline(clone);
+        var deleteRowsEdit = new DeleteRowsEdit(rowsToDelete);
+        AddReversibleEdit(deleteRowsEdit);
+        string message = $"Deleted {rowsToDelete.Count} rows";
         return new AggregateOperationDeleteResult(true, rowsToDelete.Count, message);
     }
 
@@ -75,26 +85,23 @@ public class StrategyRunner
         if (CurrentCsv == null) return new AggregateOperationDeleteResult(false, 0, "Component not initialized yet.");
         if (evaluateDelete == null!) return new AggregateOperationDeleteResult(false, 0, "CsvRowDeleteEvaluator was null");
 
-        var clone = CurrentCsv.Clone();
-        List<int> rowsToDelete = new List<int>();
-        int i = -1;
-        foreach (var (row, index) in clone.CsvContent.FilterByIndexesWithOriginalIndex(filteredRowIds))
+        List<CsvRow> rowsToDelete = new ();
+        foreach (var (row, index) in CurrentCsv.CsvContent.FilterByIndexesWithOriginalIndex(filteredRowIds))
         {
-            i++;
             var operationResult = await evaluateDelete.EvaluateDelete(row, index);
             if (operationResult.Delete)
             {
-                rowsToDelete.Add(i);
+                rowsToDelete.Add(row);
             }
             if (operationResult.Success == false)
             {
                 return new AggregateOperationDeleteResult(false, 0, operationResult.Message);
             }
         }
-        await clone.MutateAsync(x => x.DeleteRows(rowsToDelete));
-        string message = $"Deleted {rowsToDelete.Count} rows";
 
-        AddToTimeline(clone);
+        var deleteRowsEdit = new DeleteRowsEdit(rowsToDelete);
+        AddReversibleEdit(deleteRowsEdit);
+        string message = $"Deleted {rowsToDelete.Count} rows";
         return new AggregateOperationDeleteResult(true, rowsToDelete.Count, message);
     }
 
@@ -291,128 +298,192 @@ public class StrategyRunner
         return Utils.IsValidIndex(index, ReferenceCsvs.Count);
     }
 }
+
+public class AddRowsEdit : IReversibleEdit
+{
+    internal readonly ICollection<CsvRow> _rowsToAdd;
+
+    public AddRowsEdit(ICollection<CsvRow> rowsToAdd)
+    {
+        _rowsToAdd = rowsToAdd;
+    }
+
+    public void DoEdit(IEasyCsv csv)
+    {
+        foreach (var row in _rowsToAdd)
+        {
+            csv.CsvContent.Add(row);
+        }
+    }
+
+    public void UndoEdit(IEasyCsv csv)
+    {
+        foreach (var row in _rowsToAdd)
+        {
+            csv.CsvContent.Remove(row);
+        }
+    }
+}
+
+public class DeleteRowsEdit : IReversibleEdit
+{
+    private readonly ICollection<CsvRow> _rowsToDelete;
+
+    public DeleteRowsEdit(ICollection<CsvRow> rowsToDelete)
+    {
+        _rowsToDelete = rowsToDelete;
+    }
+
+    public void DoEdit(IEasyCsv csv)
+    {
+        foreach (var row in _rowsToDelete)
+        {
+            csv.CsvContent.Remove(row);
+        }
+    }
+
+    public void UndoEdit(IEasyCsv csv)
+    {
+        foreach (var row in _rowsToDelete)
+        {
+            csv.CsvContent.Add(row);
+        }
+    }
+}
+
 public class ModifyRowEdit : IReversibleEdit
 {
-    public ModifyRowEdit(int rowIndex, CsvRow rowClone, CsvRow rowAfterOperation)
+    public ModifyRowEdit(CsvRow row, CsvRow rowClone, CsvRow rowAfterOperation)
     {
-        RowIndex = rowIndex;
+        Row = row;
         RowClone = rowClone;
         RowAfterOperation = rowAfterOperation;
     }
 
-    public int RowIndex { get; }
+    public CsvRow Row { get; }
     public CsvRow RowClone { get; }
     public CsvRow RowAfterOperation { get; }
     public void DoEdit(IEasyCsv csv)
     {
 #if DEBUG
-        var equals = csv.CsvContent[RowIndex].ValuesEqual(RowClone);
+        var equals = Row.ValuesEqual(RowClone);
         if (!equals)
         {
             throw new Exception("Should've equalled Before Row");
         }
 #endif
-        RowAfterOperation.MapValuesTo(csv.CsvContent[RowIndex]);
+        RowAfterOperation.MapValuesTo(Row);
     }
     public void UndoEdit(IEasyCsv csv)
     {
 #if DEBUG
-        var equals = csv.CsvContent[RowIndex].ValuesEqual(RowAfterOperation);
+        var equals = Row.ValuesEqual(RowAfterOperation);
         if (!equals)
         {
             throw new Exception("Should've equalled After Row");
         }
 #endif
-        RowClone.MapValuesTo(csv.CsvContent[RowIndex]);
+        RowClone.MapValuesTo(Row);
     }
 }
 public class AddTagEdit : IReversibleEdit
 {
-    public AddTagEdit(int rowIndex, string tagToAdd, int tagColumnIndex = -1)
+    public AddTagEdit(CsvRow row, string tagToAdd, int tagColumnIndex = -1)
     {
-        RowIndex = rowIndex;
+        Row = row;
         TagToAdd = tagToAdd;
         TagColumnIndex = tagColumnIndex;
     }
-    public int RowIndex { get; }
+    public CsvRow Row { get; }
     public string TagToAdd { get; }
     public int TagColumnIndex { get; }
     public void DoEdit(IEasyCsv csv)
     {
-        csv!.CsvContent[RowIndex].AddProcessingTag(TagToAdd);
+        if (TagColumnIndex >= 0)
+        {
+            Row.AddProcessingTag(TagColumnIndex, TagToAdd);
+        }
+        else
+        {
+            Row.AddProcessingTag(TagToAdd);
+        }
     }
     public void UndoEdit(IEasyCsv csv)
     {
-        csv!.CsvContent[RowIndex].RemoveProcessingTag(TagToAdd);
+        if (TagColumnIndex >= 0)
+        {
+            Row.AddProcessingTag(TagColumnIndex, TagToAdd);
+        }
+        else
+        {
+            Row.AddProcessingTag(TagToAdd);
+        }
     }
 }
 public class DeleteRowEdit : IReversibleEdit
 {
     private readonly CsvRow _row;
 
-    public DeleteRowEdit(int rowIndex, CsvRow row)
+    public DeleteRowEdit(CsvRow row)
     {
         _row = row;
-        RowIndex = rowIndex;
     }
-
-    public int RowIndex { get; }
     public void DoEdit(IEasyCsv csv)
     {
-        csv!.CsvContent.RemoveAt(RowIndex);
+        csv.CsvContent.Remove(_row);
     }
     public void UndoEdit(IEasyCsv csv)
     {
-        csv!.CsvContent.Insert(RowIndex, _row);
+        csv.CsvContent.Add(_row);
     }
 }
 
 public class RemoveTagEdit : IReversibleEdit
 {
-    public RemoveTagEdit(int rowIndex, string tagToRemove, int tagColumnIndex = -1)
+    public RemoveTagEdit(CsvRow row, string tagToRemove, int tagColumnIndex = -1)
     {
-        RowIndex = rowIndex;
+        Row = row;
         TagToRemove = tagToRemove;
         TagColumnIndex = tagColumnIndex;
     }
 
-    public int RowIndex { get; }
+    public CsvRow Row { get; }
     public string TagToRemove { get; }
     public int TagColumnIndex { get; }
     public void DoEdit(IEasyCsv csv)
     {
         if (TagColumnIndex >= 0)
         {
-            csv!.CsvContent[RowIndex].RemoveProcessingTag(TagToRemove);
+            Row.RemoveProcessingTag(TagToRemove);
         }
         else
         {
-            csv!.CsvContent[RowIndex].RemoveProcessingTag(TagColumnIndex, TagToRemove);
+            Row.RemoveProcessingTag(TagColumnIndex, TagToRemove);
         }
     }
     public void UndoEdit(IEasyCsv csv)
     {
         if (TagColumnIndex >= 0)
         {
-            csv!.CsvContent[RowIndex].AddProcessingTag(TagToRemove);
+            Row.AddProcessingTag(TagToRemove);
         }
         else
         {
-            csv!.CsvContent[RowIndex].AddProcessingTag(TagColumnIndex, TagToRemove);
+            Row.AddProcessingTag(TagColumnIndex, TagToRemove);
         }
     }
 }
 public class RemoveReferenceEdit : IReversibleEdit
 {
-    public RemoveReferenceEdit(int rowIndex, int referenceCsvId, int referenceRowId, int referencesColumnIndex = -1)
+    public RemoveReferenceEdit(CsvRow row, int referenceCsvId, int referenceRowId, int referencesColumnIndex = -1)
     {
-        RowIndex = rowIndex;
+        Row = row;
         ReferenceCsvId = referenceCsvId;
         ReferencesColumnIndex = referencesColumnIndex;
         ReferenceRowId = referenceRowId;
     }
 
-    public int RowIndex { get; }
+    public CsvRow Row { get; }
     public int ReferenceCsvId { get; }
     public int ReferencesColumnIndex { get; }
     public int ReferenceRowId { get; }
@@ -420,36 +491,36 @@ public class RemoveReferenceEdit : IReversibleEdit
     {
         if (ReferencesColumnIndex >= 0)
         {
-            csv!.CsvContent[RowIndex].RemoveProcessingReference(ReferencesColumnIndex, ReferenceCsvId, ReferenceRowId);
+            Row.RemoveProcessingReference(ReferencesColumnIndex, ReferenceCsvId, ReferenceRowId);
         }
         else
         {
-            csv!.CsvContent[RowIndex].RemoveProcessingReference(ReferenceCsvId, ReferenceRowId);
+            Row.RemoveProcessingReference(ReferenceCsvId, ReferenceRowId);
         }
     }
     public void UndoEdit(IEasyCsv csv)
     {
         if (ReferencesColumnIndex >= 0)
         {
-            csv!.CsvContent[RowIndex].AddProcessingReference(ReferencesColumnIndex, ReferenceCsvId, ReferenceRowId);
+            Row.AddProcessingReference(ReferencesColumnIndex, ReferenceCsvId, ReferenceRowId);
         }
         else
         {
-            csv!.CsvContent[RowIndex].AddProcessingReference(ReferenceCsvId, ReferenceRowId);
+            Row.AddProcessingReference(ReferenceCsvId, ReferenceRowId);
         }
     }
 }
 public class AddReferenceEdit : IReversibleEdit
 {
-    public AddReferenceEdit(int rowIndex, int referenceCsvId, int referenceRowId, int referencesColumnIndex = -1)
+    public AddReferenceEdit(CsvRow row, int referenceCsvId, int referenceRowId, int referencesColumnIndex = -1)
     {
-        RowIndex = rowIndex;
+        Row = row;
         ReferenceCsvId = referenceCsvId;
         ReferencesColumnIndex = referencesColumnIndex;
         ReferenceRowId = referenceRowId;
     }
 
-    public int RowIndex { get; }
+    public CsvRow Row { get; }
     public int ReferenceCsvId { get; }
     public int ReferencesColumnIndex { get; }
     public int ReferenceRowId { get; }
@@ -457,22 +528,22 @@ public class AddReferenceEdit : IReversibleEdit
     {
         if (ReferencesColumnIndex >= 0)
         {
-            csv!.CsvContent[RowIndex].AddProcessingReference(ReferencesColumnIndex, ReferenceCsvId, ReferenceRowId);
+            Row.AddProcessingReference(ReferencesColumnIndex, ReferenceCsvId, ReferenceRowId);
         }
         else
         {
-            csv!.CsvContent[RowIndex].AddProcessingReference(ReferenceCsvId, ReferenceRowId);
+            Row.AddProcessingReference(ReferenceCsvId, ReferenceRowId);
         }
     }
     public void UndoEdit(IEasyCsv csv)
     {
         if (ReferencesColumnIndex >= 0)
         {
-            csv!.CsvContent[RowIndex].RemoveProcessingReference(ReferencesColumnIndex, ReferenceCsvId, ReferenceRowId);
+            Row.RemoveProcessingReference(ReferencesColumnIndex, ReferenceCsvId, ReferenceRowId);
         }
         else
         {
-            csv!.CsvContent[RowIndex].RemoveProcessingReference(ReferenceCsvId, ReferenceRowId);
+            Row.RemoveProcessingReference(ReferenceCsvId, ReferenceRowId);
         }
     }
 }

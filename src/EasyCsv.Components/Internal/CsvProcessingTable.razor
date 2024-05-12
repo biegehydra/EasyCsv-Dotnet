@@ -348,7 +348,7 @@
     {
         int rowIndex = Stepper.Runner!.CurrentCsv!.CsvContent.IndexOf(row);
         if (rowIndex < 0) return;
-        var deleteRowEdit = new DeleteRowEdit(rowIndex, row);
+        var deleteRowEdit = new DeleteRowEdit(row);
         Stepper.Runner.AddReversibleEdit(deleteRowEdit);
     }
 
@@ -357,7 +357,7 @@
     {
         int rowIndex = Stepper.Runner!.CurrentCsv!.CsvContent.IndexOf(row);
         if (rowIndex < 0) return;
-        var removeTagEdit = new RemoveTagEdit(rowIndex, tag, tagsColumnIndex);
+        var removeTagEdit = new RemoveTagEdit(row, tag, tagsColumnIndex);
         Stepper.Runner.AddReversibleEdit(removeTagEdit);
     }
 
@@ -365,19 +365,8 @@
     {
         int rowIndex = Stepper.Runner!.CurrentCsv!.CsvContent.IndexOf(row);
         if (rowIndex < 0) return;
-        var removeReferenceEdit = new RemoveReferenceEdit(rowIndex, referenceCsvId, referenceRowId, referencesColumnIndex);
+        var removeReferenceEdit = new RemoveReferenceEdit(row, referenceCsvId, referenceRowId, referencesColumnIndex);
         Stepper.Runner.AddReversibleEdit(removeReferenceEdit);
-    }
-
-    private void RemoveReference(CsvRow row, string tag, int tagsIndex)
-    {
-        var tags = row.ValueAt(tagsIndex)?.ToString()?.Split(",", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-        int? tagIndex = tags?.IndexOf(tag);
-        if (tagIndex >= 0)
-        {
-            string newTagsStr = string.Join(",", tags!.Take(tagsIndex).Skip(1));
-            row.SetValueAtIndex(tagsIndex, newTagsStr); 
-        }
     }
 
     private string DefaultFormatReferenceText(IGrouping<int, (int CsvIndex, int RowIndex)> grouping)
@@ -387,14 +376,14 @@
         return $"Ref Csv: {grouping.Key + 1}, {rows}: {string.Join(" | ", grouping.Select(x => x.RowIndex + 1))}";
     }
 
-    private Task InvokeStateHasChanged()
+    internal Task InvokeStateHasChanged()
     {
         return InvokeAsync(StateHasChanged);
     }
 
     private string? _currentSortedColumn;
     private SortDirection _currentSortDirection = SortDirection.Ascending;
-    private async Task OnColumnNameClick(string columnName)
+    private void OnColumnNameClick(string columnName)
     {
         if (Stepper?.Runner?.CurrentCsv == null || !Stepper.EnableSorting) return;
         if (_currentSortedColumn == columnName)
@@ -411,20 +400,36 @@
             else
             {
                 bool ascending = _currentSortDirection == SortDirection.Ascending;
-                await Stepper.Runner.CurrentCsv.MutateAsync(x =>
+                Stepper.Runner.CurrentCsv.Mutate(x =>
                 {
                     x.SortCsv(columnName, ascending);
                 }, saveChanges: false);
-
             }
         }
         else
         {
             _currentSortedColumn = columnName;
             _currentSortDirection = SortDirection.Ascending;
-            await Stepper.Runner.CurrentCsv.MutateAsync(x =>
+            Stepper.Runner.CurrentCsv.Mutate(x =>
             {
                 x.SortCsv(columnName, ascending: true);
+            }, saveChanges: false);
+        }
+    }
+
+    private void ApplyCurrentColumnSort()
+    {
+        if (Stepper?.Runner?.CurrentCsv == null) return;
+        if (_currentSortedColumn == null || _currentSortDirection == SortDirection.None)
+        {
+            Stepper.Runner.SortCurrentBackToOriginalOrder();
+        }
+        else
+        {
+            bool ascending = _currentSortDirection == SortDirection.Ascending;
+            Stepper.Runner.CurrentCsv!.Mutate(x =>
+            {
+                x.SortCsv(_currentSortedColumn, ascending);
             }, saveChanges: false);
         }
     }
@@ -460,7 +465,7 @@
             int rowIndex = Stepper.Runner.CurrentCsv!.CsvContent.IndexOf(row);
             if (rowIndex < 0) return Task.CompletedTask;
             var rowClone = row.Clone();
-            var modifyRowEdit = new ModifyRowEdit(rowIndex, rowClone, _rowBeingEdited);
+            var modifyRowEdit = new ModifyRowEdit(row, rowClone, _rowBeingEdited);
             Stepper.Runner.AddReversibleEdit(modifyRowEdit);
             StateHasChanged();
             return Stepper.OnCommitEditClick.InvokeAsync();
@@ -538,13 +543,13 @@
                                {
                                    var _class = !isNextEdit ? "forward-edit mr-7" : "forward-edit";
                                    <MudTooltip Text="Go back edit" RootClass="@_class" Delay="700" >
-                                       <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ArrowBackIos" OnClick="x => Stepper.Runner.GoBackEdit()" ></MudIconButton>
+                                       <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ArrowBackIos" OnClick="x =>{ Stepper.Runner!.GoBackEdit(); ApplyCurrentColumnSort(); }" ></MudIconButton>
                                    </MudTooltip>
                                }
                                @if (isNextEdit)
                                {
                                    <MudTooltip Text="Go forward edit" Delay="700">
-                                       <MudIconButton Class="back-edit" Size="Size.Small" Icon="@Icons.Material.Filled.ArrowForwardIos" OnClick="x => Stepper.Runner.GoForwardEdit()" ></MudIconButton>
+                                       <MudIconButton Class="back-edit" Size="Size.Small" Icon="@Icons.Material.Filled.ArrowForwardIos" OnClick="x => { Stepper.Runner!.GoForwardEdit(); ApplyCurrentColumnSort(); }" ></MudIconButton>
                                    </MudTooltip>
                                }
                            </div>
@@ -683,7 +688,7 @@
                                    <MudListItem>
                                        <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between;">
                                            <div></div>
-                                           <MudButton Disabled="!_columnStrategyBuckets[column].StrategySelectedAndRunAllowed()" Variant="Variant.Filled" Color="Color.Info" OnClick="x => _columnStrategyBuckets[column].StrategyPicked()">Run Operation</MudButton>
+                                           <MudButton Disabled="!_columnStrategyBuckets[column].StrategySelectedAndRunAllowed()" Variant="Variant.Filled" Color="Color.Info" OnClick="async x => {await _columnStrategyBuckets[column].StrategyPicked(); TogglePopover(column, false); }">Run Operation</MudButton>
                                        </div>
                                    </MudListItem>
                                }

@@ -88,6 +88,7 @@ public class StrategyBucket
         var strategy = _strategies.FirstOrDefault(x => x.IsSelected);
         if (strategy == null) return;
         await strategy.StrategyPicked.InvokeAsync(ColumnName);
+        strategy.IsSelected = false;
     }
 
     internal bool MatchesSearchQuery(StrategyItem strategyItem)

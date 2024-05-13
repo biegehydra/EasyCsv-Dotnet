@@ -290,6 +290,7 @@
 
     private void OpenDownloadDialog()
     {
+        CsvProcessingTable?.CancelEdit();
         if (_columnsToDownload.Length > 0)
         {
             _columnsToDownload = [];

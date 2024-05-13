@@ -117,7 +117,7 @@
         </MudPopover>
     }
 
-    <MudTable T="CsvRow" Class="csv-processing-table" FixedHeader="true" RowsPerPage="10" Items="GetFilteredRows()"
+    <MudTable @ref="_table" T="CsvRow" Class="csv-processing-table" FixedHeader="true" RowsPerPage="10" Items="GetFilteredRows()"
               Striped Bordered Dense Hover Elevation="2" ToolBarContent="@ToolBarContent()" EditTrigger="Stepper.EditTrigger" 
               EditButtonPosition="Stepper.EditButtonPosition" CanCancelEdit="Stepper.CanCancelEdit" CancelEditIcon="@Stepper.CancelEditIcon"
               CancelEditTooltip="@Stepper.CancelEditTooltip" CommitEditIcon="@Stepper.CommitEditIcon" CommitEditTooltip="@Stepper.CommitEditTooltip"
@@ -180,7 +180,7 @@
             @if (Stepper.EnableRowDeleting)
             {
                 <MudTd>
-                    <MudIconButton Disabled="Busy" Icon="@Icons.Material.Filled.Delete" OnClick="x => DeleteRow(row)" > </MudIconButton>
+                    <MudIconButton Disabled="Busy || _rowBeingEdited != null" Icon="@Icons.Material.Filled.Delete" OnClick="x => DeleteRow(row)" > </MudIconButton>
                 </MudTd>
             }
             @if (Stepper.TagsAndReferencesLocation == ColumnLocation.Beginning)
@@ -211,8 +211,7 @@
 }
 
 @code {
-    internal static Color[] DefaultColors = [Color.Primary, Color.Secondary, Color.Success, Color.Error, Color.Tertiary, Color.Dark, Color.Warning];
-
+    internal static readonly Color[] DefaultColors = [Color.Primary, Color.Secondary, Color.Success, Color.Error, Color.Tertiary, Color.Dark, Color.Warning];
     [Parameter] public Func<IGrouping<int, (int ReferenceCsvId, int ReferenceRowId)>, string>? FormatReferenceText { get; set; } 
     [Parameter] public RenderFragment<string>? ColumnOptions { get; set; }
     [Parameter] public RenderFragment? FullCsvOptions { get; set; }
@@ -229,6 +228,7 @@
     }
 
     private readonly record struct ReferenceGroup(CsvRow Row, int ReferenceGroupIndex);
+    private MudTable<CsvRow>? _table;
 
     private CsvRow? _rowBeingEdited;
     private Dictionary<ReferenceGroup, bool> _referencesOpen = new();
@@ -327,20 +327,34 @@
         return InvokeStateHasChanged();
     }
 
-    internal void TogglePopover(string column)
+    internal Task TogglePopover(string column)
     {
         bool value = _columnPopOverDict[column];
-        if (value)
-        {
-            _columnPopOverDict[column] = false;
-        }
-        else if (!_columnPopOverDict.Values.Any(x => x)) _columnPopOverDict[column] = true;
+        return TogglePopover(column, !value);
     }
 
-    private void TogglePopover(string column, bool open)
+    private Task TogglePopover(string column, bool open)
     {
-        if (!open) _columnPopOverDict[column] = open;
-        else if (!_columnPopOverDict.Values.Any(x => x)) _columnPopOverDict[column] = true;
+        if (!open)
+        {
+            _columnPopOverDict[column] = open;
+            return OnPopoverToggled(open);
+        }
+        if (!_columnPopOverDict.Values.Any(x => x))
+        {
+            _columnPopOverDict[column] = true;
+            return OnPopoverToggled(open);
+        }
+        return Task.CompletedTask;
+    }
+
+    private Task OnPopoverToggled(bool value)
+    {
+        if (value)
+        {
+            CancelEdit();
+        }
+        return Task.CompletedTask;
     }
 
     private void DeleteRow(CsvRow row)
@@ -387,6 +401,8 @@
         return InvokeAsync(StateHasChanged);
     }
 
+    #region Sorting
+
     private string? _currentSortedColumn;
     private SortDirection _currentSortDirection = SortDirection.Ascending;
     private void OnColumnNameClick(string columnName)
@@ -394,11 +410,11 @@
         if (Stepper?.Runner?.CurrentCsv == null || !Stepper.EnableSorting) return;
         if (_currentSortedColumn == columnName)
         {
-            _currentSortDirection = _currentSortDirection == SortDirection.Ascending 
-                ? SortDirection.Descending 
-                : _currentSortDirection == SortDirection.Descending 
-                    ? SortDirection.None
-                    : SortDirection.Ascending;
+            _currentSortDirection = _currentSortDirection == SortDirection.Ascending
+            ? SortDirection.Descending
+            : _currentSortDirection == SortDirection.Descending
+                ? SortDirection.None
+                : SortDirection.Ascending;
             if (_currentSortDirection == SortDirection.None)
             {
                 Stepper.Runner.SortCurrentCsvBackToOriginalOrder();
@@ -407,9 +423,9 @@
             {
                 bool ascending = _currentSortDirection == SortDirection.Ascending;
                 Stepper.Runner.CurrentCsv.Mutate(x =>
-                {
-                    x.SortCsv(columnName, ascending);
-                }, saveChanges: false);
+            {
+                x.SortCsv(columnName, ascending);
+            }, saveChanges: false);
             }
         }
         else
@@ -417,9 +433,9 @@
             _currentSortedColumn = columnName;
             _currentSortDirection = SortDirection.Ascending;
             Stepper.Runner.CurrentCsv.Mutate(x =>
-            {
-                x.SortCsv(columnName, ascending: true);
-            }, saveChanges: false);
+        {
+            x.SortCsv(columnName, ascending: true);
+        }, saveChanges: false);
         }
     }
 
@@ -434,9 +450,9 @@
         {
             bool ascending = _currentSortDirection == SortDirection.Ascending;
             Stepper.Runner.CurrentCsv!.Mutate(x =>
-            {
-                x.SortCsv(_currentSortedColumn, ascending);
-            }, saveChanges: false);
+        {
+            x.SortCsv(_currentSortedColumn, ascending);
+        }, saveChanges: false);
         }
     }
 
@@ -446,6 +462,10 @@
         Descending,
         None
     }
+
+    #endregion
+
+    #region Editing
 
     private async Task OnPreviewEdit(object obj)
     {
@@ -460,6 +480,7 @@
     private Task OnCancelEdit(object obj)
     {
         _rowBeingEdited = null;
+        StateHasChanged();
         return Stepper.OnCancelEditClick.InvokeAsync();
     }
 
@@ -473,10 +494,18 @@
             var rowClone = row.Clone();
             var modifyRowEdit = new ModifyRowEdit(row, rowClone, _rowBeingEdited);
             Stepper.Runner.AddReversibleEdit(modifyRowEdit);
+            _rowBeingEdited = null;
             StateHasChanged();
             return Stepper.OnCommitEditClick.InvokeAsync();
         }
+        _rowBeingEdited = null;
+        StateHasChanged();
         return Task.CompletedTask;
+    }
+
+    public void CancelEdit()
+    {
+        _table?.Context?.ManagePreviousEditedRow(null);
     }
 
     private RenderFragment EditCell(CsvRow row, int columnIndex)
@@ -506,8 +535,11 @@
         }
     }
 
+    #endregion
+
     private RenderFragment? TagDataCell(int tagsColumnIndex, CsvRow row, bool allowDelete=true)
     {
+        allowDelete = allowDelete && _rowBeingEdited == null;
         if (tagsColumnIndex >= 0)
         {
             var tags = row.ValueAt(tagsColumnIndex)?.ToString()?.Split(",", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
@@ -519,7 +551,7 @@
                                {
                                    Action? onClose = allowDelete ? () => RemoveTag(row, tagsColumnIndex, tag) : null;
                                    AddTag(tag);
-                                   <MudChip Text="@tag" Color="_tagColors[tag]" Size="Size.Small" OnClose="@onClose"/>
+                                   <MudChip Text="@tag" Color="_tagColors[tag]" Size="Size.Small" OnClose="@(onClose!)"/>
                                }
                            </MudChipSet>
                        }
@@ -550,13 +582,13 @@
                                {
                                    var _class = !isNextEdit ? "forward-edit mr-7" : "forward-edit";
                                    <MudTooltip Text="Go back edit" RootClass="@_class" Delay="700" >
-                                       <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ArrowBackIos" OnClick="x =>{ Stepper.Runner!.GoBackEdit(); ApplyCurrentColumnSort(); }" ></MudIconButton>
+                                       <MudIconButton Disabled="Busy || _rowBeingEdited != null" Size="Size.Small" Icon="@Icons.Material.Filled.ArrowBackIos" OnClick="x => { CancelEdit(); Stepper.Runner!.GoBackEdit(); ApplyCurrentColumnSort(); }" ></MudIconButton>
                                    </MudTooltip>
                                }
                                @if (isNextEdit)
                                {
                                    <MudTooltip Text="Go forward edit" Delay="700">
-                                       <MudIconButton Class="back-edit" Size="Size.Small" Icon="@Icons.Material.Filled.ArrowForwardIos" OnClick="x => { Stepper.Runner!.GoForwardEdit(); ApplyCurrentColumnSort(); }" ></MudIconButton>
+                                       <MudIconButton Disabled="Busy || _rowBeingEdited != null" Class="back-edit" Size="Size.Small" Icon="@Icons.Material.Filled.ArrowForwardIos" OnClick="x => { CancelEdit(); Stepper.Runner!.GoForwardEdit(); ApplyCurrentColumnSort(); }" ></MudIconButton>
                                    </MudTooltip>
                                }
                            </div>
@@ -581,11 +613,11 @@
                            <div class="csv-processing-toolbar-forward-back-container" >
                                @if (Utils.IsValidIndex(Stepper.Runner?.CurrentRowEditIndex, Stepper.Runner?.CurrentReversibleEdits?.Count ?? -1))
                                {
-                                   <MudIconButton Class="forward-edit" Size="Size.Small" Icon="@Icons.Material.Filled.ArrowBackIos" OnClick="x => Stepper.Runner.GoBackEdit()" ></MudIconButton>
+                                   <MudIconButton Disabled="Busy || _rowBeingEdited != null" Class="forward-edit" Size="Size.Small" Icon="@Icons.Material.Filled.ArrowBackIos" OnClick="x => { CancelEdit(); Stepper.Runner!.GoBackEdit(); ApplyCurrentColumnSort(); }" ></MudIconButton>
                                }
                                @if (Utils.IsValidIndex(Stepper.Runner?.CurrentRowEditIndex + 1, Stepper.Runner?.CurrentReversibleEdits?.Count ?? -1))
                                {
-                                   <MudIconButton Class="back-edit" Size="Size.Small" Icon="@Icons.Material.Filled.ArrowForwardIos" OnClick="x => Stepper.Runner.GoForwardEdit()" ></MudIconButton>
+                                    <MudIconButton Disabled="Busy || _rowBeingEdited != null" Class="back-edit" Size="Size.Small" Icon="@Icons.Material.Filled.ArrowForwardIos" OnClick="x => { CancelEdit(); Stepper.Runner!.GoForwardEdit(); ApplyCurrentColumnSort(); }"></MudIconButton>
                                }
                            </div>
                            <MudTooltip Delay="750" Text="View Full Csv Strategies">

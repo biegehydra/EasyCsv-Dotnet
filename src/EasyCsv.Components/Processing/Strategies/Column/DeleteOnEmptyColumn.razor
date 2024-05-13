@@ -1,4 +1,5 @@
 ﻿@namespace EasyCsv.Components
+@using EasyCsv.Components.Processing
 @inherits StrategyItemBase
 
 @if (CsvProcessor == null)
@@ -10,6 +11,7 @@
 
 @code
 {
+    [Inject] public ISnackbar? Snackbar { get; set; }
     [Parameter] public override string? DisplayName { get; set; } = "Delete On Empty";
     [Parameter] public override string? DescriptionStr { get; set; } = "Will delete any row where the value in $column_name is empty";
     [Parameter] public override RenderFragment<string>? Description { get; set; }
@@ -38,7 +40,9 @@
 
     private async Task SplitPicked(string columnName)
     {
+        var progressContext = new OperationProgressContext("Deleting empty rows");
+        await Snackbar.OpenProgressSnackbar(progressContext, false);
         var deleteEmptyStrategy = new ShouldDeleteColumnStrategy(StrategyBucket.ColumnName, x => string.IsNullOrWhiteSpace(x.Value?.ToString()));
-        _ = await CsvProcessor.PerformColumnEvaluateDelete(deleteEmptyStrategy);
+        _ = await CsvProcessor.PerformColumnEvaluateDelete(deleteEmptyStrategy, progressContext);
     }
 }

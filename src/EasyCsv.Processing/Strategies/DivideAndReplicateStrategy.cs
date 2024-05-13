@@ -11,11 +11,14 @@ public class DivideAndReplicateStrategy : IFullCsvProcessor
     public bool OperatesOnlyOnFilteredRows => true;
     private readonly string _columnName;
     private readonly Func<object?, object?[]?> _divideFunc;
-    public DivideAndReplicateStrategy(string columnName, Func<object?, object?[]?> divideFunc)
+    private readonly Func<double, Task>? _onProgress;
+
+    public DivideAndReplicateStrategy(string columnName, Func<object?, object?[]?> divideFunc, Func<double, Task>? onProgress = null)
     {
         if (string.IsNullOrWhiteSpace(columnName)) throw new ArgumentException("Column name cannot be null or whitespace.", nameof(columnName));
         _columnName = columnName;
         _divideFunc = divideFunc ?? throw new ArgumentException("DivideFunc cannot be null.", nameof(divideFunc));
+        _onProgress = onProgress;
     }
     public async ValueTask<OperationResult> ProcessCsv(IEasyCsv csv, ICollection<int>? filteredRowIndexes = null)
     {
@@ -26,9 +29,11 @@ public class DivideAndReplicateStrategy : IFullCsvProcessor
 
         int deletedCount = 0;
         int replicatedCount = 0;
-        await csv.MutateAsync(x =>
+        await csv.MutateAsync(async x =>
         {
             var rowsWithIndexes = x.CsvContent.FilterByIndexesWithOriginalIndex(filteredRowIndexes).ToArray();
+            int total = filteredRowIndexes?.Count ?? csv.CsvContent.Count;
+            int processed = 0;
             foreach (var (row, origIndex) in rowsWithIndexes.OrderByDescending(y => y.Item2))
             {
                 var divided = _divideFunc(row[_columnName]);
@@ -43,6 +48,11 @@ public class DivideAndReplicateStrategy : IFullCsvProcessor
                         x.CsvContent.Insert(origIndex, clone);
                         replicatedCount++;
                     }
+                }
+                if (_onProgress != null)
+                {
+                    processed++;
+                    await _onProgress((double)processed / total);
                 }
             }
         }, saveChanges: false);

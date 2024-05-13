@@ -18,6 +18,9 @@ public partial class CsvProcessingStepper
     private static AggregateOperationDeleteResult _processingTableNullAggregateDelete = new AggregateOperationDeleteResult(false, 0, "Processing table was null");
     private static OperationResult _runnerNull = new OperationResult(false, "Runner was null");
     private static OperationResult _processingTableNull = new OperationResult(false, "Processing table was null");
+    private static Func<Exception, OperationResult> _createOperationResultError = x => new OperationResult(false, $"Error performing operation: {x}");
+    private static Func<Exception, AggregateOperationDeleteResult> _createAggregateDeleteOperationResultError = x => new AggregateOperationDeleteResult(false, 0, $"Error performing operation: {x}");
+    private static Func<Exception, OperationDeleteResult> _createDeleteOperationResultError = x => new OperationDeleteResult(false, false, $"Error performing operation: {x}");
     public bool Busy { get; private set; }
 
     [Inject] public ISnackbar? Snackbar { get; set; }
@@ -78,57 +81,64 @@ public partial class CsvProcessingStepper
         }
     }
 
-    public void AddReferenceCsv(CsvUploadedArgs csvFileArgs, bool useSnackbar = true)
+    public ValueTask<OperationResult> AddReferenceCsv(CsvUploadedArgs csvFileArgs, bool useSnackbar = true)
     {
-        if (Runner == null) return;
-        if (csvFileArgs.Csv == null!) return;
+        if (Runner == null) return ValueTask.FromResult(_runnerNull);
+        if (csvFileArgs.Csv == null!) return ValueTask.FromResult(_processingTableNull);
         string fileName = !string.IsNullOrWhiteSpace(csvFileArgs.FileName)
             ? csvFileArgs.FileName
             : $"Unnamed Csv{Runner.ReferenceCsvs.Count + 1}";
-        Runner.AddReference(csvFileArgs.Csv, fileName);
-        if (useSnackbar)
+        return PerformOperationWithCatch(() =>
         {
-            Snackbar?.Add($"Added '{fileName}' to references");
-        }
+            Runner.AddReference(csvFileArgs.Csv, fileName);
+            return new ValueTask<OperationResult>(new OperationResult(true));
+        }, _createOperationResultError);
     }
 
-    public async ValueTask<AggregateOperationDeleteResult> PerformColumnEvaluateDelete(ICsvColumnDeleteEvaluator evaluateDelete, OperationProgressContext? progressContext = null)
+    public ValueTask<AggregateOperationDeleteResult> PerformColumnEvaluateDelete(ICsvColumnDeleteEvaluator evaluateDelete, OperationProgressContext? progressContext = null)
     {
-        if (Runner == null) return _runnerNullAggregateDelete;
-        if (CsvProcessingTable == null) return _processingTableNullAggregateDelete;
+        if (Runner == null) return ValueTask.FromResult(_runnerNullAggregateDelete);
+        if (CsvProcessingTable == null) return ValueTask.FromResult(_processingTableNullAggregateDelete);
         Func<double, Task>? onProgressFunc = progressContext == null ? null : progressContext.ProgressChanged;
         var filteredRowIds = FilteredRowIds(evaluateDelete);
-        var aggregateOperationDeleteResult = await Runner.PerformColumnEvaluateDelete(evaluateDelete, filteredRowIds, onProgressFunc);
-        if (progressContext != null)
+        return PerformOperationWithCatch(async () =>
         {
-            FinishProgressContext(aggregateOperationDeleteResult, progressContext);
-        }
-        else
-        {
-            AddAggregateDeleteOperationResultSnackbar(aggregateOperationDeleteResult);
-        }
-        await CsvProcessingTable.InvokeStateHasChanged();
-        return aggregateOperationDeleteResult;
+            var aggregateOperationDeleteResult = await Runner.PerformColumnEvaluateDelete(evaluateDelete, filteredRowIds, onProgressFunc);
+            if (progressContext != null)
+            {
+                FinishProgressContext(aggregateOperationDeleteResult, progressContext);
+            }
+            else
+            {
+                AddAggregateDeleteOperationResultSnackbar(aggregateOperationDeleteResult);
+            }
+
+            await CsvProcessingTable.InvokeStateHasChanged();
+            return aggregateOperationDeleteResult;
+        }, _createAggregateDeleteOperationResultError);
     }
 
-    public async ValueTask<AggregateOperationDeleteResult> PerformRowEvaluateDelete(ICsvRowDeleteEvaluator evaluateDelete, OperationProgressContext? progressContext = null)
+    public ValueTask<AggregateOperationDeleteResult> PerformRowEvaluateDelete(ICsvRowDeleteEvaluator evaluateDelete, OperationProgressContext? progressContext = null)
     {
-        if (Runner == null) return _runnerNullAggregateDelete;
-        if (CsvProcessingTable == null) return _processingTableNullAggregateDelete;
+        if (Runner == null) return ValueTask.FromResult(_runnerNullAggregateDelete);
+        if (CsvProcessingTable == null) return ValueTask.FromResult(_processingTableNullAggregateDelete);
         Func<double, Task>? onProgressFunc = progressContext == null ? null : progressContext.ProgressChanged;
         var filteredRowIds = FilteredRowIds(evaluateDelete);
-        var aggregateOperationDeleteResult = await Runner.RunRowEvaluateDelete(evaluateDelete, filteredRowIds, onProgressFunc);
-        if (progressContext != null)
+        return PerformOperationWithCatch(async () =>
         {
-            progressContext.CompletedText = aggregateOperationDeleteResult.Message;
-            FinishProgressContext(aggregateOperationDeleteResult, progressContext);
-        }
-        else
-        {
-            AddAggregateDeleteOperationResultSnackbar(aggregateOperationDeleteResult);
-        }
-        await CsvProcessingTable.InvokeStateHasChanged();
-        return aggregateOperationDeleteResult;
+            var aggregateOperationDeleteResult = await Runner.RunRowEvaluateDelete(evaluateDelete, filteredRowIds, onProgressFunc);
+            if (progressContext != null)
+            {
+                progressContext.CompletedText = aggregateOperationDeleteResult.Message;
+                FinishProgressContext(aggregateOperationDeleteResult, progressContext);
+            }
+            else
+            {
+                AddAggregateDeleteOperationResultSnackbar(aggregateOperationDeleteResult);
+            }
+            await CsvProcessingTable.InvokeStateHasChanged();
+            return aggregateOperationDeleteResult;
+        }, _createAggregateDeleteOperationResultError);
     }
 
     public async ValueTask<OperationResult> PerformDedupe(IFindDupesOperation findDupesOperation, int[]? referenceCsvIds)
@@ -140,11 +150,12 @@ public partial class CsvProcessingStepper
         _columnName = findDupesOperation.ColumnName;
         _autoSelectRow = findDupesOperation.AutoSelectRow;
         _autoSelectRows = findDupesOperation.AutoSelectRows;
-        _duplicateRowsResolveVisible = true;
-        await InvokeAsync(StateHasChanged);
-        List<CsvRow> rowsToDelete = new ();
         try
         {
+            Busy = true;
+            _duplicateRowsResolveVisible = true;
+            await InvokeStateHasChangeAndWait();
+            List<CsvRow> rowsToDelete = new();
             var filteredRowIds = FilteredRowIds(findDupesOperation);
             var referenceCsvs = Runner.ReferenceCsvs.Select((x, i) => (x.Csv, i))
                 .Where(x => referenceCsvIds?.Contains(x.i) == true).ToArray();
@@ -171,8 +182,6 @@ public partial class CsvProcessingStepper
                         {
                             Snackbar?.Add("Dedupe operation aborted");
                         }
-
-                        await InvokeAsync(StateHasChanged);
                         return failedOperationResult;
                     }
 
@@ -202,7 +211,6 @@ public partial class CsvProcessingStepper
                         }
 
                         var failedOperationResult = new OperationResult(false, $"Resolve duplicate roots cancelled");
-                        await InvokeAsync(StateHasChanged);
                         return failedOperationResult;
                     }
 
@@ -227,76 +235,114 @@ public partial class CsvProcessingStepper
                 Runner.AddReversibleEdit(deleteRowsEdit);
             }
 
-            var operationResult = new OperationResult(true, $"Dedupe operation complete - {deleted+kept} rows evaluated | {deleted} rows deleted | {kept} rows kept");
+            var operationResult = new OperationResult(true, $"Dedupe operation complete - {deleted + kept} rows evaluated | {deleted} rows deleted | {kept} rows kept");
             OnAfterOperation(operationResult);
-            await InvokeAsync(StateHasChanged);
             return operationResult;
+        }
+        catch (Exception ex)
+        {
+            return new OperationResult(false, $"Error during operation: {ex}");
         }
         finally
         {
             _duplicateRowsResolveVisible = false;
+            Busy = false;
+            await InvokeStateHasChangeAndWait();
         }
     }
 
-    public Task AddReversibleEdit(IReversibleEdit reversibleEdit)
+    public ValueTask<OperationResult> AddReversibleEdit(IReversibleEdit reversibleEdit)
     {
-        if (CsvProcessingTable == null || Runner == null) return Task.CompletedTask;
-        if (Runner.AddReversibleEdit(reversibleEdit))
+        if (CsvProcessingTable == null || Runner == null) return ValueTask.FromResult(_runnerNull);
+        return PerformOperationWithCatch(() =>
         {
-            CsvProcessingTable.ApplyCurrentColumnSort();
-            return CsvProcessingTable.InvokeStateHasChanged();
-        }
-        return Task.CompletedTask;
+            if (Runner.AddReversibleEdit(reversibleEdit))
+            {
+                CsvProcessingTable.ApplyCurrentColumnSort();
+            }
+            return new ValueTask<OperationResult>(new OperationResult(true));
+        }, _createOperationResultError);
     }
 
-    public async ValueTask<OperationResult> PerformReferenceStrategy(ICsvReferenceProcessor csvReferenceProcessor, OperationProgressContext? progressContext = null)
+    public ValueTask<OperationResult> PerformReferenceStrategy(ICsvReferenceProcessor csvReferenceProcessor, OperationProgressContext? progressContext = null)
     {
-        if (Runner == null) return _runnerNull;
-        if (CsvProcessingTable == null) return _processingTableNull;
+        if (Runner == null) return ValueTask.FromResult(_runnerNull);
+        if (CsvProcessingTable == null) return ValueTask.FromResult(_processingTableNull);
         var filteredRowIds = FilteredRowIds(csvReferenceProcessor);
-        var operationResult = await Runner.RunReferenceStrategy(csvReferenceProcessor, filteredRowIds);
-        FinishProgressContext(operationResult, progressContext);
-        OnAfterOperation(operationResult, progressContext: progressContext);
-        await InvokeAsync(StateHasChanged);
-        return operationResult;
+        return PerformOperationWithCatch(async () =>
+        {
+            var operationResult = await Runner.RunReferenceStrategy(csvReferenceProcessor, filteredRowIds);
+            FinishProgressContext(operationResult, progressContext);
+            OnAfterOperation(operationResult, progressContext: progressContext);
+            await InvokeAsync(StateHasChanged);
+            return operationResult;
+        }, _createOperationResultError);
     }
 
-    public async ValueTask<OperationResult> PerformColumnStrategy(ICsvColumnProcessor columnProcessor, OperationProgressContext? progressContext = null)
+    public ValueTask<OperationResult> PerformColumnStrategy(ICsvColumnProcessor columnProcessor, OperationProgressContext? progressContext = null)
     {
-        if (Runner == null) return _runnerNull;
-        if (CsvProcessingTable == null) return _processingTableNull;
+        if (Runner == null) return ValueTask.FromResult(_runnerNull);
+        if (CsvProcessingTable == null) return ValueTask.FromResult(_processingTableNull);
         Func<double, Task>? onProgressFunc = progressContext == null ? null : progressContext.ProgressChanged;
         var filteredRowIds = FilteredRowIds(columnProcessor);
-        var operationResult = await Runner.RunColumnStrategy(columnProcessor, filteredRowIds, onProgressFunc);
-        FinishProgressContext(operationResult, progressContext);
-        OnAfterOperation(operationResult, skipSuccessSnackbar: true, progressContext);
-        await InvokeAsync(StateHasChanged);
-        return operationResult;
+        return PerformOperationWithCatch(async () =>
+        {
+            var operationResult = await Runner.RunColumnStrategy(columnProcessor, filteredRowIds, onProgressFunc);
+            FinishProgressContext(operationResult, progressContext);
+            OnAfterOperation(operationResult, skipSuccessSnackbar: true, progressContext);
+            await InvokeAsync(StateHasChanged);
+            return operationResult;
+        }, _createOperationResultError);
     }
 
-    public async ValueTask<OperationResult> PerformRowStrategy(ICsvRowProcessor rowProcessor, OperationProgressContext? progressContext = null)
+    public ValueTask<OperationResult> PerformRowStrategy(ICsvRowProcessor rowProcessor, OperationProgressContext? progressContext = null)
     {
-        if (Runner == null) return _runnerNull;
-        if (CsvProcessingTable == null) return _processingTableNull;
+        if (Runner == null) return ValueTask.FromResult(_runnerNull);
+        if (CsvProcessingTable == null) return ValueTask.FromResult(_processingTableNull);
         Func<double, Task>? onProgressFunc = progressContext == null ? null : progressContext.ProgressChanged;
         var filteredRowIds = FilteredRowIds(rowProcessor);
-        var operationResult = await Runner.RunRowStrategy(rowProcessor, filteredRowIds, onProgressFunc);
-        FinishProgressContext(operationResult, progressContext);
-        OnAfterOperation(operationResult, skipSuccessSnackbar: true, progressContext);
-        await InvokeAsync(StateHasChanged);
-        return operationResult;
+        return PerformOperationWithCatch(async () =>
+        {
+            var operationResult = await Runner.RunRowStrategy(rowProcessor, filteredRowIds, onProgressFunc);
+            FinishProgressContext(operationResult, progressContext);
+            OnAfterOperation(operationResult, skipSuccessSnackbar: true, progressContext);
+            await InvokeAsync(StateHasChanged);
+            return operationResult;
+        }, _createOperationResultError);
     }
 
-    public async ValueTask<OperationResult> PerformCsvStrategy(IFullCsvProcessor fullCsvProcessor, OperationProgressContext? progressContext = null)
+    public ValueTask<OperationResult> PerformCsvStrategy(IFullCsvProcessor fullCsvProcessor, OperationProgressContext? progressContext = null)
     {
-        if (Runner == null) return _runnerNull;
-        if (CsvProcessingTable == null) return _processingTableNull;
+        if (Runner == null) return ValueTask.FromResult(_runnerNull);
+        if (CsvProcessingTable == null) return ValueTask.FromResult(_processingTableNull);
         var filteredRowIds = FilteredRowIds(fullCsvProcessor);
-        var operationResult = await Runner.RunCsvStrategy(fullCsvProcessor, filteredRowIds);
-        FinishProgressContext(operationResult, progressContext);
-        OnAfterOperation(operationResult, progressContext: progressContext);
-        await InvokeAsync(StateHasChanged);
-        return operationResult;
+        return PerformOperationWithCatch(async () =>
+        {
+            var operationResult = await Runner.RunCsvStrategy(fullCsvProcessor, filteredRowIds);
+            FinishProgressContext(operationResult, progressContext);
+            OnAfterOperation(operationResult, progressContext: progressContext);
+            await InvokeAsync(StateHasChanged);
+            return operationResult;
+        }, _createOperationResultError);
+    }
+
+    private async ValueTask<TOperationResult> PerformOperationWithCatch<TOperationResult>(Func<ValueTask<TOperationResult>> operation, Func<Exception, TOperationResult> createErrorResult) where TOperationResult : IOperationResult
+    {
+        try
+        {
+            Busy = true;
+            await InvokeStateHasChangeAndWait();
+            return await operation();
+        }
+        catch (Exception ex)
+        {
+            return createErrorResult(ex);
+        }
+        finally
+        {
+            Busy = false;
+            await InvokeStateHasChangeAndWait();
+        }
     }
 
     private void FinishProgressContext<T>(T operationResult, OperationProgressContext? progressContext = null) where T : IOperationResult
@@ -408,7 +454,11 @@ public partial class CsvProcessingStepper
             .ToHashSet() ?? new HashSet<int>();
     }
 
-
+    private async Task InvokeStateHasChangeAndWait()
+    {
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(1);
+    }
 
     #region Editing
 

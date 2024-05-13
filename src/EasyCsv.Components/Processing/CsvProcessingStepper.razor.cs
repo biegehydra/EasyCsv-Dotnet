@@ -101,7 +101,7 @@ public partial class CsvProcessingStepper
         var aggregateOperationDeleteResult = await Runner.PerformColumnEvaluateDelete(evaluateDelete, filteredRowIds, onProgressFunc);
         if (progressContext != null)
         {
-            await FinishProgressContext(aggregateOperationDeleteResult, progressContext);
+            FinishProgressContext(aggregateOperationDeleteResult, progressContext);
         }
         else
         {
@@ -121,7 +121,7 @@ public partial class CsvProcessingStepper
         if (progressContext != null)
         {
             progressContext.CompletedText = aggregateOperationDeleteResult.Message;
-            await FinishProgressContext(aggregateOperationDeleteResult, progressContext);
+            FinishProgressContext(aggregateOperationDeleteResult, progressContext);
         }
         else
         {
@@ -255,7 +255,7 @@ public partial class CsvProcessingStepper
         if (CsvProcessingTable == null) return _processingTableNull;
         var filteredRowIds = FilteredRowIds(csvReferenceProcessor);
         var operationResult = await Runner.RunReferenceStrategy(csvReferenceProcessor, filteredRowIds);
-        await FinishProgressContext(operationResult, progressContext);
+        FinishProgressContext(operationResult, progressContext);
         OnAfterOperation(operationResult, progressContext: progressContext);
         await InvokeAsync(StateHasChanged);
         return operationResult;
@@ -268,7 +268,7 @@ public partial class CsvProcessingStepper
         Func<double, Task>? onProgressFunc = progressContext == null ? null : progressContext.ProgressChanged;
         var filteredRowIds = FilteredRowIds(columnProcessor);
         var operationResult = await Runner.RunColumnStrategy(columnProcessor, filteredRowIds, onProgressFunc);
-        await FinishProgressContext(operationResult, progressContext);
+        FinishProgressContext(operationResult, progressContext);
         OnAfterOperation(operationResult, skipSuccessSnackbar: true, progressContext);
         await InvokeAsync(StateHasChanged);
         return operationResult;
@@ -281,7 +281,7 @@ public partial class CsvProcessingStepper
         Func<double, Task>? onProgressFunc = progressContext == null ? null : progressContext.ProgressChanged;
         var filteredRowIds = FilteredRowIds(rowProcessor);
         var operationResult = await Runner.RunRowStrategy(rowProcessor, filteredRowIds, onProgressFunc);
-        await FinishProgressContext(operationResult, progressContext);
+        FinishProgressContext(operationResult, progressContext);
         OnAfterOperation(operationResult, skipSuccessSnackbar: true, progressContext);
         await InvokeAsync(StateHasChanged);
         return operationResult;
@@ -293,20 +293,21 @@ public partial class CsvProcessingStepper
         if (CsvProcessingTable == null) return _processingTableNull;
         var filteredRowIds = FilteredRowIds(fullCsvProcessor);
         var operationResult = await Runner.RunCsvStrategy(fullCsvProcessor, filteredRowIds);
-        await FinishProgressContext(operationResult, progressContext);
+        FinishProgressContext(operationResult, progressContext);
         OnAfterOperation(operationResult, progressContext: progressContext);
         await InvokeAsync(StateHasChanged);
         return operationResult;
     }
 
-    private Task FinishProgressContext<T>(T operationResult, OperationProgressContext? progressContext = null) where T : IOperationResult
+    private void FinishProgressContext<T>(T operationResult, OperationProgressContext? progressContext = null) where T : IOperationResult
     {
         if (progressContext != null)
         {
             progressContext.CompletedText = operationResult.Message;
-            return progressContext.Completed(operationResult.Success);
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            progressContext.Completed(operationResult.Success); // Fire and forget
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
-        return Task.CompletedTask;
     }
 
     private void OnAfterOperation<T>(T operationResult, bool skipSuccessSnackbar = false, OperationProgressContext? progressContext = null) where T : IOperationResult

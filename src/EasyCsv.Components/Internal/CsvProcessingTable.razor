@@ -1,6 +1,5 @@
 ﻿@namespace EasyCsv.Components.Internal
 @using EasyCsv.Components.Processing.Strategies.Editing
-App
 <style>
     .mud-input-control-input-container:has(.mud-input-outlined) {
         margin-top: 0px !important;
@@ -373,7 +372,14 @@ App
     {
         var count = grouping.Count();
         string rows = count == 1 ? "Row" : "Rows";
-        return $"Ref Csv: {grouping.Key + 1}, {rows}: {string.Join(" | ", grouping.Select(x => x.RowIndex + 1))}";
+        if (count <= 3)
+        {
+            return $"Ref Csv: {grouping.Key + 1}, {rows}: {string.Join(" | ", grouping.Select(x => x.RowIndex + 1))}";
+        }
+        else
+        {
+            return $"Ref Csv: {grouping.Key + 1}, {count} {rows}";
+        }
     }
 
     internal Task InvokeStateHasChanged()
@@ -689,7 +695,7 @@ App
                                    <MudListItem>
                                        <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between;">
                                            <div></div>
-                                           <MudButton Disabled="!_columnStrategyBuckets[column].StrategySelectedAndRunAllowed()" Variant="Variant.Filled" Color="Color.Info" OnClick="async x => {await _columnStrategyBuckets[column].StrategyPicked(); TogglePopover(column, false); }">Run Operation</MudButton>
+                                           <MudButton Disabled="!_columnStrategyBuckets[column].StrategySelectedAndRunAllowed()" Variant="Variant.Filled" Color="Color.Info" OnClick="async x => { TogglePopover(column, false); await _columnStrategyBuckets[column].StrategyPicked(); }">Run Operation</MudButton>
                                        </div>
                                    </MudListItem>
                                }

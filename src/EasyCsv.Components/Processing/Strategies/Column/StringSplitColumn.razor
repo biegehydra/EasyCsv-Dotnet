@@ -1,4 +1,5 @@
 ﻿@namespace EasyCsv.Components
+@using EasyCsv.Components.Processing
 @inherits StrategyItemBase
 
 @if (CsvProcessor == null)
@@ -22,6 +23,7 @@
 
 @code
 {
+    [Inject] public ISnackbar? Snackbar { get; set; }
     [Parameter] public override string? DisplayName { get; set; } = "String Split";
     [Parameter] public override string? DescriptionStr { get; set; } = "Will split all the values in $column_name, on a specified delimiter, into new columns";
     [Parameter] public override RenderFragment<string>? Description { get; set; }
@@ -57,7 +59,9 @@
     private async Task SplitPicked(string columnName)
     {
         if (!AllowRun) return;
-        var splitParsingStrategy = new StringSplitColumnStrategy(columnName, _newColumnNames!.Split(','), _delimiter!, _removeSplitColumn);
-        _ = await CsvProcessor.PerformCsvStrategy(splitParsingStrategy);
+        var progressContext = new OperationProgressContext($"Splitting values in {StrategyBucket.ColumnName} on '{_delimiter}'");
+        await Snackbar.OpenProgressSnackbar(progressContext, false);
+        var splitParsingStrategy = new StringSplitColumnStrategy(columnName, _newColumnNames!.Split(','), _delimiter!, _removeSplitColumn, onProgress: progressContext.ProgressChanged);
+        _ = await CsvProcessor.PerformCsvStrategy(splitParsingStrategy, progressContext);
     }
 }

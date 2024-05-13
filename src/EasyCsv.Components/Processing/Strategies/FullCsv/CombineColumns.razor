@@ -1,4 +1,5 @@
 ﻿@namespace EasyCsv.Components
+@using EasyCsv.Components.Processing
 @inherits StrategyItemBase
 
 @if (CsvProcessor == null || StrategyBucket == null)
@@ -28,6 +29,7 @@
 
 @code
 {
+    [Inject] public ISnackbar? Snackbar { get; set; }
     [Parameter] public bool Immediate { get; set; } = true;
     [Parameter] public override string? DisplayName { get; set; } = "Combine Columns";
     [Parameter] public override string? DescriptionStr { get; set; } = "Combine the specified columns using a delimiter into a new column.";
@@ -66,7 +68,9 @@
     private async Task RunCombineColumns(string columnName)
     {
         if (!AllowRun) return;
-        var splitParsingStrategy = new JoinColumnsStrategy(_columnsToJoin!, _newColumnName!, _delimiter!, _removeJoinedColumns);
-        _ = await CsvProcessor.PerformCsvStrategy(splitParsingStrategy);
+        var progressContext = new OperationProgressContext($"Running {DisplayName}");
+        await Snackbar.OpenProgressSnackbar(progressContext, false);
+        var joinColumnsStrategy = new JoinColumnsStrategy(_columnsToJoin!, _newColumnName!, _delimiter!, _removeJoinedColumns, onProgress: progressContext.ProgressChanged);
+        _ = await CsvProcessor.PerformCsvStrategy(joinColumnsStrategy, progressContext);
     }
 }

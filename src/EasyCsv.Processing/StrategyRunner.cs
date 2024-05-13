@@ -56,15 +56,22 @@ public class StrategyRunner
         return true;
     }
 
-    public async ValueTask<AggregateOperationDeleteResult> PerformColumnEvaluateDelete(ICsvColumnDeleteEvaluator evaluateDelete, ICollection<int>? filteredRowIds)
+    public async ValueTask<AggregateOperationDeleteResult> PerformColumnEvaluateDelete(ICsvColumnDeleteEvaluator evaluateDelete, ICollection<int>? filteredRowIds, Func<double, Task>? onProgressFunc = null)
     {
         if (CurrentCsv == null) return new AggregateOperationDeleteResult(false, 0, "Component not initialized yet.");
         if (evaluateDelete == null!) return new AggregateOperationDeleteResult(false, 0, "CsvColumnDeleteEvaluator was null");
         List<CsvRow> rowsToDelete = new ();
         string columnName = evaluateDelete.ColumnName;
+        int total = filteredRowIds == null ? CurrentCsv.CsvContent.Count : filteredRowIds.Count;
+        int processed = 0;
         foreach (var row in CurrentCsv.CsvContent.FilterByIndexes(filteredRowIds))
         {
             var operationResult = await evaluateDelete.EvaluateDelete(new RowCell(columnName, row[columnName]));
+            processed++;
+            if (onProgressFunc != null)
+            {
+                await onProgressFunc((double) processed / total);
+            }
             if (operationResult.Delete)
             {
                 rowsToDelete.Add(row);
@@ -85,15 +92,22 @@ public class StrategyRunner
         return new AggregateOperationDeleteResult(true, rowsToDelete.Count, message);
     }
 
-    public async ValueTask<AggregateOperationDeleteResult> RunRowEvaluateDelete(ICsvRowDeleteEvaluator evaluateDelete, ICollection<int>? filteredRowIds)
+    public async ValueTask<AggregateOperationDeleteResult> RunRowEvaluateDelete(ICsvRowDeleteEvaluator evaluateDelete, ICollection<int>? filteredRowIds, Func<double, Task>? onProgressFunc = null)
     {
         if (CurrentCsv == null) return new AggregateOperationDeleteResult(false, 0, "Component not initialized yet.");
         if (evaluateDelete == null!) return new AggregateOperationDeleteResult(false, 0, "CsvRowDeleteEvaluator was null");
 
         List<CsvRow> rowsToDelete = new ();
+        int total = filteredRowIds == null ? CurrentCsv.CsvContent.Count : filteredRowIds.Count;
+        int processed = 0;
         foreach (var row in CurrentCsv.CsvContent.FilterByIndexes(filteredRowIds))
         {
             var operationResult = await evaluateDelete.EvaluateDelete(row);
+            processed++;
+            if (onProgressFunc != null)
+            {
+                await onProgressFunc((double)processed / total);
+            }
             if (operationResult.Delete)
             {
                 rowsToDelete.Add(row);
@@ -132,16 +146,23 @@ public class StrategyRunner
         return operationResult;
     }
 
-    public async ValueTask<OperationResult> RunColumnStrategy(ICsvColumnProcessor columnProcessor, ICollection<int>? filteredRowIds)
+    public async ValueTask<OperationResult> RunColumnStrategy(ICsvColumnProcessor columnProcessor, ICollection<int>? filteredRowIds, Func<double, Task>? onProgressFunc = null)
     {
         if (CurrentCsv == null) return new OperationResult(false, "Component not initialized yet.");
         var columnName = columnProcessor.ColumnName;
         List<CellEdit> cellEdits = new List<CellEdit>(CurrentCsv.CsvContent.Count / 8);
+        int total = filteredRowIds?.Count ?? CurrentCsv.CsvContent.Count;
+        int processed = 0;
         foreach (var row in CurrentCsv.CsvContent.FilterByIndexes(filteredRowIds))
         {
             object? originalValue = row[columnName];
             var rowCell = new RowCell(columnName, originalValue);
             var operationResult = await columnProcessor.ProcessCell(ref rowCell);
+            processed++;
+            if (onProgressFunc != null)
+            {
+                await onProgressFunc((double)processed / total);
+            }
             if (operationResult.Success == false)
             {
                 return operationResult;
@@ -161,13 +182,20 @@ public class StrategyRunner
         return new OperationResult(true);
     }
 
-    public async ValueTask<OperationResult> RunRowStrategy(ICsvRowProcessor rowProcessor, ICollection<int>? filteredRowIds)
+    public async ValueTask<OperationResult> RunRowStrategy(ICsvRowProcessor rowProcessor, ICollection<int>? filteredRowIds, Func<double, Task>? onProgressFunc = null)
     {
         if (CurrentCsv == null) return new OperationResult(false, "Component not initialized yet.");
         var clone = CurrentCsv.Clone();
+        int total = filteredRowIds?.Count ?? CurrentCsv.CsvContent.Count;
+        int processed = 0;
         foreach (var row in clone.CsvContent.FilterByIndexes(filteredRowIds))
         {
             var operationResult = await rowProcessor.ProcessRow(row);
+            processed++;
+            if (onProgressFunc != null)
+            {
+                await onProgressFunc((double)processed / total);
+            }
             if (operationResult.Success == false)
             {
                 return operationResult;

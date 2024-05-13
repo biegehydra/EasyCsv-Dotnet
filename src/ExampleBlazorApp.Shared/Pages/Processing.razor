@@ -86,7 +86,8 @@ else if (_loaded)
                 tags.Add("Invalid Email");
             }
         });
-        await _csvProcessor.PerformCsvStrategy(addTagStrategy);
+        await _csvProcessor.PerformColumnStrategy(new TransformValueStrategy(columnName, x => x?.ToString() + "test"));
+        //await _csvProcessor.PerformCsvStrategy(addTagStrategy);
     }
 
     private static EasyCsvConfiguration Config = new EasyCsvConfiguration()

@@ -1,4 +1,5 @@
 ﻿@namespace EasyCsv.Components
+@using EasyCsv.Components.Processing
 @inherits StrategyItemBase
 
 @if (CsvProcessor == null)
@@ -8,13 +9,14 @@
 <StrategyItem DisplayName="@DisplayName" OnlyOperatesOnFilteredRows="OnlyOperatesOnFilteredRows" DescriptionStr="@DescriptionStr" Description="Description" BeforeCsvExample="BeforeExample" AfterCsvExample="AfterExample" ExampleOptions="ExampleOptions" AllowRun="AllowRun" StrategyPicked="RunDivideAndReplicate">
     <Options>
         <MudListItem>
-            <MudTextField Disabled="context" Label="Delimiter To Divide On" Immediate="true" Variant="Variant.Outlined" @bind-Value="_delimiter"></MudTextField>
+            <MudTextField Disabled="context" Label="Delimiter To Divide On" Immediate="Immediate" Variant="Variant.Outlined" @bind-Value="_delimiter"></MudTextField>
         </MudListItem>
     </Options>
 </StrategyItem>
 
 @code
 {
+    [Inject] public ISnackbar? Snackbar { get; set; }
     [Parameter] public bool Immediate { get; set; } = true;
     [Parameter] public override string? DisplayName { get; set; } = "Divide And Replicate";
     [Parameter] public override string? DescriptionStr { get; set; } = "Will split the values in $column_name, on a specified delimiter, into parts and then create a copy of the row for each part";
@@ -50,7 +52,9 @@
     private async Task RunDivideAndReplicate(string columnName)
     {
         if (!AllowRun) return;
-        var splitParsingStrategy = new DivideAndReplicateStrategy(columnName, y => y?.ToString()?.Split(_delimiter).Cast<object?>().ToArray());
-        _ = await CsvProcessor.PerformCsvStrategy(splitParsingStrategy);
+        var progressContext = new OperationProgressContext($"Dividing and replicating values in {StrategyBucket.ColumnName} on `{_delimiter}`");
+        await Snackbar.OpenProgressSnackbar(progressContext, false);
+        var divideAndReplicateStrategy = new DivideAndReplicateStrategy(columnName, y => y?.ToString()?.Split(_delimiter).Cast<object?>().ToArray(), progressContext.ProgressChanged);
+        _ = await CsvProcessor.PerformCsvStrategy(divideAndReplicateStrategy, progressContext);
     }
 }

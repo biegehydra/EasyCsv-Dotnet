@@ -1,4 +1,5 @@
 ﻿@namespace EasyCsv.Components
+@using EasyCsv.Components.Processing
 @inherits StrategyItemBase
 
 @if (CsvProcessor == null)
@@ -21,6 +22,7 @@
 
 @code
 {
+    [Inject] public ISnackbar? Snackbar { get; set; }
     [Parameter] public override string? DisplayName { get; set; } = "Reference Compare And Tag";
     [Parameter] public override string? DescriptionStr { get; set; } = "Will compare all the values in $column_name in the Working Csv to all the values in the selected column of the reference csv. On any exact matches, the specified tag will be added to the row, and a link to the reference table will be created.";
     [Parameter] public override RenderFragment<string>? Description { get; set; }
@@ -38,7 +40,9 @@
         {
             return;
         }
-        var tagAndReferenceMatchesStrategy = new TagAndReferenceMatchesStrategy(_referenceCsvId.Value, StrategyBucket.ColumnName, _referenceColumnName, _tagToAdd);
-        _ = await CsvProcessor.PerformReferenceStrategy(tagAndReferenceMatchesStrategy);
+        var progressContext = new OperationProgressContext($"Running {DisplayName}");
+        await Snackbar.OpenProgressSnackbar(progressContext, false);
+        var tagAndReferenceMatchesStrategy = new TagAndReferenceMatchesStrategy(_referenceCsvId.Value, StrategyBucket.ColumnName, _referenceColumnName, _tagToAdd, onProgress: progressContext.ProgressChanged);
+        _ = await CsvProcessor.PerformReferenceStrategy(tagAndReferenceMatchesStrategy, progressContext);
     }
 }

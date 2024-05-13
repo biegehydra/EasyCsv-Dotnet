@@ -1,0 +1,140 @@
+﻿@implements IDisposable
+@if (OperationProgressContext != null!)
+{
+    <div style="gap: 20px; display: flex; flex-direction: row; align-items: center;">
+        @if (_complete)
+        {
+            var icon = _failed ? Icons.Material.Filled.Close : Icons.Material.Filled.Check;
+            var color = _failed ? MudBlazor.Color.Error : MudBlazor.Color.Success;
+            <MudText Typo="Typo.h6">@OperationProgressContext.CompletedText</MudText>
+            <MudIcon Color="@color" Icon="@icon" Size="Size.Large"></MudIcon>
+        }
+        else
+        {
+            <MudText Typo="Typo.h6">@OperationProgressContext.Text</MudText>
+            @if (_indeterminate)
+            {
+                <MudProgressCircular Indeterminate="true" Size="Size.Medium" StrokeWidth="4" Color="Color.Success" Min="0" Max="1" />
+            }
+            else
+            {
+                <MudProgressCircular Value="@_progress" Indeterminate="false" Size="Size.Medium" StrokeWidth="4" Color="Color.Success" Min="0" Max="1" />
+                <MudText Typo="Typo.h6"><b style="white-space: nowrap;">@($"{_progress:P2}")</b></MudText>
+            }
+        }
+    </div>
+}
+@code {
+    [Inject] private ISnackbar? Snackbar { get; set; } = null!;
+
+    [Parameter] public OperationProgressContext OperationProgressContext { get; set; }
+    private bool _indeterminate;
+    [Parameter] public bool Indeterminate { get; set; }
+    [Parameter] public string PositionClass { get; set; }
+    [Parameter] public int DeleteDelayMilliseconds { get; set; } = 1500;
+
+    private bool _failed = false;
+    private bool _first = true;
+    private bool _complete;
+    private double _progress = 0;
+
+
+    public void Reset()
+    {
+        _complete = false;
+        _progress = 0;
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (_first && OperationProgressContext != null! && Snackbar != null)
+        {
+            _first = false;
+            Snackbar.Configuration.PositionClass = PositionClass;
+            _indeterminate = Indeterminate;
+            StartTrackingProgress();
+        }
+    }
+
+    private void StartTrackingProgress()
+    {
+        OperationProgressContext.OnProgressChange += OnProgressChangeChanged;
+        OperationProgressContext.OnStageChange += OnStageChange;
+        OperationProgressContext.OnIndeterminateChanged += OnIndeterminateChanged;
+        OperationProgressContext.OnCompleted += OnPopupCompleted;
+        OperationProgressContext.OnAborted += Abort;
+    }
+
+    private async Task OnIndeterminateChanged(bool indeterminate)
+    {
+        Reset();
+        _indeterminate = indeterminate;
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(50);
+    }
+
+    private async Task OnStageChange(string stage)
+    {
+        OperationProgressContext.Text = stage;
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(100);
+    }
+
+    private async Task OnProgressChangeChanged(double newProgress)
+    {
+        if (Math.Abs(_progress - 1) < .001)
+        {
+            _complete = true;
+            _progress = 1;
+        }
+        else
+        {
+            _progress = newProgress;
+        }
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(2);
+    }
+
+    private async Task OnPopupCompleted(bool success)
+    {
+        _failed = !success;
+        _complete = true;
+        _progress = 1;
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(DeleteDelayMilliseconds);
+        if (OperationProgressContext.Data is Snackbar snackbar)
+        {
+            Snackbar?.Remove(snackbar);
+        }
+    }
+
+    private Task Abort()
+    {
+        Unsubscribe();
+        if (OperationProgressContext.Data is Snackbar snackbar)
+        {
+            Snackbar?.Remove(snackbar);
+        }
+        return Task.CompletedTask;
+    }
+
+    private bool _unsubscribed;
+
+    private void Unsubscribe()
+    {
+        if (!_unsubscribed)
+        {
+            _unsubscribed = true;
+            OperationProgressContext.OnProgressChange -= OnProgressChangeChanged;
+            OperationProgressContext.OnStageChange -= OnStageChange;
+            OperationProgressContext.OnIndeterminateChanged -= OnIndeterminateChanged;
+            OperationProgressContext.OnCompleted -= OnPopupCompleted;
+            OperationProgressContext.OnAborted -= Abort;
+        }
+    }
+
+    public void Dispose()
+    {
+        Unsubscribe();
+    }
+}

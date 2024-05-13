@@ -122,7 +122,7 @@
               EditButtonPosition="Stepper.EditButtonPosition" CanCancelEdit="Stepper.CanCancelEdit" CancelEditIcon="@Stepper.CancelEditIcon"
               CancelEditTooltip="@Stepper.CancelEditTooltip" CommitEditIcon="@Stepper.CommitEditIcon" CommitEditTooltip="@Stepper.CommitEditTooltip"
               IsEditRowSwitchingBlocked="Stepper.IsEditRowSwitchingBlocked" OnCancelEditClick="@Stepper.OnCancelEditClick" OnCommitEditClick="@Stepper.OnCommitEditClick"
-              ReadOnly="@Stepper.ReadOnly" OnPreviewEditClick="OnPreviewEdit" RowEditCancel="x => OnCancelEdit(x)" RowEditCommit="x => OnConfirmEdit(x)"
+              ReadOnly="Stepper.ReadOnly || Busy" OnPreviewEditClick="OnPreviewEdit" RowEditCancel="x => OnCancelEdit(x)" RowEditCommit="x => OnConfirmEdit(x)"
               RowEditPreview="@Stepper.RowEditPreview" ApplyButtonPosition="@Stepper.ApplyButtonPosition" RowEditingTemplate="RowEditTemplate(tagsColumnIndex, referenceColumnIndex)" >
         <HeaderContent>
             @if (Stepper.EnableRowDeleting)
@@ -180,7 +180,7 @@
             @if (Stepper.EnableRowDeleting)
             {
                 <MudTd>
-                    <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="x => DeleteRow(row)" > </MudIconButton>
+                    <MudIconButton Disabled="Busy" Icon="@Icons.Material.Filled.Delete" OnClick="x => DeleteRow(row)" > </MudIconButton>
                 </MudTd>
             }
             @if (Stepper.TagsAndReferencesLocation == ColumnLocation.Beginning)

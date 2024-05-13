@@ -169,6 +169,7 @@ public partial class CsvProcessingStepper
                     : duplicateGroup.DuplicateValue;
                 _duplicateGroup = duplicateGroup;
                 _duplicateValue = value;
+                StateHasChanged();
                 if (findDupesOperation.MultiSelect)
                 {
                     _multiResolveDuplicateRowTaskSource = new TaskCompletionSource<MultiDuplicateRootPickerResult?>();

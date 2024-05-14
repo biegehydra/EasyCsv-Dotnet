@@ -53,6 +53,9 @@ public partial class CsvProcessingStepper
     [Parameter] public ResolveDuplicatesAutoSelect ResolveDuplicatesAutoSelect { get; set; } = ResolveDuplicatesAutoSelect.None;
     [Parameter] public bool AllowControlTagsAndReferencesLocation { get; set; } = true;
     [Parameter] public bool UseSearchBar { get; set; } = true;
+    /// <summary>
+    /// 2 is a good value for Blazor-Server, 50 is a good value for Blazor-Wasm
+    /// </summary>
     [Parameter] public int DelayAfterProgressMilliseconds { get; set; } = 2;
     [Parameter] public double SearchDebounceInterval { get; set; } = 250;
     [Parameter] public string? ViewFullCsvOperationsIcon { get; set; } = EasyCsvIcons.ColumnStrategies;

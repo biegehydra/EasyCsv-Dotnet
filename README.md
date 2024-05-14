@@ -206,7 +206,7 @@ Please note the following licensing terms for EasyCsv's packages:
 
 ### Usage Guidelines:
 
-1. **Internal Use**: If the `EasyCsv.Components` are used solely within a company by company employees for internal operations, **and not exposed to external customers**, you may utilize these components under the MIT License. This allows your team to integrate and use these components internally without the broader requirements of the AGPL-3.0 License.
+1. **Internal Use**: If the `EasyCsv.Components` package is solely used within your company by company employees for internal operations, **and not exposed to external customers**, you may utilize these components under the MIT License. This allows your team to integrate and use these components internally without the broader requirements of the AGPL-3.0 License.
 
 2. **External Use**: Any deployment of the `EasyCsv.Components` in a customer facing application or service, for-profit or not, is strictly governed by the AGPL-3.0 License. This includes any form of service provided over a network where the components are used to interact with users. In such scenarios, you must comply with all provisions of the AGPL-3.0 License, including but not limited to making the source code available to all users.
 

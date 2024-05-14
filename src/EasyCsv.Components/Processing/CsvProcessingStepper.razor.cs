@@ -233,7 +233,7 @@ public partial class CsvProcessingStepper
             if (deleted > 0)
             {
                 var deleteRowsEdit = new DeleteRowsEdit(rowsToDelete);
-                Runner.AddReversibleEdit(deleteRowsEdit);
+                await AddReversibleEdit(deleteRowsEdit);
             }
 
             var operationResult = new OperationResult(true, $"Dedupe operation complete - {deleted + kept} rows evaluated | {deleted} rows deleted | {kept} rows kept");
@@ -252,17 +252,18 @@ public partial class CsvProcessingStepper
         }
     }
 
-    public ValueTask<OperationResult> AddReversibleEdit(IReversibleEdit reversibleEdit)
+    public ValueTask<OperationResult> AddReversibleEdit(IReversibleEdit reversibleEdit, bool makeBusy=false)
     {
         if (CsvProcessingTable == null || Runner == null) return ValueTask.FromResult(_runnerNull);
         return PerformOperationWithCatch(() =>
         {
             if (Runner.AddReversibleEdit(reversibleEdit))
             {
+                CheckAddedCsvsAfterEdit();
                 CsvProcessingTable.ApplyCurrentColumnSort();
             }
             return new ValueTask<OperationResult>(new OperationResult(true));
-        }, _createOperationResultError);
+        }, _createOperationResultError, makeBusy);
     }
 
     public ValueTask<OperationResult> PerformReferenceStrategy(ICsvReferenceProcessor csvReferenceProcessor, OperationProgressContext? progressContext = null)
@@ -327,12 +328,15 @@ public partial class CsvProcessingStepper
         }, _createOperationResultError);
     }
 
-    private async ValueTask<TOperationResult> PerformOperationWithCatch<TOperationResult>(Func<ValueTask<TOperationResult>> operation, Func<Exception, TOperationResult> createErrorResult) where TOperationResult : IOperationResult
+    private async ValueTask<TOperationResult> PerformOperationWithCatch<TOperationResult>(Func<ValueTask<TOperationResult>> operation, Func<Exception, TOperationResult> createErrorResult, bool makeBusy=true) where TOperationResult : IOperationResult
     {
         try
         {
-            Busy = true;
-            await InvokeStateHasChangeAndWait();
+            if (makeBusy)
+            {
+                Busy = true;
+                await InvokeStateHasChangeAndWait();
+            }
             return await operation();
         }
         catch (Exception ex)
@@ -341,8 +345,11 @@ public partial class CsvProcessingStepper
         }
         finally
         {
-            Busy = false;
-            await InvokeStateHasChangeAndWait();
+            if (makeBusy)
+            {
+                Busy = false;
+                await InvokeStateHasChangeAndWait();
+            }
         }
     }
 
@@ -364,6 +371,22 @@ public partial class CsvProcessingStepper
             AddOperationResultSnackbar(operationResult, skipSuccess: skipSuccessSnackbar);
         }
         CheckAddedCsvsAfterOperation(operationResult);
+    }
+
+    public void GoForwardEdit()
+    {
+        if (Runner?.GoForwardEdit() == true)
+        {
+            StateHasChanged();
+        }
+    }
+
+    public void GoBackEdit()
+    {
+        if (Runner?.GoBackEdit() == true)
+        {
+            StateHasChanged();
+        }
     }
 
     private HashSet<int>? FilteredRowIds(ICsvProcessor processor)

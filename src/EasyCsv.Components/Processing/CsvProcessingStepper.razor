@@ -63,7 +63,7 @@
                                     <p>It is the result of all previous operations leading up to the CURRENT step, which is not necessarily the last step.</p>
                                     <br/>
                                     <p>To help you keep track of things, below shows the initial csv that was uploaded, and all the csvs that have been added.</p>
-                                    @if (_addedCsvsWithStepIndexAdded.Count == 0)
+                                    @if (_addedCsvsWithEditIndexAdded.Count == 0)
                                     {
                                         <br/>
                                         <p>
@@ -80,17 +80,17 @@
                         </div>
                         <div class="csv-file-container">
                             <MudChip Color="Color.Dark" Text="@EasyCsvFileName"/>
-                            @Runner?._steps[0].Csv.RowCount()&nbsp;rows&nbsp;
+                            @_initialRowCount&nbsp;rows&nbsp;
                             <MudTooltip RootClass="csv-file-container" Text="Initial Csv">
                                 <MudIcon Color="Color.Primary" Icon="@Icons.Material.Filled.Star"></MudIcon>
                             </MudTooltip>
                         </div>
-                        @foreach (var (fileName, rowCount, indexAdded) in _addedCsvsWithStepIndexAdded)
+                        @foreach (var (fileName, rowCount, indexAdded, rowEditAdded) in _addedCsvsWithEditIndexAdded.Where(x => x.IndexAdded <= Runner.CurrentIndex && x.EditIndexAdded < Runner.CurrentRowEditIndex))
                         {
                             <div class="csv-file-container">
                                 <MudChip Color="Color.Dark" Text="@fileName" />
                                 @rowCount&nbsp;rows&nbsp;
-                                <MudTooltip RootClass="csv-file-container" Text="@($"This Csv was added on step {indexAdded + 1}")">
+                                <MudTooltip RootClass="csv-file-container" Text="@($"This Csv was added on step {indexAdded + 1}, edit {rowEditAdded + 1}")">
                                     <MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.StarHalf"></MudIcon>
                                 </MudTooltip>
                             </div>
@@ -244,10 +244,10 @@
     private string? _sq;
     private string? _fileName;
 
-    private List<(string FileName, int RowCount, int IndexAdded)> _addedCsvsWithStepIndexAdded = new();
+    private List<(string FileName, int RowCount, int IndexAdded, int EditIndexAdded)> _addedCsvsWithEditIndexAdded = new();
     public async Task AddCsv(IEasyCsv csv, string csvName)
     {
-        if (csv == null! || Runner == null) return;
+        if (csv == null! || Runner?.CurrentCsv == null) return;
         if (string.IsNullOrWhiteSpace(csvName))
         {
             csvName = "N/A";
@@ -256,7 +256,13 @@
         var operationResult = Runner.AddRows(csv.CsvContent);
         if (operationResult.Success)
         {
-            _addedCsvsWithStepIndexAdded.Add((csvName, csv.RowCount(),  Runner.CurrentIndex));
+            var index = _addedCsvsWithEditIndexAdded.IndexOf(x => x.IndexAdded == Runner.CurrentIndex && x.EditIndexAdded == Runner.CurrentRowEditIndex - 1);
+            if (index >= 0)
+            {
+                _addedCsvsWithEditIndexAdded.RemoveAt(index);
+            }
+            _addedCsvsWithEditIndexAdded.Add((csvName, csv.RowCount(), Runner.CurrentIndex!,  Runner.CurrentRowEditIndex!.Value - 1));
+            await InvokeStateHasChangeAndWait();
             await CsvProcessingTable!.InvokeStateHasChanged();
             if (UseSearchBar)
             {
@@ -269,9 +275,9 @@
         }
     }
 
-    private void CheckAddedCsvsAfterOperation<T>(T operationResult) where T : IOperationResult
+    private void CheckAddedCsvsAfterEdit() 
     {
-        if (Runner == null || !operationResult.Success) return;
+        if (Runner?.CurrentCsv == null) return;
         // Before Operation (Edge Case)
         // AddedCsvs: ("fileName1", 1), ("fileName3", 3)
         // Current Index: 2, Max Index: 5
@@ -279,11 +285,30 @@
         // After Operation (Edge Case)
         // AddedCsvs: ("fileName1", 1)
         // Current Index: 3, Max Index: 3
-        for (int i = _addedCsvsWithStepIndexAdded.Count-1; i > 0; i--)
+        bool anyRemoved = false;
+        for (int i = _addedCsvsWithEditIndexAdded.Count-1; i >= 0; i--)
         {
-            if (_addedCsvsWithStepIndexAdded[i].IndexAdded >= Runner.CurrentIndex)
+            if (_addedCsvsWithEditIndexAdded[i].IndexAdded == Runner.CurrentIndex &&  _addedCsvsWithEditIndexAdded[i].EditIndexAdded >= Runner.CurrentRowEditIndex - 1)
             {
-                _addedCsvsWithStepIndexAdded.RemoveAt(i);
+                _addedCsvsWithEditIndexAdded.RemoveAt(i);
+                anyRemoved = true;
+            }
+        }
+
+        if (anyRemoved)
+        {
+            StateHasChanged();
+        }
+    }
+
+    private void CheckAddedCsvsAfterOperation<T>(T operationResult) where T : IOperationResult
+    {
+        if (Runner == null || !operationResult.Success) return;
+        for (int i = _addedCsvsWithEditIndexAdded.Count-1; i >= 0; i--)
+        {
+            if (_addedCsvsWithEditIndexAdded[i].IndexAdded >= Runner.CurrentIndex)
+            {
+                _addedCsvsWithEditIndexAdded.RemoveAt(i);
             }
         }
     }

@@ -362,7 +362,7 @@
         int rowIndex = Stepper.Runner!.CurrentCsv!.CsvContent.IndexOf(row);
         if (rowIndex < 0) return;
         var deleteRowEdit = new DeleteRowEdit(row);
-        Stepper.Runner.AddReversibleEdit(deleteRowEdit);
+        Stepper.AddReversibleEdit(deleteRowEdit);
     }
 
 
@@ -371,7 +371,7 @@
         int rowIndex = Stepper.Runner!.CurrentCsv!.CsvContent.IndexOf(row);
         if (rowIndex < 0) return;
         var removeTagEdit = new RemoveTagEdit(row, tag, tagsColumnIndex);
-        Stepper.Runner.AddReversibleEdit(removeTagEdit);
+        Stepper.AddReversibleEdit(removeTagEdit);
     }
 
     private void RemoveReference(CsvRow row, int referencesColumnIndex, int referenceCsvId, int referenceRowId)
@@ -379,7 +379,7 @@
         int rowIndex = Stepper.Runner!.CurrentCsv!.CsvContent.IndexOf(row);
         if (rowIndex < 0) return;
         var removeReferenceEdit = new RemoveReferenceEdit(row, referenceCsvId, referenceRowId, referencesColumnIndex);
-        Stepper.Runner.AddReversibleEdit(removeReferenceEdit);
+        Stepper.AddReversibleEdit(removeReferenceEdit);
     }
 
     private string DefaultFormatReferenceText(IGrouping<int, (int CsvIndex, int RowIndex)> grouping)
@@ -582,13 +582,13 @@
                                {
                                    var _class = !isNextEdit ? "forward-edit mr-7" : "forward-edit";
                                    <MudTooltip Text="Go back edit" RootClass="@_class" Delay="700" >
-                                       <MudIconButton Disabled="Busy || _rowBeingEdited != null" Size="Size.Small" Icon="@Icons.Material.Filled.ArrowBackIos" OnClick="x => { CancelEdit(); Stepper.Runner!.GoBackEdit(); ApplyCurrentColumnSort(); }" ></MudIconButton>
+                                       <MudIconButton Disabled="Busy || _rowBeingEdited != null" Size="Size.Small" Icon="@Icons.Material.Filled.ArrowBackIos" OnClick="x => { CancelEdit(); Stepper.GoBackEdit(); ApplyCurrentColumnSort(); }" ></MudIconButton>
                                    </MudTooltip>
                                }
                                @if (isNextEdit)
                                {
                                    <MudTooltip Text="Go forward edit" Delay="700">
-                                       <MudIconButton Disabled="Busy || _rowBeingEdited != null" Class="back-edit" Size="Size.Small" Icon="@Icons.Material.Filled.ArrowForwardIos" OnClick="x => { CancelEdit(); Stepper.Runner!.GoForwardEdit(); ApplyCurrentColumnSort(); }" ></MudIconButton>
+                                       <MudIconButton Disabled="Busy || _rowBeingEdited != null" Class="back-edit" Size="Size.Small" Icon="@Icons.Material.Filled.ArrowForwardIos" OnClick="x => { CancelEdit(); Stepper.GoForwardEdit(); ApplyCurrentColumnSort(); }" ></MudIconButton>
                                    </MudTooltip>
                                }
                            </div>
@@ -613,11 +613,11 @@
                            <div class="csv-processing-toolbar-forward-back-container" >
                                @if (Utils.IsValidIndex(Stepper.Runner?.CurrentRowEditIndex, Stepper.Runner?.CurrentReversibleEdits?.Count ?? -1))
                                {
-                                   <MudIconButton Disabled="Busy || _rowBeingEdited != null" Class="forward-edit" Size="Size.Small" Icon="@Icons.Material.Filled.ArrowBackIos" OnClick="x => { CancelEdit(); Stepper.Runner!.GoBackEdit(); ApplyCurrentColumnSort(); }" ></MudIconButton>
+                                   <MudIconButton Disabled="Busy || _rowBeingEdited != null" Class="forward-edit" Size="Size.Small" Icon="@Icons.Material.Filled.ArrowBackIos" OnClick="x => { CancelEdit(); Stepper.GoBackEdit(); ApplyCurrentColumnSort(); }" ></MudIconButton>
                                }
                                @if (Utils.IsValidIndex(Stepper.Runner?.CurrentRowEditIndex + 1, Stepper.Runner?.CurrentReversibleEdits?.Count ?? -1))
                                {
-                                    <MudIconButton Disabled="Busy || _rowBeingEdited != null" Class="back-edit" Size="Size.Small" Icon="@Icons.Material.Filled.ArrowForwardIos" OnClick="x => { CancelEdit(); Stepper.Runner!.GoForwardEdit(); ApplyCurrentColumnSort(); }"></MudIconButton>
+                                    <MudIconButton Disabled="Busy || _rowBeingEdited != null" Class="back-edit" Size="Size.Small" Icon="@Icons.Material.Filled.ArrowForwardIos" OnClick="x => { CancelEdit(); Stepper.GoForwardEdit(); ApplyCurrentColumnSort(); }"></MudIconButton>
                                }
                            </div>
                            <MudTooltip Delay="750" Text="View Full Csv Strategies">

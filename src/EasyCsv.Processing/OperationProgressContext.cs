@@ -6,6 +6,7 @@ namespace EasyCsv.Components.Processing;
 public class OperationProgressContext
 {
     private readonly double _minProgressBetweenUpdates;
+    public int DelayAfterProgressMilliseconds { get; set; }
     public string Text { get; set; }
     public string? CompletedText { get; set; }
     public object? Data { get; set; }
@@ -15,9 +16,10 @@ public class OperationProgressContext
     public event Func<bool, Task>? OnCompleted;
     public event Func<Task>? OnAborted;
     private double _lastProgress;
-    public OperationProgressContext(string text, double minProgressBetweenUpdates=0.005)
+    public OperationProgressContext(string text, double minProgressBetweenUpdates=0.005, int delayAfterProgressMilliseconds=2)
     {
         _minProgressBetweenUpdates = minProgressBetweenUpdates;
+        DelayAfterProgressMilliseconds = delayAfterProgressMilliseconds;
         Text = text;
     }
 

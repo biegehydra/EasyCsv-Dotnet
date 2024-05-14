@@ -68,6 +68,7 @@ public partial class CsvProcessingStepper
     [Parameter] public bool OpenDownloadWithAllColumnsSelected { get; set; } = true; 
     [Parameter] public bool AutoSelectAllColumnsToSearch { get; set; } = true; 
     [Parameter] public ColumnValueType DefaultColumnValueType { get; set; } = ColumnValueType.Text; 
+    [Parameter] public bool UseProgressContext { get; set; } = true; 
     public StrategyRunner? Runner { get; private set; }
     internal CsvProcessingTable? CsvProcessingTable { get; private set; }
     private int _initialRowCount;
@@ -99,6 +100,7 @@ public partial class CsvProcessingStepper
     {
         if (Runner == null) return ValueTask.FromResult(_runnerNullAggregateDelete);
         if (CsvProcessingTable == null) return ValueTask.FromResult(_processingTableNullAggregateDelete);
+        if (!UseProgressContext) progressContext = null;
         Func<double, Task>? onProgressFunc = progressContext == null ? null : progressContext.ProgressChanged;
         var filteredRowIds = FilteredRowIds(evaluateDelete);
         return PerformOperationWithCatch(async () =>
@@ -122,6 +124,7 @@ public partial class CsvProcessingStepper
     {
         if (Runner == null) return ValueTask.FromResult(_runnerNullAggregateDelete);
         if (CsvProcessingTable == null) return ValueTask.FromResult(_processingTableNullAggregateDelete);
+        if (!UseProgressContext) progressContext = null;
         Func<double, Task>? onProgressFunc = progressContext == null ? null : progressContext.ProgressChanged;
         var filteredRowIds = FilteredRowIds(evaluateDelete);
         return PerformOperationWithCatch(async () =>
@@ -270,6 +273,7 @@ public partial class CsvProcessingStepper
     {
         if (Runner == null) return ValueTask.FromResult(_runnerNull);
         if (CsvProcessingTable == null) return ValueTask.FromResult(_processingTableNull);
+        if (!UseProgressContext) progressContext = null;
         var filteredRowIds = FilteredRowIds(csvReferenceProcessor);
         return PerformOperationWithCatch(async () =>
         {
@@ -285,6 +289,7 @@ public partial class CsvProcessingStepper
     {
         if (Runner == null) return ValueTask.FromResult(_runnerNull);
         if (CsvProcessingTable == null) return ValueTask.FromResult(_processingTableNull);
+        if (!UseProgressContext) progressContext = null;
         Func<double, Task>? onProgressFunc = progressContext == null ? null : progressContext.ProgressChanged;
         var filteredRowIds = FilteredRowIds(columnProcessor);
         return PerformOperationWithCatch(async () =>
@@ -301,6 +306,7 @@ public partial class CsvProcessingStepper
     {
         if (Runner == null) return ValueTask.FromResult(_runnerNull);
         if (CsvProcessingTable == null) return ValueTask.FromResult(_processingTableNull);
+        if (!UseProgressContext) progressContext = null;
         Func<double, Task>? onProgressFunc = progressContext == null ? null : progressContext.ProgressChanged;
         var filteredRowIds = FilteredRowIds(rowProcessor);
         return PerformOperationWithCatch(async () =>
@@ -317,6 +323,7 @@ public partial class CsvProcessingStepper
     {
         if (Runner == null) return ValueTask.FromResult(_runnerNull);
         if (CsvProcessingTable == null) return ValueTask.FromResult(_processingTableNull);
+        if (!UseProgressContext) progressContext = null;
         var filteredRowIds = FilteredRowIds(fullCsvProcessor);
         return PerformOperationWithCatch(async () =>
         {

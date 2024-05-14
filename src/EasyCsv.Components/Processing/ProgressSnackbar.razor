@@ -92,7 +92,7 @@
             _progress = newProgress;
         }
         await InvokeAsync(StateHasChanged);
-        await Task.Delay(2);
+        await Task.Delay(50);
     }
 
     private async Task OnPopupCompleted(bool success)

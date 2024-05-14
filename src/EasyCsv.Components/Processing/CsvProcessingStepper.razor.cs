@@ -53,6 +53,10 @@ public partial class CsvProcessingStepper
     [Parameter] public ResolveDuplicatesAutoSelect ResolveDuplicatesAutoSelect { get; set; } = ResolveDuplicatesAutoSelect.None;
     [Parameter] public bool AllowControlTagsAndReferencesLocation { get; set; } = true;
     [Parameter] public bool UseSearchBar { get; set; } = true;
+    /// <summary>
+    /// 2 is a good value for Blazor-Server, 50 is a good value for Blazor-Wasm
+    /// </summary>
+    [Parameter] public int DelayAfterProgressMilliseconds { get; set; } = 2;
     [Parameter] public double SearchDebounceInterval { get; set; } = 250;
     [Parameter] public string? ViewFullCsvOperationsIcon { get; set; } = EasyCsvIcons.ColumnStrategies;
     [Parameter] public bool HideExpandUnselected { get; set; }
@@ -101,6 +105,7 @@ public partial class CsvProcessingStepper
         if (Runner == null) return ValueTask.FromResult(_runnerNullAggregateDelete);
         if (CsvProcessingTable == null) return ValueTask.FromResult(_processingTableNullAggregateDelete);
         if (!UseProgressContext) progressContext = null;
+        if (DelayAfterProgressMilliseconds != 2 && progressContext?.DelayAfterProgressMilliseconds == 2) progressContext.DelayAfterProgressMilliseconds = DelayAfterProgressMilliseconds;
         Func<double, Task>? onProgressFunc = progressContext == null ? null : progressContext.ProgressChanged;
         var filteredRowIds = FilteredRowIds(evaluateDelete);
         return PerformOperationWithCatch(async () =>
@@ -125,6 +130,7 @@ public partial class CsvProcessingStepper
         if (Runner == null) return ValueTask.FromResult(_runnerNullAggregateDelete);
         if (CsvProcessingTable == null) return ValueTask.FromResult(_processingTableNullAggregateDelete);
         if (!UseProgressContext) progressContext = null;
+        if (DelayAfterProgressMilliseconds != 2 && progressContext?.DelayAfterProgressMilliseconds == 2) progressContext.DelayAfterProgressMilliseconds = DelayAfterProgressMilliseconds;
         Func<double, Task>? onProgressFunc = progressContext == null ? null : progressContext.ProgressChanged;
         var filteredRowIds = FilteredRowIds(evaluateDelete);
         return PerformOperationWithCatch(async () =>
@@ -274,6 +280,7 @@ public partial class CsvProcessingStepper
         if (Runner == null) return ValueTask.FromResult(_runnerNull);
         if (CsvProcessingTable == null) return ValueTask.FromResult(_processingTableNull);
         if (!UseProgressContext) progressContext = null;
+        if (DelayAfterProgressMilliseconds != 2 && progressContext?.DelayAfterProgressMilliseconds == 2) progressContext.DelayAfterProgressMilliseconds = DelayAfterProgressMilliseconds;
         var filteredRowIds = FilteredRowIds(csvReferenceProcessor);
         return PerformOperationWithCatch(async () =>
         {
@@ -290,6 +297,7 @@ public partial class CsvProcessingStepper
         if (Runner == null) return ValueTask.FromResult(_runnerNull);
         if (CsvProcessingTable == null) return ValueTask.FromResult(_processingTableNull);
         if (!UseProgressContext) progressContext = null;
+        if (DelayAfterProgressMilliseconds != 2 && progressContext?.DelayAfterProgressMilliseconds == 2) progressContext.DelayAfterProgressMilliseconds = DelayAfterProgressMilliseconds;
         Func<double, Task>? onProgressFunc = progressContext == null ? null : progressContext.ProgressChanged;
         var filteredRowIds = FilteredRowIds(columnProcessor);
         return PerformOperationWithCatch(async () =>
@@ -307,6 +315,7 @@ public partial class CsvProcessingStepper
         if (Runner == null) return ValueTask.FromResult(_runnerNull);
         if (CsvProcessingTable == null) return ValueTask.FromResult(_processingTableNull);
         if (!UseProgressContext) progressContext = null;
+        if (DelayAfterProgressMilliseconds != 2 && progressContext?.DelayAfterProgressMilliseconds == 2) progressContext.DelayAfterProgressMilliseconds = DelayAfterProgressMilliseconds;
         Func<double, Task>? onProgressFunc = progressContext == null ? null : progressContext.ProgressChanged;
         var filteredRowIds = FilteredRowIds(rowProcessor);
         return PerformOperationWithCatch(async () =>
@@ -324,6 +333,7 @@ public partial class CsvProcessingStepper
         if (Runner == null) return ValueTask.FromResult(_runnerNull);
         if (CsvProcessingTable == null) return ValueTask.FromResult(_processingTableNull);
         if (!UseProgressContext) progressContext = null;
+        if (DelayAfterProgressMilliseconds != 2 && progressContext?.DelayAfterProgressMilliseconds == 2) progressContext.DelayAfterProgressMilliseconds = DelayAfterProgressMilliseconds;
         var filteredRowIds = FilteredRowIds(fullCsvProcessor);
         return PerformOperationWithCatch(async () =>
         {

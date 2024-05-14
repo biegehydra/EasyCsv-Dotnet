@@ -197,6 +197,10 @@ This library makes use of the following third-party dependencies:
 
 EasyCsv uses [CsvHelper](https://joshclose.github.io/CsvHelper/) to read and write CSV files. CsvHelper is licensed under the [Microsoft Public License (Ms-PL)](https://opensource.org/licenses/MS-PL). We would like to thank the authors and contributors of CsvHelper for their work on this excellent library.
 
+## Licensing
+
+Note, all packages are licensed under an MIT license except all the code in the EasyCsv.Components folder, which is licensed under AGPL-3.0 License
+
 ## Known Issues and Limitations
 
 License

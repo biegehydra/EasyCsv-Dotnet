@@ -2,9 +2,9 @@
 
 EasyCsv.Components provides you with 3 components. They are available to test at this [example website](https://d143idkvxttaq3.cloudfront.net/processing)                                                                                                         
 
-## Installation
+## Installation (CsvProcessingStepper is in beta package)
 
-`NuGet\Install-Package EasyCsv.Components`
+`NuGet\Install-Package EasyCsv.Components -Version=2.0.0-beta6.1`
 
 ## CsvProcessingStepper
 

@@ -114,7 +114,7 @@ All you need to do in your component is give your StrategyItem a `DisplayName`, 
 ### Add Options Components To CsvProcessingStepper
 Once your done write your `StrategyItem` wrappers, just put them in the `<ColumnStrategies>` or `<FullCsvStrategies>` section of the CsvProcessingStepper. Note, when a **full csv** strategy is picked, the column name will be `InternalColumnNames.FullCsvOperations` or "_FullCsvOperations" in the `StrategyPicked` callback
 
- ```
+ ```html
 <CsvProcessingStepper @ref="_csvProcessor" EasyCsv="_easyCsv" EasyCsvFileName="Example.csv">
     <ColumnStrategies>
         <FindDedupesExactMatchColumn MustSelectRow="false" />
@@ -134,7 +134,7 @@ Once your done write your `StrategyItem` wrappers, just put them in the `<Column
 ### Reversible Edits
 In addition to operations, which should be used for complex operations because they require **cloning the entire csv**, `IReversibleEdit`'s can be used to alter the working csv in place. Some operations, such as the `ICsvColumnProcessor`, `ICsvColumnDeleteEvaluator`, `ICsvRowDeleteEvaluator`, and `IFindDupesOperation` are automatically treated as reversible edits so those can be used in some scenarios instead of writing your own `IReversibleEdit`.
 
-```
+```csharp
 public interface IReversibleEdit
 {
     void DoEdit(IEasyCsv csv);
@@ -142,7 +142,7 @@ public interface IReversibleEdit
 }
 ```
 For example, this is the ModifyRowEdit class. The `DoEdit` and `UndoEdit` methods provide the working csv, but do not require you to use them
-```
+```csharp
 public class ModifyRowEdit : IReversibleEdit
 {
     public ModifyRowEdit(CsvRow row, CsvRow rowClone, CsvRow rowAfterOperation)

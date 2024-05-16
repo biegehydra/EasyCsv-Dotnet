@@ -42,6 +42,7 @@ public partial class CsvProcessingStepper
     [Parameter] public CloseBehaviour CloseBehaviour { get; set; } = Enums.CloseBehaviour.CloseButtonAndClickAway;
     [Parameter] public bool HideOtherStrategiesOnSelect { get; set; } = true;
     [Parameter] public bool SearchBar { get; set; } = true;
+    [Parameter] public bool ForceIndeterminate { get; set; }
     [Parameter] public bool EnableRowEditing { get; set; } = true;
     [Parameter] public bool EnableRowDeleting { get; set; } = true;
     [Parameter] public bool EnableSorting { get; set; } = true;
@@ -105,6 +106,7 @@ public partial class CsvProcessingStepper
         if (Runner == null) return ValueTask.FromResult(_runnerNullAggregateDelete);
         if (CsvProcessingTable == null) return ValueTask.FromResult(_processingTableNullAggregateDelete);
         if (!UseProgressContext) progressContext = null;
+        if (ForceIndeterminate && progressContext != null) progressContext.ForceIndeterminate = true; 
         if (DelayAfterProgressMilliseconds != 2 && progressContext?.DelayAfterProgressMilliseconds == 2) progressContext.DelayAfterProgressMilliseconds = DelayAfterProgressMilliseconds;
         Func<double, Task>? onProgressFunc = progressContext == null ? null : progressContext.ProgressChanged;
         var filteredRowIds = FilteredRowIds(evaluateDelete);
@@ -130,6 +132,7 @@ public partial class CsvProcessingStepper
         if (Runner == null) return ValueTask.FromResult(_runnerNullAggregateDelete);
         if (CsvProcessingTable == null) return ValueTask.FromResult(_processingTableNullAggregateDelete);
         if (!UseProgressContext) progressContext = null;
+        if (ForceIndeterminate && progressContext != null) progressContext.ForceIndeterminate = true;
         if (DelayAfterProgressMilliseconds != 2 && progressContext?.DelayAfterProgressMilliseconds == 2) progressContext.DelayAfterProgressMilliseconds = DelayAfterProgressMilliseconds;
         Func<double, Task>? onProgressFunc = progressContext == null ? null : progressContext.ProgressChanged;
         var filteredRowIds = FilteredRowIds(evaluateDelete);
@@ -280,6 +283,7 @@ public partial class CsvProcessingStepper
         if (Runner == null) return ValueTask.FromResult(_runnerNull);
         if (CsvProcessingTable == null) return ValueTask.FromResult(_processingTableNull);
         if (!UseProgressContext) progressContext = null;
+        if (ForceIndeterminate && progressContext != null) progressContext.ForceIndeterminate = true;
         if (DelayAfterProgressMilliseconds != 2 && progressContext?.DelayAfterProgressMilliseconds == 2) progressContext.DelayAfterProgressMilliseconds = DelayAfterProgressMilliseconds;
         var filteredRowIds = FilteredRowIds(csvReferenceProcessor);
         return PerformOperationWithCatch(async () =>
@@ -292,36 +296,38 @@ public partial class CsvProcessingStepper
         }, _createOperationResultError);
     }
 
-    public ValueTask<OperationResult> PerformColumnStrategy(ICsvColumnProcessor columnProcessor, OperationProgressContext? progressContext = null)
+    public ValueTask<OperationResult> PerformColumnStrategy<TColumnProcessor>(TColumnProcessor columnProcessor, OperationProgressContext<TColumnProcessor>? progressContext = null) where TColumnProcessor : ICsvColumnProcessor
     {
         if (Runner == null) return ValueTask.FromResult(_runnerNull);
         if (CsvProcessingTable == null) return ValueTask.FromResult(_processingTableNull);
         if (!UseProgressContext) progressContext = null;
+        if (ForceIndeterminate && progressContext != null) progressContext.ForceIndeterminate = true;
         if (DelayAfterProgressMilliseconds != 2 && progressContext?.DelayAfterProgressMilliseconds == 2) progressContext.DelayAfterProgressMilliseconds = DelayAfterProgressMilliseconds;
         Func<double, Task>? onProgressFunc = progressContext == null ? null : progressContext.ProgressChanged;
         var filteredRowIds = FilteredRowIds(columnProcessor);
         return PerformOperationWithCatch(async () =>
         {
             var operationResult = await Runner.RunColumnStrategy(columnProcessor, filteredRowIds, onProgressFunc);
-            FinishProgressContext(operationResult, progressContext);
+            FinishColumnProgressContext(operationResult, progressContext, columnProcessor);
             OnAfterOperation(operationResult, skipSuccessSnackbar: true, progressContext);
             await InvokeAsync(StateHasChanged);
             return operationResult;
         }, _createOperationResultError);
     }
 
-    public ValueTask<OperationResult> PerformRowStrategy(ICsvRowProcessor rowProcessor, OperationProgressContext? progressContext = null)
+    public ValueTask<OperationResult> PerformRowStrategy<TCsvRowProcessor>(TCsvRowProcessor rowProcessor, OperationProgressContext<TCsvRowProcessor>? progressContext = null) where TCsvRowProcessor : ICsvRowProcessor
     {
         if (Runner == null) return ValueTask.FromResult(_runnerNull);
         if (CsvProcessingTable == null) return ValueTask.FromResult(_processingTableNull);
         if (!UseProgressContext) progressContext = null;
+        if (ForceIndeterminate && progressContext != null) progressContext.ForceIndeterminate = true;
         if (DelayAfterProgressMilliseconds != 2 && progressContext?.DelayAfterProgressMilliseconds == 2) progressContext.DelayAfterProgressMilliseconds = DelayAfterProgressMilliseconds;
         Func<double, Task>? onProgressFunc = progressContext == null ? null : progressContext.ProgressChanged;
         var filteredRowIds = FilteredRowIds(rowProcessor);
         return PerformOperationWithCatch(async () =>
         {
             var operationResult = await Runner.RunRowStrategy(rowProcessor, filteredRowIds, onProgressFunc);
-            FinishProgressContext(operationResult, progressContext);
+            FinishColumnProgressContext(operationResult, progressContext, rowProcessor);
             OnAfterOperation(operationResult, skipSuccessSnackbar: true, progressContext);
             await InvokeAsync(StateHasChanged);
             return operationResult;
@@ -333,6 +339,7 @@ public partial class CsvProcessingStepper
         if (Runner == null) return ValueTask.FromResult(_runnerNull);
         if (CsvProcessingTable == null) return ValueTask.FromResult(_processingTableNull);
         if (!UseProgressContext) progressContext = null;
+        if (ForceIndeterminate && progressContext != null) progressContext.ForceIndeterminate = true;
         if (DelayAfterProgressMilliseconds != 2 && progressContext?.DelayAfterProgressMilliseconds == 2) progressContext.DelayAfterProgressMilliseconds = DelayAfterProgressMilliseconds;
         var filteredRowIds = FilteredRowIds(fullCsvProcessor);
         return PerformOperationWithCatch(async () =>
@@ -375,6 +382,16 @@ public partial class CsvProcessingStepper
         if (progressContext != null)
         {
             progressContext.CompletedText = operationResult.Message;
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            progressContext.Completed(operationResult.Success); // Fire and forget
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+        }
+    }
+    private void FinishColumnProgressContext<T, U>(T operationResult, OperationProgressContext<U>? progressContext, U columnProcessor) where T : IOperationResult where U : IProvideCompletedTextStrategy
+    {
+        if (progressContext != null)
+        {
+            progressContext.CompletedText = progressContext.CreateCompletedText(columnProcessor);
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             progressContext.Completed(operationResult.Success); // Fire and forget
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed

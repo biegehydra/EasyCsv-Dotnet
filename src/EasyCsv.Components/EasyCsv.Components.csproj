@@ -32,6 +32,7 @@
 
 	<ItemGroup>
 	  <Content Remove="Internals\ColumnValueTypeSelect.razor" />
+	  <Content Remove="Processing\StringReplaceStrategy.razor" />
 	</ItemGroup>
 
 
@@ -66,6 +67,14 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net7.0' ">
 		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="7.0.18" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <UpToDateCheckInput Remove="Processing\StringReplaceStrategy.razor" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <_ContentIncludedByDefault Remove="Processing\StringReplaceStrategy.razor" />
 	</ItemGroup>
 
 </Project>

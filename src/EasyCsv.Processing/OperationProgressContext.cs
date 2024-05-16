@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using EasyCsv.Processing;
 
 namespace EasyCsv.Components.Processing;
 public class OperationProgressContext
@@ -10,6 +11,7 @@ public class OperationProgressContext
     public string Text { get; set; }
     public string? CompletedText { get; set; }
     public object? Data { get; set; }
+    internal bool ForceIndeterminate { get; set; }
     public event Func<string, Task>? OnStageChange;
     public event Func<bool, Task>? OnIndeterminateChanged;
     public event Func<double, Task>? OnProgressChange;
@@ -93,5 +95,15 @@ public class OperationProgressContext
 
             await Task.WhenAll(tasks);
         }
+    }
+}
+
+public class OperationProgressContext<T> : OperationProgressContext where T : IProvideCompletedTextStrategy
+{
+    public Func<T, string> CreateCompletedText { get; }
+
+    public OperationProgressContext(string text, Func<T, string> createCompletedText, double minProgressBetweenUpdates = 0.005, int delayAfterProgressMilliseconds = 2) : base(text, minProgressBetweenUpdates, delayAfterProgressMilliseconds)
+    {
+        CreateCompletedText = createCompletedText;
     }
 }

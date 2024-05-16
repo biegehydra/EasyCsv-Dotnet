@@ -47,7 +47,7 @@ public interface IFindDupesOperation : ICsvProcessor
     public IAsyncEnumerable<DuplicateGrouping> YieldReturnDupes(IEasyCsv csv, ICollection<int>? filteredRowIndexes = null, params (IEasyCsv Csv, int ReferenceCsvId)[] referenceCsvs);
 }
 
-public interface ICsvColumnProcessor : IColumnOperation
+public interface ICsvColumnProcessor : IColumnOperation, IProvideCompletedTextStrategy
 {
     /// <summary>
     /// Process row will be called for each row in the
@@ -59,7 +59,7 @@ public interface ICsvColumnProcessor : IColumnOperation
     /// <returns>A result saying if the operation was successful. If the operation was not successful, the <see cref="StrategyRunner"/> will cancel the operation and undo any changes</returns>
     public ValueTask<OperationResult> ProcessCell<TCell>(ref TCell cell) where TCell : ICell;
 }
-public interface ICsvRowProcessor : ICsvProcessor
+public interface ICsvRowProcessor : ICsvProcessor, IProvideCompletedTextStrategy
 {
     /// <summary>
     /// This function will be called for each row in the csv. You will be able to modify
@@ -197,6 +197,11 @@ public interface IReferenceOperation : ICsvProcessor
     /// The Id of the reference csv in the CsvProcessingStepper 
     /// </summary>
     public int ReferenceCsvId { get; }
+}
+
+public interface IProvideCompletedTextStrategy
+{
+
 }
 
 public readonly struct DuplicateGrouping

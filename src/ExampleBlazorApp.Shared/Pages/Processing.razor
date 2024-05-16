@@ -15,10 +15,11 @@
 {
 <CsvProcessingStepper @ref="_csvProcessor" EasyCsvFileName="Example.csv" EasyCsv="_easyCsv"
                       ResolveDuplicatesAutoSelect="ResolveDuplicatesAutoSelect.FirstRow" HideExpandUnselected="true"
-                      DelayAfterProgressMilliseconds="50">
+                      DelayAfterProgressMilliseconds="2" >
     <ColumnStrategies>
         <FindDedupesExactMatchColumn MustSelectRow="false" />
         <StringSplitColumn />
+        <StringReplace  ></StringReplace>
         <DivideAndReplicate />
         <TagAndReferenceMatches />
         <DeleteOnEmptyColumn />

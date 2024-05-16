@@ -1,0 +1,97 @@
+﻿@namespace EasyCsv.Components
+@using EasyCsv.Components.Processing
+@inherits StrategyItemBase
+
+@if (CsvProcessor == null)
+{
+    throw new ArgumentException("EasyCsv: Attempted to render strategy options not within CsvProcessingStepper", nameof(CsvProcessingStepper));
+}
+<StrategyItem DisplayName="@DisplayName" DescriptionStr="@DescriptionStr" Description="Description" BeforeCsvExample="BeforeExample" AfterCsvExample="AfterExample"
+              ExampleOptions="@ExampleOptions" AllowRun="AllowRun" StrategyPicked="SplitPicked">
+    <Options>
+        <MudListItem>
+            <MudTextField Disabled="context" Immediate="Immediate" Label="Value To Replace" Variant="Variant.Outlined" @bind-Value="_valueToReplace"></MudTextField>
+        </MudListItem>
+        <MudListItem>
+            <MudTextField Disabled="context" Immediate="Immediate" Label="New Value" HelperTextOnFocus="true" Variant="Variant.Outlined" @bind-Value="_newValue"></MudTextField>
+        </MudListItem>
+        @if (ShowStringComparisonInput)
+        {
+            <MudListItem>
+                <MudSelect Immediate="Immediate" Disabled="context" Label="String Comparison Type" T="StringComparison" @bind-Value="_comparison" Clearable="true" OnClearButtonClick="x => _comparison = DefaultStringComparisonType" 
+                           Variant="@Variant" Style="min-width: 250px;" >
+                    @foreach (var value in Enum.GetValues<StringComparison>())
+                    {
+                        <MudSelectItem Value="value">@value</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudListItem>
+        }
+    </Options>
+</StrategyItem>
+
+@code
+{
+    [Inject] public ISnackbar? Snackbar { get; set; }
+    [Parameter] public override string? DisplayName { get; set; } = "String Replace";
+    [Parameter] public override string? DescriptionStr { get; set; } = "Will replace all occurrences the specified value using the specified string comparison type in $column_name";
+    [Parameter] public override RenderFragment<string>? Description { get; set; }
+    [Parameter] public StringComparison DefaultStringComparisonType { get; set; } = StringComparison.OrdinalIgnoreCase;
+    [Parameter] public Variant Variant { get; set; } = Variant.Filled;
+    [Parameter] public bool Immediate { get; set; } = true;
+    [Parameter] public bool ShowStringComparisonInput { get; set; } = true;
+    private bool AllowRun => !string.IsNullOrWhiteSpace(_valueToReplace);
+    protected override void OnInitialized()
+    {
+        _comparison = DefaultStringComparisonType;
+    }
+
+    private static readonly Dictionary<string, string> ExampleOptions = new Dictionary<string, string>()
+    {
+        {"ValueToReplace", "OLD_VALUE"},
+        {"NewValue", "NEW_VALUE"},
+        {"StringComparison", "OrdinalIgnoreCase"}
+    };
+    private static Dictionary<string, string>[] BeforeExample { get; set; } =
+    [
+        new Dictionary<string, string>()
+        {
+            {"Column1", "The OLD_VALUE is bad"},
+        },
+        new Dictionary<string, string>()
+        {
+            {"Column1", "The old_value is bad"},
+        },
+        new Dictionary<string, string>()
+        {
+            {"Column1", "The oLd_VaLuE is bad"},
+        },
+    ];
+    private static Dictionary<string, string>[] AfterExample { get; set; } =
+    [
+        new Dictionary<string, string>()
+        {
+            {"Column1", "The NEW_VALUE is bad"},
+        },
+        new Dictionary<string, string>()
+        {
+            {"Column1", "The NEW_VALUE is bad"},
+        },
+        new Dictionary<string, string>()
+        {
+            {"Column1", "The NEW_VALUE is bad"},
+        },
+    ];
+
+    private string? _valueToReplace;
+    private string? _newValue;
+    private StringComparison _comparison;
+    private async Task SplitPicked(string columnName)
+    {
+        if (!AllowRun) return;
+        var progressContext = new OperationProgressContext<StringReplaceStrategy>($"Replacing all '{_valueToReplace}' with '{_newValue}' in {StrategyBucket.ColumnName}", x => $"{x.ReplacedCount} values replaced");
+        await Snackbar.OpenProgressSnackbar(progressContext, false);
+        var splitParsingStrategy = new StringReplaceStrategy(StrategyBucket.ColumnName, _valueToReplace!, _newValue!, _comparison);
+        _ = await CsvProcessor.PerformColumnStrategy(splitParsingStrategy, progressContext);
+    }
+}

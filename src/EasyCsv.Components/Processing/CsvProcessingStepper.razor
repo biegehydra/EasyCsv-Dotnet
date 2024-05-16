@@ -144,7 +144,7 @@
                     </MudTooltip>
                     @if (ShowAddReferenceCsv)
                     {
-                        <CsvFileInput ButtonTooltip="Reference Csvs are looked at during some operations" Disabled="@Busy" InputVariant="@FileInputVariant.Button" ButtonText="Add Reference Csv" OnCsvUpload="x => AddReferenceCsv(x)"></CsvFileInput>
+                        <CsvFileInput ButtonTooltip="Reference Csvs are looked at during some operations" Disabled="@Busy" InputVariant="@FileInputVariant.Button" ButtonText="Add Reference Csv" OnCsvUpload="async x => await AddReferenceCsv(x)"></CsvFileInput>
                     }
                 </div>
             </div>

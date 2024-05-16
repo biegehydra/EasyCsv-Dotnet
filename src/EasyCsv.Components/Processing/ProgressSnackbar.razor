@@ -12,7 +12,7 @@
         else
         {
             <MudText Typo="Typo.h6">@OperationProgressContext.Text</MudText>
-            @if (_indeterminate)
+            @if (_indeterminate || OperationProgressContext.ForceIndeterminate)
             {
                 <MudProgressCircular Indeterminate="true" Size="Size.Medium" StrokeWidth="4" Color="Color.Success" Min="0" Max="1" />
             }
@@ -82,6 +82,10 @@
 
     private async Task OnProgressChangeChanged(double newProgress)
     {
+        if (OperationProgressContext.ForceIndeterminate)
+        {
+            return;
+        } 
         if (Math.Abs(_progress - 1) < .001)
         {
             _complete = true;

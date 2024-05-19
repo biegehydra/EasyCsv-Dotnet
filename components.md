@@ -4,7 +4,7 @@ EasyCsv.Components provides you with 3 components. They are available to test at
 
 ## Installation (CsvProcessingStepper is in beta package)
 
-`NuGet\Install-Package EasyCsv.Components -Version=2.0.0-beta6.1`
+`NuGet\Install-Package EasyCsv.Components -Version=2.0.0-beta6.2`
 
 ## CsvProcessingStepper
 
@@ -58,6 +58,13 @@ Once you have written you strategy, to integrate it with the CsvProcessingSteppe
     <Options>
         <MudListItem>
             <MudTextField Disabled="context" Label="Delimiter To Divide On" Variant="Variant.Outlined" @bind-Value="_delimiter"></MudTextField>
+            @* <ColumnSelect/> *@
+            @* <MultiColumnSelect/> *@
+            @* <TagSelect/> *@
+            @* <MultiTagSelect/> *@
+            @* <ReferenceCsvSelect/> *@
+            @* <ReferenceColumnSelect/> *@
+            @* <MultiReferenceColumnSelect/> *@
         </MudListItem>
     </Options>
 </StrategyItem>
@@ -110,6 +117,8 @@ The options inherits from `StrategyItemBase` which gives you access to the `Stra
 All you need to do in your component is give your StrategyItem a `DisplayName`, optionally define an `<Options>` section, and subscribe a callback to `StrategyPicked` that will create your strategy/reversible edit and use the CsvProcessor to perform it. The `CsvProcessingStepper` has a function to perform each operation you in the interfaces file. The `Description`, `DescriptionStr` `BeforeCsvExample`, `AfterCsvExample`, and `Example Options` are optional parameters for the UI.
 
 `AllowRun` controls whether the `RunOperation` button is disabled or not. When the "Run Operation" button is clicked, the `StrategyPicked` callback is called (calling `RunDivideAndReplicate` here) with the column name of the StrategyBucket this component is rendered in.
+
+There are 7 input components integrated with the stepper that you can use in your options components. `<ColumnSelect/>`, `<MultiColumnSelect/>`, `<TagSelect/>`, `<MultiTagSelect/>`, `<ReferenceCsvSelect/>`, `<ReferenceColumnSelect/>`, `<MultiReferenceColumnSelect/>`. All of these are used in the example website.
 
 ### Add Options Components To CsvProcessingStepper
 Once your done write your `StrategyItem` wrappers, just put them in the `<ColumnStrategies>` or `<FullCsvStrategies>` section of the CsvProcessingStepper. Note, when a **full csv** strategy is picked, the column name will be `InternalColumnNames.FullCsvOperations` or "_FullCsvOperations" in the `StrategyPicked` callback

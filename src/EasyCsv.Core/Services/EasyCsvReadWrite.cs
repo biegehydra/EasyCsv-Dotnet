@@ -1,4 +1,5 @@
-﻿using CsvHelper.Configuration;
+﻿using System;
+using CsvHelper.Configuration;
 using CsvHelper;
 using System.Collections.Generic;
 using System.Globalization;
@@ -237,12 +238,14 @@ namespace EasyCsv.Core
             await foreach (var record in csvReader.GetRecordsAsync<T>())
             {
                 records.Add(record);
-                }
+            }
             }
             async Task ReadRecordsNotStrict()
             {
                 var config = new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
+                    HeaderValidated = null,
+                    MissingFieldFound = null,
                     PrepareHeaderForMatch = args => Regex.Replace(args.Header, @"\W", "").ToLower(CultureInfo.InvariantCulture)
                 };
                 using var reader = new StreamReader(new MemoryStream(ContentBytes!), Encoding.UTF8);
@@ -250,10 +253,17 @@ namespace EasyCsv.Core
 
                 AddSettingsToCsvContext<T>(csvReader.Context, csvContextProfile);
 
-                await foreach (var record in csvReader.GetRecordsAsync<T>())
+                try
                 {
-                    records.Add(record);
-            }
+                    await foreach (var record in csvReader.GetRecordsAsync<T>())
+                    {
+                        records.Add(record);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.Write(ex);
+                }
             }
         }
 

@@ -61,7 +61,6 @@
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
-		<PackageReference Include="MudBlazor" Version="6.19.1" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="6.0.29" />
 	</ItemGroup>
 

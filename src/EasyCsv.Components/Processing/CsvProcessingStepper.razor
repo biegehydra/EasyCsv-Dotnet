@@ -130,7 +130,7 @@
                     </div>
                 </div>
                 <div style="display: flex; flex-direction: row; justify-content: space-between; gap: 20px; align-items: baseline;">
-                    @if (AllowControlTagsAndReferencesLocation && columnsNames != null && (columnsNames.Contains(InternalColumnNames.References) || columnsNames.Contains(InternalColumnNames.Tags)))
+                    @if (EnableControlTagsAndReferencesLocation && columnsNames != null && (columnsNames.Contains(InternalColumnNames.References) || columnsNames.Contains(InternalColumnNames.Tags)))
                     {
                         string text = TagsAndReferencesLocation == ColumnLocation.Beginning ? "Move tags and references columns to end" : "Move tags and references columns to beginning";
                         <MudTooltip Text="@text" Delay="600">
@@ -142,7 +142,7 @@
                         <MudIconButton Variant="Variant.Filled" Color="Color.Info" Icon="@Icons.Material.Filled.Download"
                                        Disabled="@Busy" OnClick="_ => OpenDownloadDialog()" />
                     </MudTooltip>
-                    @if (ShowAddReferenceCsv)
+                    @if (EnableAddReferenceCsv)
                     {
                         <CsvFileInput ButtonTooltip="Reference Csvs are looked at during some operations" Disabled="@Busy" InputVariant="@FileInputVariant.Button" ButtonText="Add Reference Csv" OnCsvUpload="async x => await AddReferenceCsv(x)"></CsvFileInput>
                     }
@@ -153,14 +153,14 @@
             <CsvProcessingTable @ref="CsvProcessingTable" Busy="@Busy" ColumnOptions="ColumnStrategies" FullCsvOptions="FullCsvStrategies"  Stepper="this" EasyCsv="Runner.CurrentCsv" />
         }
     </ChildContent>
-    <ErrorContent>
+    <ErrorContent Context="context">
         @if (ErrorBoundaryContent == null)
         {
             <MudText Typo="Typo.h3" >Something went wrong</MudText>
         }
         else
         {
-            @ErrorBoundaryContent
+            @ErrorBoundaryContent(context)
         }
     </ErrorContent>
 </ErrorBoundary>
@@ -180,7 +180,7 @@
                                   HelperText="Name given to downloaded file" HelperTextOnFocus Variant="Variant.Outlined" @bind-Value="_fileName"
                                   Clearable OnClearButtonClick="x => _sq = null"/>
                     <MudText Typo="Typo.h6">Column Filter (Required)</MudText>
-                    <MultiColumnSelect @bind-ColumnNames="_columnsToDownload" InitializeWithAllColumnNames="@OpenDownloadWithAllColumnsSelected" Label="Columns To Download" SelectAll="true" SelectAllText="Download All Columns"></MultiColumnSelect>
+                    <MultiColumnSelect @bind-ColumnNames="_columnsToDownload" InitializeWithAllColumnNames="@AutoSelectAllColumnsDownload" Label="Columns To Download" SelectAll="true" SelectAllText="Download All Columns"></MultiColumnSelect>
                     <MudText Typo="Typo.h6">Search Filter (Optional)</MudText>
                     <MudTextField T="string" DebounceInterval="SearchDebounceInterval" Immediate="true" Label="Search Query"
                                   HelperText="Value to search for" HelperTextOnFocus Variant="Variant.Outlined" @bind-Value="_sq"
@@ -264,12 +264,12 @@
             _addedCsvsWithEditIndexAdded.Add((csvName, csv.RowCount(), Runner.CurrentIndex!,  Runner.CurrentRowEditIndex!.Value - 1));
             await InvokeStateHasChangeAndWait();
             await CsvProcessingTable!.InvokeStateHasChanged();
-            if (UseSearchBar)
+            if (UseSnackBar)
             {
                 Snackbar?.Add(operationResult.Message, Severity.Success);
             }
         }
-        else if (UseSearchBar)
+        else if (UseSnackBar)
         {
             Snackbar?.Add(operationResult.Message, Severity.Error);
         }

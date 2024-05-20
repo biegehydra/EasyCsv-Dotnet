@@ -134,7 +134,7 @@
         if (value == false)
         {
             if (!IsSelected) return Task.CompletedTask;
-            if (CsvProcessor.AutoControlExpandOptionsOnSelect)
+            if (CsvProcessor.EnableAutoControlExpandOptionsOnSelect)
             {
                 AutoUpdateExpandAfterShortDelay(false);
             }
@@ -144,7 +144,7 @@
         else if (!IsSelected && !StrategyBucket.IsOtherStrategySelected(this))
         {
             IsSelected = true;
-            if (CsvProcessor.AutoControlExpandOptionsOnSelect)
+            if (CsvProcessor.EnableAutoControlExpandOptionsOnSelect)
             {
                 AutoUpdateExpandAfterShortDelay(true);
             }

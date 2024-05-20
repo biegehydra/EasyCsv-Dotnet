@@ -2,9 +2,9 @@
 
 EasyCsv.Components provides you with 3 components. They are available to test at this [example website](https://d143idkvxttaq3.cloudfront.net/processing)                                                                                                         
 
-## Installation
+## Installation (CsvProcessingStepper is in beta package)
 
-`NuGet\Install-Package EasyCsv.Components`
+`NuGet\Install-Package EasyCsv.Components -Version=2.0.0-beta6.2`
 
 ## CsvProcessingStepper
 
@@ -58,6 +58,13 @@ Once you have written you strategy, to integrate it with the CsvProcessingSteppe
     <Options>
         <MudListItem>
             <MudTextField Disabled="context" Label="Delimiter To Divide On" Variant="Variant.Outlined" @bind-Value="_delimiter"></MudTextField>
+            @* <ColumnSelect/> *@
+            @* <MultiColumnSelect/> *@
+            @* <TagSelect/> *@
+            @* <MultiTagSelect/> *@
+            @* <ReferenceCsvSelect/> *@
+            @* <ReferenceColumnSelect/> *@
+            @* <MultiReferenceColumnSelect/> *@
         </MudListItem>
     </Options>
 </StrategyItem>
@@ -107,15 +114,16 @@ The options inherits from `StrategyItemBase` which gives you access to the `Stra
 
 ![2024-05-12_13-54](https://github.com/biegehydra/EasyCsv-Dotnet/assets/84036995/ce563585-f299-4aa4-8234-c6fcd70f9938)
 
-All you need to do in your component is give your StrategyItem a `DisplayName`, optionally define an `<Options>` section, and subscribe a callback to `StrategyPicked` that will create your strategy/reversible edit and use the CsvProcessor to perform it. The `Description`, `DescriptionStr` `BeforeCsvExample`, `AfterCsvExample`, and `Example Options` are optional parameters for the UI.
+All you need to do in your component is give your StrategyItem a `DisplayName`, optionally define an `<Options>` section, and subscribe a callback to `StrategyPicked` that will create your strategy/reversible edit and use the CsvProcessor to perform it. The `CsvProcessingStepper` has a function to perform each operation you in the interfaces file. The `Description`, `DescriptionStr` `BeforeCsvExample`, `AfterCsvExample`, and `Example Options` are optional parameters for the UI.
 
-`AllowRun` controls whether the `RunOperation` button is disabled or not. When the "Run Operation" button is clicked, the `StrategyPicked` callback is called (calling `RunDivideAndReplicate` here)
- with the column name of the StrategyBucket this component is rendered in.
+`AllowRun` controls whether the `RunOperation` button is disabled or not. When the "Run Operation" button is clicked, the `StrategyPicked` callback is called (calling `RunDivideAndReplicate` here) with the column name of the StrategyBucket this component is rendered in.
+
+There are 7 input components integrated with the stepper that you can use in your options components. `<ColumnSelect/>`, `<MultiColumnSelect/>`, `<TagSelect/>`, `<MultiTagSelect/>`, `<ReferenceCsvSelect/>`, `<ReferenceColumnSelect/>`, `<MultiReferenceColumnSelect/>`. All of these are used in the example website.
 
 ### Add Options Components To CsvProcessingStepper
-Once your done write your `StrategyItem` wrappers, just put them in the `<COlumnStrategies>` or `<FullCsvStrategies>` section of the CsvProcessingStepper. Note, when a full csv strategy is picked, the column name will be `InternalColumnNames.FullCsvOperations` or "_FullCsvOperations" in the `StrategyPicked` callback
+Once your done write your `StrategyItem` wrappers, just put them in the `<ColumnStrategies>` or `<FullCsvStrategies>` section of the CsvProcessingStepper. Note, when a **full csv** strategy is picked, the column name will be `InternalColumnNames.FullCsvOperations` or "_FullCsvOperations" in the `StrategyPicked` callback
 
- ```
+ ```html
 <CsvProcessingStepper @ref="_csvProcessor" EasyCsv="_easyCsv" EasyCsvFileName="Example.csv">
     <ColumnStrategies>
         <FindDedupesExactMatchColumn MustSelectRow="false" />
@@ -135,7 +143,7 @@ Once your done write your `StrategyItem` wrappers, just put them in the `<COlumn
 ### Reversible Edits
 In addition to operations, which should be used for complex operations because they require **cloning the entire csv**, `IReversibleEdit`'s can be used to alter the working csv in place. Some operations, such as the `ICsvColumnProcessor`, `ICsvColumnDeleteEvaluator`, `ICsvRowDeleteEvaluator`, and `IFindDupesOperation` are automatically treated as reversible edits so those can be used in some scenarios instead of writing your own `IReversibleEdit`.
 
-```
+```csharp
 public interface IReversibleEdit
 {
     void DoEdit(IEasyCsv csv);
@@ -143,7 +151,7 @@ public interface IReversibleEdit
 }
 ```
 For example, this is the ModifyRowEdit class. The `DoEdit` and `UndoEdit` methods provide the working csv, but do not require you to use them
-```
+```csharp
 public class ModifyRowEdit : IReversibleEdit
 {
     public ModifyRowEdit(CsvRow row, CsvRow rowClone, CsvRow rowAfterOperation)

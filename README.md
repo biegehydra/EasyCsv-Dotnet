@@ -197,6 +197,20 @@ This library makes use of the following third-party dependencies:
 
 EasyCsv uses [CsvHelper](https://joshclose.github.io/CsvHelper/) to read and write CSV files. CsvHelper is licensed under the [Microsoft Public License (Ms-PL)](https://opensource.org/licenses/MS-PL). We would like to thank the authors and contributors of CsvHelper for their work on this excellent library.
 
+## License Information
+
+Please note the following licensing terms for EasyCsv's packages:
+
+- **General License**: All packages are licensed under the MIT License, except for the code located in the `EasyCsv.Components` folder.
+- **Special Licensing for EasyCsv.Components**: The code within the `EasyCsv.Components` folder is licensed under the AGPL-3.0 License.
+
+### Usage Guidelines:
+
+1. **Internal Use**: If the `EasyCsv.Components` package is solely used within your company by company employees for internal operations, **and not exposed to external customers**, you may utilize these components under the MIT License. This allows your team to integrate and use these components internally without the broader requirements of the AGPL-3.0 License. Please still include the AGPL-3.0 License in your project if you use a clone.
+
+2. **External Use**: Any deployment of the `EasyCsv.Components` in a customer facing application or service, for-profit or not, is strictly governed by the AGPL-3.0 License. This includes any form of service provided over a network where the components are used to interact with users. In such scenarios, you must comply with all provisions of the AGPL-3.0 License, including but not limited to making the source code available to all users.
+
+
 ## Known Issues and Limitations
 
 License

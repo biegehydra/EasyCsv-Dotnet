@@ -333,7 +333,7 @@ public partial class CsvProcessingStepper
         }
     }
 
-    public ValueTask<OperationResult> AddReversibleEdit(IReversibleEdit reversibleEdit, bool makeBusy=false)
+    public ValueTask<OperationResult> AddReversibleEdit(IReversibleEdit reversibleEdit, bool makeBusy=false, bool applyColumnSort=true)
     {
         if (CsvProcessingTable == null || Runner == null) return ValueTask.FromResult(_runnerNull);
         return PerformOperationWithCatch(() =>
@@ -341,7 +341,10 @@ public partial class CsvProcessingStepper
             if (Runner.AddReversibleEdit(reversibleEdit))
             {
                 CheckAddedCsvsAfterEdit();
-                CsvProcessingTable.ApplyCurrentColumnSort();
+                if (applyColumnSort)
+                {
+                    CsvProcessingTable.ApplyCurrentColumnSort();
+                }
             }
             return new ValueTask<OperationResult>(new OperationResult(true));
         }, _createOperationResultError, makeBusy);
@@ -576,7 +579,7 @@ public partial class CsvProcessingStepper
         return Runner?.CurrentCsv?.CsvContent
             .Select((row, index) => (row, index))
             .Where(x => x.row.AnyColumnContainsValues(_searchColumns, _sq))
-            .Where(x => tagsColumnIndex < 0 || x.row.MatchesIncludeTagsAndExcludeTags(tagsColumnIndex, _includeTags, _excludeTags))
+            .Where(x => tagsColumnIndex < 0 || x.row.MatchesIncludeTagsAndExcludeTags(_includeTags, _excludeTags))
             .Select(x => x.index)
             .ToHashSet() ?? new HashSet<int>();
     }

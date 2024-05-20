@@ -8,6 +8,22 @@ using System.Runtime.CompilerServices;
 namespace EasyCsv.Core.Extensions;
 internal static class Extensions
 {
+    internal static bool ContainsAny<T>(this ICollection<T> collection1, ICollection<T> collection2)
+    {
+        if (collection1 == null! || collection2 == null! || collection1.Count == 0 || collection2.Count == 0)
+        {
+            return false;
+        }
+        foreach (var item in collection2)
+        {
+            if (collection1.Contains(item))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     internal static int IndexOf<T>(this IEnumerable<T> enumerable, T value, IEqualityComparer<T>? equalityComparer = null)
     {
         equalityComparer ??= EqualityComparer<T>.Default;
@@ -46,5 +62,22 @@ internal static class Extensions
             hashSet.Add(item);
         }
         return hashSet;
+    }
+
+    internal static IEnumerable<T> TakeSkipTakeRest<T>(this IEnumerable<T>? enumerable, int take, int skip)
+    {
+        if (enumerable == null) yield break;
+        int i = 0;
+        foreach (var item in enumerable)
+        {
+            if (take-- > 0)
+            {
+                yield return item;
+            }
+            else if (skip-- == 0)
+            {
+                yield return item;
+            }
+        }
     }
 }

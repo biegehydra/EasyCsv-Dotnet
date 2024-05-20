@@ -291,7 +291,7 @@ public class StrategyRunner
         if (Utils.IsValidIndex(CurrentRowEditIndex + 1, CurrentReversibleEdits?.Count ?? -1))
         {
             var nextRowEdit = CurrentReversibleEdits![CurrentRowEditIndex!.Value + 1];
-            nextRowEdit.DoEdit(CurrentCsv!);
+            nextRowEdit.DoEdit(CurrentCsv!, this);
             _steps[_currentIndex].CurrentRowEditIndex.Value += 1;
             return true;
         }
@@ -303,7 +303,7 @@ public class StrategyRunner
         if (Utils.IsValidIndex(CurrentRowEditIndex, CurrentReversibleEdits?.Count ?? -1))
         {
             var currentRowEdit = CurrentReversibleEdits![CurrentRowEditIndex!.Value];
-            currentRowEdit.UndoEdit(CurrentCsv!);
+            currentRowEdit.UndoEdit(CurrentCsv!, this);
             _steps[_currentIndex].CurrentRowEditIndex.Value -= 1;
             return true;
         }
@@ -361,6 +361,33 @@ public readonly record struct CellEdit
     public object? BeforeValue { get; }
     public object? AfterValue { get; }
 };
+
+public class CompoundEdit : IReversibleEdit
+{
+    private readonly ICollection<IReversibleEdit> _edits;
+
+    public CompoundEdit(ICollection<IReversibleEdit> edits)
+    {
+        _edits = edits;
+    }
+
+    public void DoEdit(IEasyCsv csv, StrategyRunner runner)
+    {
+        foreach (var edit in _edits)
+        {
+            edit.DoEdit(csv, runner);
+        }
+    }
+
+    public void UndoEdit(IEasyCsv csv, StrategyRunner runner)
+    {
+        foreach (var edit in _edits.Reverse())
+        {
+            edit.UndoEdit(csv, runner);
+        }
+    }
+}
+
 public class MakeColumnEdit : IReversibleEdit
 {
     private readonly ICollection<CellEdit> _cellEdits;
@@ -372,7 +399,7 @@ public class MakeColumnEdit : IReversibleEdit
         _columnName = columnName;
     }
 
-    public void DoEdit(IEasyCsv csv)
+    public void DoEdit(IEasyCsv csv, StrategyRunner runner)
     {
         foreach (var cellEdit in _cellEdits)
         {
@@ -380,7 +407,7 @@ public class MakeColumnEdit : IReversibleEdit
         }
     }
 
-    public void UndoEdit(IEasyCsv csv)
+    public void UndoEdit(IEasyCsv csv, StrategyRunner runner)
     {
         foreach (var cellEdit in _cellEdits)
         {
@@ -398,7 +425,7 @@ public class AddRowsEdit : IReversibleEdit
         _rowsToAdd = rowsToAdd;
     }
 
-    public void DoEdit(IEasyCsv csv)
+    public void DoEdit(IEasyCsv csv, StrategyRunner runner)
     {
         foreach (var row in _rowsToAdd)
         {
@@ -406,12 +433,30 @@ public class AddRowsEdit : IReversibleEdit
         }
     }
 
-    public void UndoEdit(IEasyCsv csv)
+    public void UndoEdit(IEasyCsv csv, StrategyRunner runner)
     {
         foreach (var row in _rowsToAdd)
         {
             csv.CsvContent.Remove(row);
         }
+    }
+}
+
+public class DeleteRowEdit : IReversibleEdit
+{
+    private readonly CsvRow _row;
+
+    public DeleteRowEdit(CsvRow row)
+    {
+        _row = row;
+    }
+    public void DoEdit(IEasyCsv csv, StrategyRunner runner)
+    {
+        csv.CsvContent.Remove(_row);
+    }
+    public void UndoEdit(IEasyCsv csv, StrategyRunner runner)
+    {
+        csv.CsvContent.Add(_row);
     }
 }
 
@@ -424,7 +469,7 @@ public class DeleteRowsEdit : IReversibleEdit
         _rowsToDelete = rowsToDelete;
     }
 
-    public void DoEdit(IEasyCsv csv)
+    public void DoEdit(IEasyCsv csv, StrategyRunner runner)
     {
         foreach (var row in _rowsToDelete)
         {
@@ -432,7 +477,7 @@ public class DeleteRowsEdit : IReversibleEdit
         }
     }
 
-    public void UndoEdit(IEasyCsv csv)
+    public void UndoEdit(IEasyCsv csv, StrategyRunner runner)
     {
         foreach (var row in _rowsToDelete)
         {
@@ -453,7 +498,7 @@ public class ModifyRowEdit : IReversibleEdit
     public CsvRow Row { get; }
     public CsvRow RowClone { get; }
     public CsvRow RowAfterOperation { get; }
-    public void DoEdit(IEasyCsv csv)
+    public void DoEdit(IEasyCsv csv, StrategyRunner runner)
     {
 #if DEBUG
         var equals = Row.ValuesEqual(RowClone);
@@ -464,7 +509,7 @@ public class ModifyRowEdit : IReversibleEdit
 #endif
         RowAfterOperation.MapValuesTo(Row);
     }
-    public void UndoEdit(IEasyCsv csv)
+    public void UndoEdit(IEasyCsv csv, StrategyRunner runner)
     {
 #if DEBUG
         var equals = Row.ValuesEqual(RowAfterOperation);
@@ -476,172 +521,198 @@ public class ModifyRowEdit : IReversibleEdit
         RowClone.MapValuesTo(Row);
     }
 }
+
+public class AddColumnEdit : IReversibleEdit
+{
+    private readonly string _columnName;
+    private readonly string? _defaultValue;
+    public AddColumnEdit(string columnName, string? defaultValue)
+    {
+        _columnName = columnName;
+        _defaultValue = defaultValue;
+    }
+
+    public void DoEdit(IEasyCsv csv, StrategyRunner runner)
+    {
+        csv.AddColumn(_columnName, _defaultValue);
+        var newColumnNames = csv.ColumnNames()!;
+        var temp = runner._steps[runner.CurrentIndex];
+        runner._steps[runner.CurrentIndex] = (temp.Csv, newColumnNames, temp.Tags, temp.ReversibleEdits, temp.OriginalRowIndexes, temp.CurrentRowEditIndex);
+    }
+    public void UndoEdit(IEasyCsv csv, StrategyRunner runner)
+    {
+        csv.RemoveColumn(_columnName);
+        var newColumnNames = csv.ColumnNames()!;
+        var temp = runner._steps[runner.CurrentIndex];
+        runner._steps[runner.CurrentIndex] = (temp.Csv, newColumnNames, temp.Tags, temp.ReversibleEdits, temp.OriginalRowIndexes, temp.CurrentRowEditIndex);
+    }
+}
+
+internal struct RemoveColumnEditRow : IReversibleEdit
+{
+    private readonly Dictionary<string, object?> _newDictionary;
+    private readonly CsvRow _row;
+    private readonly string _columnName;
+    private readonly string? _beforeValue;
+    private readonly int _columnIndex;
+    private string[] _columnNamesBefore;
+    public RemoveColumnEditRow(CsvRow row, string columnName, string[] columnNamesBefore, Dictionary<string, object?> newDictionary)
+    {
+        _row = row;
+        _columnName = columnName;
+        _beforeValue = row[_columnName]?.ToString();
+        _columnNamesBefore = columnNamesBefore;
+        _newDictionary = newDictionary;
+        _columnIndex = _columnNamesBefore.IndexOf(columnName);
+    }
+    public void DoEdit(IEasyCsv csv, StrategyRunner runner)
+    {
+        _row.Remove(_columnName);
+    }
+
+    public void UndoEdit(IEasyCsv csv, StrategyRunner runner)
+    {
+        for (int i = 0; i < _row.Count; i++)
+        {
+            if (i == _columnIndex)
+            {
+                _newDictionary[_columnName] = _beforeValue;
+            }
+            _newDictionary[_columnNamesBefore[i]] = _row.ValueAt(i);
+        }
+        _row.Clear();
+        foreach (var kvp in _newDictionary)
+        {
+            _row.Add(kvp.Key, kvp.Value);
+        }
+    }
+}
+
+public class RemoveColumnEdit : IReversibleEdit
+{
+    private readonly string _columnName;
+    private string[]? _columnValuesBefore;
+    private readonly Dictionary<string, object?> _newDictionary = new();
+    private RemoveColumnEditRow[]? _removeColumnEdits;
+    public RemoveColumnEdit(string columnName)
+    {
+        _columnName = columnName;
+    }
+
+    public void DoEdit(IEasyCsv csv, StrategyRunner runner)
+    {
+        if (_columnValuesBefore == null)
+        {
+            _columnValuesBefore = csv.ColumnNames()!;
+            _removeColumnEdits = csv.CsvContent.Select(x => new RemoveColumnEditRow(x, _columnName, _columnValuesBefore, _newDictionary)).ToArray();
+        }
+        foreach (var removeColumnEditRow in _removeColumnEdits!)
+        {
+            removeColumnEditRow.DoEdit(csv, runner);
+        }
+        var newColumnNames = csv.ColumnNames()!;
+        var temp = runner._steps[runner.CurrentIndex];
+        runner._steps[runner.CurrentIndex] = (temp.Csv, newColumnNames, temp.Tags, temp.ReversibleEdits, temp.OriginalRowIndexes, temp.CurrentRowEditIndex);
+    }
+    public void UndoEdit(IEasyCsv csv, StrategyRunner runner)
+    {
+        if (_removeColumnEdits != null)
+        {
+            foreach (var removeColumnEditRow in _removeColumnEdits)
+            {
+                removeColumnEditRow.DoEdit(csv, runner);
+            }
+            var newColumnNames = csv.ColumnNames()!;
+            var temp = runner._steps[runner.CurrentIndex];
+            runner._steps[runner.CurrentIndex] = (temp.Csv, newColumnNames, temp.Tags, temp.ReversibleEdits, temp.OriginalRowIndexes, temp.CurrentRowEditIndex);
+        }
+    }
+}
+
 public class AddTagEdit : IReversibleEdit
 {
-    public AddTagEdit(CsvRow row, string tagToAdd, int tagColumnIndex = -1)
+    public AddTagEdit(CsvRow row, string tagToAdd)
     {
         Row = row;
         TagToAdd = tagToAdd;
-        TagColumnIndex = tagColumnIndex;
     }
     public CsvRow Row { get; }
     public string TagToAdd { get; }
-    public int TagColumnIndex { get; }
-    public void DoEdit(IEasyCsv csv)
+    public void DoEdit(IEasyCsv csv, StrategyRunner runner)
     {
-        if (TagColumnIndex >= 0)
-        {
-            Row.AddProcessingTag(TagColumnIndex, TagToAdd);
-        }
-        else
-        {
-            Row.AddProcessingTag(TagToAdd);
-        }
+        Row.AddProcessingTag(TagToAdd);
     }
-    public void UndoEdit(IEasyCsv csv)
+    public void UndoEdit(IEasyCsv csv, StrategyRunner runner)
     {
-        if (TagColumnIndex >= 0)
-        {
-            Row.AddProcessingTag(TagColumnIndex, TagToAdd);
-        }
-        else
-        {
-            Row.AddProcessingTag(TagToAdd);
-        }
+        Row.RemoveProcessingTag(TagToAdd);
     }
 }
-public class DeleteRowEdit : IReversibleEdit
-{
-    private readonly CsvRow _row;
-
-    public DeleteRowEdit(CsvRow row)
-    {
-        _row = row;
-    }
-    public void DoEdit(IEasyCsv csv)
-    {
-        csv.CsvContent.Remove(_row);
-    }
-    public void UndoEdit(IEasyCsv csv)
-    {
-        csv.CsvContent.Add(_row);
-    }
-}
-
 public class RemoveTagEdit : IReversibleEdit
 {
-    public RemoveTagEdit(CsvRow row, string tagToRemove, int tagColumnIndex = -1)
+    public RemoveTagEdit(CsvRow row, string tagToRemove)
     {
         Row = row;
         TagToRemove = tagToRemove;
-        TagColumnIndex = tagColumnIndex;
     }
 
     public CsvRow Row { get; }
     public string TagToRemove { get; }
-    public int TagColumnIndex { get; }
-    public void DoEdit(IEasyCsv csv)
+    public void DoEdit(IEasyCsv csv, StrategyRunner runner)
     {
-        if (TagColumnIndex >= 0)
-        {
-            Row.RemoveProcessingTag(TagToRemove);
-        }
-        else
-        {
-            Row.RemoveProcessingTag(TagColumnIndex, TagToRemove);
-        }
+        Row.RemoveProcessingTag(TagToRemove);
     }
-    public void UndoEdit(IEasyCsv csv)
+    public void UndoEdit(IEasyCsv csv, StrategyRunner runner)
     {
-        if (TagColumnIndex >= 0)
-        {
-            Row.AddProcessingTag(TagToRemove);
-        }
-        else
-        {
-            Row.AddProcessingTag(TagColumnIndex, TagToRemove);
-        }
+        Row.AddProcessingTag(TagToRemove);
     }
 }
 public class RemoveReferenceEdit : IReversibleEdit
 {
-    public RemoveReferenceEdit(CsvRow row, int referenceCsvId, int referenceRowId, int referencesColumnIndex = -1)
+    public RemoveReferenceEdit(CsvRow row, int referenceCsvId, int referenceRowId)
     {
         Row = row;
         ReferenceCsvId = referenceCsvId;
-        ReferencesColumnIndex = referencesColumnIndex;
         ReferenceRowId = referenceRowId;
     }
 
     public CsvRow Row { get; }
     public int ReferenceCsvId { get; }
-    public int ReferencesColumnIndex { get; }
     public int ReferenceRowId { get; }
-    public void DoEdit(IEasyCsv csv)
+    public void DoEdit(IEasyCsv csv, StrategyRunner runner)
     {
-        if (ReferencesColumnIndex >= 0)
-        {
-            Row.RemoveProcessingReference(ReferencesColumnIndex, ReferenceCsvId, ReferenceRowId);
-        }
-        else
-        {
-            Row.RemoveProcessingReference(ReferenceCsvId, ReferenceRowId);
-        }
+        Row.RemoveProcessingReference(ReferenceCsvId, ReferenceRowId);
     }
-    public void UndoEdit(IEasyCsv csv)
+    public void UndoEdit(IEasyCsv csv, StrategyRunner runner)
     {
-        if (ReferencesColumnIndex >= 0)
-        {
-            Row.AddProcessingReference(ReferencesColumnIndex, ReferenceCsvId, ReferenceRowId);
-        }
-        else
-        {
-            Row.AddProcessingReference(ReferenceCsvId, ReferenceRowId);
-        }
+        Row.AddProcessingReference(ReferenceCsvId, ReferenceRowId);
     }
 }
 public class AddReferenceEdit : IReversibleEdit
 {
-    public AddReferenceEdit(CsvRow row, int referenceCsvId, int referenceRowId, int referencesColumnIndex = -1)
+    public AddReferenceEdit(CsvRow row, int referenceCsvId, int referenceRowId)
     {
         Row = row;
         ReferenceCsvId = referenceCsvId;
-        ReferencesColumnIndex = referencesColumnIndex;
         ReferenceRowId = referenceRowId;
     }
 
     public CsvRow Row { get; }
     public int ReferenceCsvId { get; }
-    public int ReferencesColumnIndex { get; }
     public int ReferenceRowId { get; }
-    public void DoEdit(IEasyCsv csv)
+    public void DoEdit(IEasyCsv csv, StrategyRunner runner)
     {
-        if (ReferencesColumnIndex >= 0)
-        {
-            Row.AddProcessingReference(ReferencesColumnIndex, ReferenceCsvId, ReferenceRowId);
-        }
-        else
-        {
-            Row.AddProcessingReference(ReferenceCsvId, ReferenceRowId);
-        }
+        Row.AddProcessingReference(ReferenceCsvId, ReferenceRowId);
     }
-    public void UndoEdit(IEasyCsv csv)
+    public void UndoEdit(IEasyCsv csv, StrategyRunner runner)
     {
-        if (ReferencesColumnIndex >= 0)
-        {
-            Row.RemoveProcessingReference(ReferencesColumnIndex, ReferenceCsvId, ReferenceRowId);
-        }
-        else
-        {
-            Row.RemoveProcessingReference(ReferenceCsvId, ReferenceRowId);
-        }
+        Row.RemoveProcessingReference(ReferenceCsvId, ReferenceRowId);
     }
 }
 
 public interface IReversibleEdit
 {
-    void DoEdit(IEasyCsv csv);
-    void UndoEdit(IEasyCsv csv);
+    void DoEdit(IEasyCsv csv, StrategyRunner runner);
+    void UndoEdit(IEasyCsv csv, StrategyRunner runner);
 }
 
 internal class CurrentRowEditIndex

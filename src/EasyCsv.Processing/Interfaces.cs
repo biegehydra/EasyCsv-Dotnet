@@ -235,16 +235,11 @@ public readonly struct OperationResult : IOperationResult
     /// <param name="message">A message to accompany the result. For operations that operate on the full csv, these messages
     /// will be added as snack bars</param>
     /// <param name="progress">Not an implemented feature yet, shows the progress of the operation</param>
-    public OperationResult(bool success, string? message = null, double progress = 0)
+    public OperationResult(bool success, string? message = null)
     {
         Success = success;
         Message = message;
-        Progress = progress;
     }
-    /// <summary>
-    /// Not an implemented feature yet, shows the progress of the operation
-    /// </summary>
-    public double Progress { get; }
     /// <summary>
     /// If False, the <see cref="StrategyRunner"/> will cancel the operation and rollback changes
     /// </summary>
@@ -263,21 +258,16 @@ public readonly struct OperationDeleteResult : IOperationResult
     /// <param name="message">A message to accompany the result. For operations that operate on the full csv, these messages
     /// will be added as snack bars by the CsvProcessingStepper</param>
     /// <param name="progress">Not an implemented feature yet, shows the progress of the operation</param>
-    public OperationDeleteResult(bool success, bool delete, string? message = null, double progress = 0)
+    public OperationDeleteResult(bool success, bool delete, string? message = null)
     {
         Success = success;
         Message = message;
         Delete = delete;
-        Progress = progress;
     }    
     /// <summary>
     /// If False, the <see cref="StrategyRunner"/> will cancel the operation and rollback changes
     /// </summary>
     public bool Success { get; }
-    /// <summary>
-    /// Not an implemented feature yet, shows the progress of the operation
-    /// </summary>
-    public double Progress { get; }
     /// <summary>
     /// A flag to indicate if a row should be deleted
     /// </summary>

@@ -44,7 +44,7 @@
 {
     @if (Options != null)
     {
-        <MudListItem @bind-Expanded="_expanded" Class="@Class" >
+        <MudListItem @bind-Expanded="_expanded" Class="@Class" UserAttributes="_negativeTabIndex">
             <ChildContent>
                 @MudListItemChildContent()
             </ChildContent>
@@ -55,7 +55,7 @@
     }
     else
     {
-        <MudListItem @bind-Expanded="_expanded" Class="@Class" Text="@DisplayName">
+        <MudListItem @bind-Expanded="_expanded" Class="@Class" Text="@DisplayName" UserAttributes="_negativeTabIndex" >
             <ChildContent>
                 @MudListItemChildContent()
             </ChildContent>
@@ -64,7 +64,7 @@
 }
 
 @code {
-
+    private static Dictionary<string, object> _negativeTabIndex = new Dictionary<string, object>() {{"tabindex", "-1"}};
     private bool Expanded
     {
         get => _expanded;

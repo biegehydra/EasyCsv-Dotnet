@@ -26,7 +26,7 @@ public class StringReplaceStrategy : ICsvColumnProcessor
 #else
         cell.Value = cell.Value?.ToString()?.Replace(ValueToReplace, NewValue, StringComparison);
 #endif
-        if (string.Equals(beforeValue, cell.Value?.ToString()))
+        if (!string.Equals(beforeValue, cell.Value?.ToString()))
         {
             ReplacedCount++;
         }

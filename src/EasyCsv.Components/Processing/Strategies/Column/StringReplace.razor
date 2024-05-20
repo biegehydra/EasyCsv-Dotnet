@@ -89,9 +89,10 @@
     private async Task SplitPicked(string columnName)
     {
         if (!AllowRun) return;
-        var progressContext = new OperationProgressContext<StringReplaceStrategy>($"Replacing all '{_valueToReplace}' with '{_newValue}' in {StrategyBucket.ColumnName}", x => $"{x.ReplacedCount} values replaced");
+        Func<StringReplaceStrategy, string> completeMessage = x => $"{x.ReplacedCount} {(x.ReplacedCount == 1 ? "value" : "values")} replaced";
+        var progressContext = new OperationProgressContext<StringReplaceStrategy>($"Replacing all '{_valueToReplace}' with '{_newValue}' in {StrategyBucket.ColumnName}", completeMessage);
         await Snackbar.OpenProgressSnackbar(progressContext, false);
-        var splitParsingStrategy = new StringReplaceStrategy(StrategyBucket.ColumnName, _valueToReplace!, _newValue!, _comparison);
-        _ = await CsvProcessor.PerformColumnStrategy(splitParsingStrategy, progressContext);
+        var stringReplaceStrategy = new StringReplaceStrategy(StrategyBucket.ColumnName, _valueToReplace!, _newValue!, _comparison);
+        _ = await CsvProcessor.PerformColumnStrategy(stringReplaceStrategy, progressContext);
     }
 }

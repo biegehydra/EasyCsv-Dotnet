@@ -13,7 +13,7 @@
         </MudListItem>
         <MudListItem>
             <MudSelect T="StringPredicates" Label="Predicate" @bind-Value="_selectedPredicate" Variant="Variant.Outlined" Immediate="@Immediate">
-                @foreach (var predicate in Enum.GetValues<StringPredicates>())
+                @foreach (var predicate in AllowedPredicates)
                 {
                     <MudSelectItem Value="@predicate">@predicate</MudSelectItem>
                 }
@@ -34,7 +34,7 @@
             {
                 <MudListItem>
                     <MudSelect T="StringComparison" Label="String Comparison" Variant="Variant.Outlined" @bind-Value="_stringComparison" Immediate="@Immediate">
-                        @foreach (var comparison in Enum.GetValues<StringComparison>())
+                        @foreach (var comparison in _stringComparisons)
                         {
                             <MudSelectItem Value="@comparison">@comparison</MudSelectItem>
                         }
@@ -68,7 +68,8 @@
     [Parameter] public override string DescriptionStr { get; set; } = "Will tag all rows that match the specified predicate in $column_name.";
     [Parameter] public override RenderFragment<string>? Description { get; set; }
     [Parameter] public bool Immediate { get; set; } = true;
-
+    [Parameter] public StringPredicates[] AllowedPredicates { get; set; } = Enum.GetValues<StringPredicates>();
+    private static StringComparison[] _stringComparisons = Enum.GetValues<StringComparison>();
     private StringPredicates _selectedPredicate;
     private string _tagToAdd = string.Empty;
     private string _values = string.Empty;

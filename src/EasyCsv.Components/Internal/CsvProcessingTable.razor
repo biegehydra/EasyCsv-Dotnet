@@ -212,7 +212,7 @@
 
 @code {
     internal static readonly Color[] DefaultColors = [Color.Primary, Color.Secondary, Color.Success, Color.Error, Color.Tertiary, Color.Dark, Color.Warning];
-    [Parameter] public Func<IGrouping<int, (int ReferenceCsvId, int ReferenceRowId)>, string>? FormatReferenceText { get; set; } 
+    [Parameter] public Func<IGrouping<int, ProcessingReference>, string>? FormatReferenceText { get; set; } 
     [Parameter] public RenderFragment<string>? ColumnOptions { get; set; }
     [Parameter] public RenderFragment? FullCsvOptions { get; set; }
     [Parameter] public CsvProcessingStepper Stepper { get; set; } = null!;
@@ -238,7 +238,7 @@
     private string[] _searchTags = [];
     private Dictionary<string, ColumnValueType> _columnValueTypes = [];
     private Dictionary<string, StrategyBucket> _columnStrategyBuckets = new();
-    private Dictionary<string, string[]> _cachedAllValues = new();
+    private Dictionary<string, string?[]> _cachedAllValues = new();
     private Dictionary<string, Color> _tagColors = new();
     private IEasyCsv? _easyCsv;
     private string? _sq;
@@ -249,7 +249,7 @@
         if (IsFiltered())
         {
             var tagsColumnIndex = Stepper?.Runner?.CurrentCsvColumnNames?.IndexOf(x => x == InternalColumnNames.Tags) ?? -1;
-            return Stepper?.Runner?.CurrentCsv?.CsvContent.Where(x => x.AnyColumnContainsValues(SearchColumns, _sq) && (tagsColumnIndex < 0 || x.MatchesIncludeTagsAndExcludeTags(tagsColumnIndex, _searchTags, null))) ?? Enumerable.Empty<CsvRow>();
+            return Stepper?.Runner?.CurrentCsv?.CsvContent.Where(x => x.AnyColumnContainsValues(SearchColumns, _sq) && (tagsColumnIndex < 0 || x.MatchesIncludeTagsAndExcludeTags(_searchTags, null))) ?? Enumerable.Empty<CsvRow>();
         }
         return Stepper?.Runner?.CurrentCsv?.CsvContent ?? Enumerable.Empty<CsvRow>();
     }
@@ -261,7 +261,7 @@
         return Stepper?.Runner?.CurrentCsv?.CsvContent
             .Select((row, index) => (row, index))
             .Where(x => x.row.AnyColumnContainsValues(SearchColumns, _sq))
-            .Where(x => tagsColumnIndex < 0 || x.row.MatchesIncludeTagsAndExcludeTags(tagsColumnIndex, _searchTags, null))
+            .Where(x => tagsColumnIndex < 0 || x.row.MatchesIncludeTagsAndExcludeTags(_searchTags, null))
             .Select(x => x.index)
             .ToHashSet() ?? new HashSet<int>();
     }
@@ -370,7 +370,7 @@
     {
         int rowIndex = Stepper.Runner!.CurrentCsv!.CsvContent.IndexOf(row);
         if (rowIndex < 0) return;
-        var removeTagEdit = new RemoveTagEdit(row, tag, tagsColumnIndex);
+        var removeTagEdit = new RemoveTagEdit(row, tag);
         Stepper.AddReversibleEdit(removeTagEdit);
     }
 
@@ -378,17 +378,17 @@
     {
         int rowIndex = Stepper.Runner!.CurrentCsv!.CsvContent.IndexOf(row);
         if (rowIndex < 0) return;
-        var removeReferenceEdit = new RemoveReferenceEdit(row, referenceCsvId, referenceRowId, referencesColumnIndex);
+        var removeReferenceEdit = new RemoveReferenceEdit(row, referenceCsvId, referenceRowId);
         Stepper.AddReversibleEdit(removeReferenceEdit);
     }
 
-    private string DefaultFormatReferenceText(IGrouping<int, (int CsvIndex, int RowIndex)> grouping)
+    private string DefaultFormatReferenceText(IGrouping<int, ProcessingReference> grouping)
     {
         var count = grouping.Count();
         string rows = count == 1 ? "Row" : "Rows";
         if (count <= 3)
         {
-            return $"Ref Csv: {grouping.Key + 1}, {rows}: {string.Join(" | ", grouping.Select(x => x.RowIndex + 1))}";
+            return $"Ref Csv: {grouping.Key + 1}, {rows}: {string.Join(" | ", grouping.Select(x => x.ReferenceRowIndex + 1))}";
         }
         else
         {
@@ -741,13 +741,13 @@
         {
             var anchorOrigin = Stepper.TagsAndReferencesLocation == ColumnLocation.Beginning ? Origin.BottomRight : Origin.BottomLeft;
             var transformOrigin = Stepper.TagsAndReferencesLocation == ColumnLocation.Beginning ? Origin.TopLeft : Origin.TopRight;
-            var references = row.ProcessingReferences(referenceColumnIndex);
+            var references = row.ProcessingReferences();
             return @<MudTd Class="extra-dense">
                        @if (references?.Any() == true && Stepper.Runner?.ReferenceCsvs.Count > 0)
                        {
                            int i = -1;
                            <MudChipSet>
-                               @foreach (IGrouping<int, (int CsvIndex, int RowIndex)> group in references.Where(x => Utils.IsValidIndex(x.CsvIndex, Stepper.Runner?.ReferenceCsvs.Count ?? -1)).GroupBy(x => x.CsvIndex))
+                               @foreach (IGrouping<int, ProcessingReference> group in references.Where(x => Utils.IsValidIndex(x.ReferenceCsvIndex, Stepper.Runner?.ReferenceCsvs.Count ?? -1)).GroupBy(x => x.ReferenceCsvIndex))
                                {
                                    i++;
                                    int groupIndex = i;
@@ -766,7 +766,7 @@
                                                int j = 0;
                                                foreach (var reference in references)
                                                {
-                                                   dictionaryArray[j] = Stepper.Runner.ReferenceCsvs[reference.CsvIndex].Csv.CsvContent[reference.RowIndex].ToStringDictionary();
+                                                   dictionaryArray[j] = Stepper.Runner.ReferenceCsvs[reference.ReferenceCsvIndex].Csv.CsvContent[reference.ReferenceRowIndex].ToStringDictionary();
                                                    j++;
                                                }
                                            }

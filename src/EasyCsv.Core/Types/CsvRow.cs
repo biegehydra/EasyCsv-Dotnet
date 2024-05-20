@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
-
 namespace EasyCsv.Core
 {
     public class CsvRow : DynamicObject
@@ -176,129 +175,115 @@ namespace EasyCsv.Core
             return false;
         }
 
-        public bool RemoveProcessingReference(int referencesColumnIndex, int referenceCsvId, int referenceRowId)
-        {
-            if (!Utils.IsValidIndex(referencesColumnIndex, Count)) return false;
-            string? value = ValueAt(referencesColumnIndex)?.ToString();
-            if (string.IsNullOrWhiteSpace(value)) return false;
-            var split = value.Split([","], StringSplitOptions.RemoveEmptyEntries);
-            var parsedIntegers = split.Select(ParseIntegers).ToArray();
-            var referenceIndex = parsedIntegers.IndexOf(x => x.Left == referenceCsvId && x.Right == referenceRowId);
-            if (referenceIndex >= 0)
-            {
-                string newReferencesStr = string.Join(",", parsedIntegers.Take(referenceIndex).Skip(1).Select(x => $"{referenceCsvId}-{x}"));
-                SetValueAtIndex(referencesColumnIndex, newReferencesStr);
-            }
-            return false;
-        }
-
         public bool RemoveProcessingReference(int referenceCsvId, int referenceRowId)
         {
-            int referenceColumnIndex = Keys.IndexOf(InternalColumnNames.References);
-            return RemoveProcessingReference(referenceColumnIndex, referenceCsvId, referenceRowId);
-        }
-
-
-        public bool RemoveProcessingTag(int tagsColumnIndex, string tag)
-        {
-            if (!Utils.IsValidIndex(tagsColumnIndex, Values.Count)) return false;
-            var tags = ValueAt(tagsColumnIndex)?.ToString()?.Split([","], StringSplitOptions.RemoveEmptyEntries);
-            int? tagIndex = tags?.IndexOf(tag);
-            if (tagIndex >= 0)
+            var processingReferences = ProcessingReferences();
+            if (processingReferences?.Length is not > 0) return false;
+            var referenceIndex = processingReferences.IndexOf(x => x.ReferenceCsvIndex == referenceCsvId && x.ReferenceRowIndex == referenceRowId);
+            if (referenceIndex >= 0)
             {
-                string newTagsStr = string.Join(",", tags!.Take(tagsColumnIndex).Skip(1)); 
-                SetValueAtIndex(tagsColumnIndex, newTagsStr);
-                return true;
+                string newReferencesStr = string.Join(",", processingReferences.TakeSkipTakeRest(referenceIndex, 1).Select(x => $"{x.ReferenceCsvIndex}-{x.ReferenceRowIndex}"));
+                _innerDictionary[InternalColumnNames.References] = newReferencesStr;
             }
             return false;
         }
 
         public bool RemoveProcessingTag(string tag)
         {
-            int tagsColumnIndex = Keys.IndexOf(InternalColumnNames.Tags);
-            return RemoveProcessingTag(tagsColumnIndex, tag);
-        }
-
-        public bool ContainsProcessingTag(int tagsColumnIndex, string tag)
-        {
-            if (string.IsNullOrWhiteSpace(tag)) return false;
-            return ValueAt(tagsColumnIndex)?.ToString()?.Contains(tag) == true;
-        }
-
-        public bool ContainsAnyProcessingTag(int tagsColumnIndex, IEnumerable<string> tags)
-        {
-            if (tags == null!) return false;
-            string? strValue = ValueAt(tagsColumnIndex)?.ToString();
-            if (string.IsNullOrWhiteSpace(strValue)) return false;
-            foreach (var tag in tags)
+            var tags = ProcessingTags();
+            if (tags?.Length is not > 0) return false;
+            int tagIndex = tags.IndexOf(tag);
+            if (tagIndex >= 0)
             {
-                if (string.IsNullOrWhiteSpace(tag)) continue;
-                if (strValue!.Contains(tag)) return true;
+                string newTagsStr = string.Join(",", tags.TakeSkipTakeRest(tagIndex, 1));
+                _innerDictionary[InternalColumnNames.Tags] = newTagsStr;
+                return true;
             }
             return false;
         }
 
-        public bool MatchesIncludeTagsAndExcludeTags(int tagsColumnIndex, ICollection<string>? includeTags, ICollection<string>? excludeTags)
+        public bool ContainsProcessingTag(string tag)
+        {
+            if (string.IsNullOrWhiteSpace(tag)) return false;
+            var existingTags = ProcessingTags();
+            if (existingTags == null) return false;
+            return existingTags.Contains(tag);
+        }
+
+        public bool ContainsAnyProcessingTag(IEnumerable<string> tags)
+        {
+            if (tags == null!) return false;
+            var existingTags = ProcessingTags();
+            if (existingTags == null) return false;
+            foreach (var tag in tags)
+            {
+                if (string.IsNullOrWhiteSpace(tag)) continue;
+                if (existingTags.Contains(tag)) return true;
+            }
+            return false;
+        }
+
+        public bool MatchesIncludeTagsAndExcludeTags(ICollection<string>? includeTags, ICollection<string>? excludeTags)
         {
             if (includeTags == null && excludeTags == null) return true;
             if (includeTags?.Count == 0 && excludeTags?.Count == 0) return true;
-            string? strValue = ValueAt(tagsColumnIndex)?.ToString();
-            if (includeTags?.Count > 0 && string.IsNullOrWhiteSpace(strValue)) return false;
-            if (excludeTags != null)
+            var tags = ProcessingTags()?.ToHashSet();
+            if (includeTags?.Count > 0 && (tags == null || tags.Count == 0)) return false;
+            if (excludeTags != null && tags != null)
             {
                 foreach (var excludeTag in excludeTags)
                 {
                     if (string.IsNullOrWhiteSpace(excludeTag)) continue;
-                    if (strValue?.Contains(excludeTag) == true) return false;
+                    if (tags.Contains(excludeTag) == true) return false;
                 }
             }
             bool any = false;
-            if (includeTags != null)
+            if (includeTags != null && tags != null)
             {
                 foreach (var includeTag in includeTags)
                 {
                     if (string.IsNullOrWhiteSpace(includeTag)) continue;
                     any = true;
-                    if (strValue!.Contains(includeTag)) return true;
+                    if (tags.Contains(includeTag)) return true;
                 }
             }
             return !any;
         }
 
-        public string[]? ProcessingTags(int tagsColumnIndex)
+        public string[]? ProcessingTags()
         {
-            if (!Utils.IsValidIndex(tagsColumnIndex, Count)) return null;
-            string? value = ValueAt(tagsColumnIndex)?.ToString();
-            if (string.IsNullOrWhiteSpace(value)) return null;
+            if (!_innerDictionary.TryGetValue(InternalColumnNames.Tags, out var value))
+            {
+                return null;
+            }
+
+            var valueStr = value?.ToString();
+            if (string.IsNullOrWhiteSpace(valueStr)) return null;
 #if NETSTANDARD2_0
-            var split = value.Split([","], StringSplitOptions.RemoveEmptyEntries);
+            var split = valueStr!.Split([","], StringSplitOptions.RemoveEmptyEntries);
 #else
-            var split = value.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            var split = valueStr!.Split(',', StringSplitOptions.RemoveEmptyEntries);
 #endif
             return split;
         }
 
-        public string[]? ProcessingTags()
+        public ProcessingReference[]? ProcessingReferences()
         {
-            int tagsColumnIndex = Keys.IndexOf(InternalColumnNames.Tags);
-            return ProcessingTags(tagsColumnIndex);
-        }
-
-        public (int CsvIndex, int RowIndex)[]? ProcessingReferences(int referencesColumnIndex)
-        {
-            if (!Utils.IsValidIndex(referencesColumnIndex, Count)) return null;
-            string? value = ValueAt(referencesColumnIndex)?.ToString();
-            if (string.IsNullOrWhiteSpace(value)) return null;
-            var split = value.Split([","], StringSplitOptions.RemoveEmptyEntries);
+            if (!_innerDictionary.TryGetValue(InternalColumnNames.References, out var value))
+            {
+                return null;
+            }
+            var valueStr = value?.ToString();
+            if (string.IsNullOrWhiteSpace(valueStr)) return null;
+#if NETSTANDARD2_0
+            var split = valueStr!.Split([","], StringSplitOptions.RemoveEmptyEntries);
+#else
+            var split = valueStr!.Split(',', StringSplitOptions.RemoveEmptyEntries);
+#endif
             return split.Select(ParseIntegers).ToArray();
         }
-        public (int CsvIndex, int RowIndex)[]? ProcessingReferences()
-        {
-            int referenceColumnIndex = Keys.IndexOf(InternalColumnNames.References);
-            return ProcessingReferences(referenceColumnIndex);
-        }
 
-        private static (int Left, int Right) ParseIntegers(string input)
+        private static ProcessingReference ParseIntegers(string input)
         {
             int dashIndex = input.IndexOf('-');
             if (dashIndex == -1)
@@ -316,7 +301,7 @@ namespace EasyCsv.Core
 
             if (int.TryParse(leftSpan, out int left) && int.TryParse(rightSpan, out int right))
             {
-                return (left, right);
+                return new ProcessingReference(left, right);
             }
             else
             {
@@ -347,29 +332,11 @@ namespace EasyCsv.Core
                 this[InternalColumnNames.Tags] = string.Join(",", existingTags);
             }
         }
-        public void AddProcessingTag(int tagsColumnIndex, string tag)
-        {
-            var existingTags = ProcessingTags(tagsColumnIndex)?.ToHashSet() ?? new HashSet<string>();
-            bool added = existingTags.Add(tag);
-            if (added)
-            {
-                this[InternalColumnNames.Tags] = string.Join(",", existingTags);
-            }
-        }
 
-        public void AddProcessingReference(int referenceCsvId, int referenceRowId)
+        public void AddProcessingReference(int referenceCsvId, int referenceRowIndex)
         {
-            var existingReferences = ProcessingReferences()?.ToHashSet() ?? new HashSet<(int CsvIndex, int RowIndex)>();
-            if (existingReferences.Add((referenceCsvId, referenceRowId)))
-            {
-                this[InternalColumnNames.References] = string.Join(",", existingReferences);
-            }
-        }
-
-        public void AddProcessingReference(int referencesColumnIndex, int referenceCsvId, int referenceRowId)
-        {
-            var existingReferences = ProcessingReferences(referencesColumnIndex)?.ToHashSet() ?? new HashSet<(int CsvIndex, int RowIndex)>();
-            if (existingReferences.Add((referenceCsvId, referenceRowId)))
+            var existingReferences = ProcessingReferences()?.ToHashSet() ?? new HashSet<ProcessingReference>();
+            if (existingReferences.Add(new ProcessingReference(referenceCsvId, referenceRowIndex)))
             {
                 this[InternalColumnNames.References] = string.Join(",", existingReferences);
             }
@@ -377,7 +344,7 @@ namespace EasyCsv.Core
 
         public void AddProcessingTags(IEnumerable<string> tags)
         {
-            var existingTags = Extensions.Extensions.ToHashSet(this[InternalColumnNames.Tags]?.ToString()?.Split([","], StringSplitOptions.RemoveEmptyEntries));
+            var existingTags = Extensions.Extensions.ToHashSet(ProcessingTags());
             foreach (var tag in tags)
             {
                 existingTags.Add(tag);
@@ -385,13 +352,16 @@ namespace EasyCsv.Core
             this[InternalColumnNames.Tags] = string.Join(",", existingTags);
         }
 
-        public void AddProcessingReferences(int referenceCsvId, IEnumerable<int> referenceRowIds)
+        public void AddProcessingReferences(int referenceCsvId, IEnumerable<int> referenceRowIndexes)
         {
-            var newReferences = referenceRowIds.Select(y => $"{referenceCsvId}-{y}");
-            var existingReferences = this[InternalColumnNames.References]?.ToString()?.Split([","], StringSplitOptions.RemoveEmptyEntries);
+            var newReferences = referenceRowIndexes.Select(x => new ProcessingReference(referenceCsvId, x)).ToHashSet();
+            var existingReferences = ProcessingReferences();
             if (existingReferences != null)
             {
-                newReferences = newReferences.Union(existingReferences);
+                foreach (var existingReference in existingReferences)
+                {
+                    newReferences.Add(existingReference);
+                }
             }
             this[InternalColumnNames.References] = string.Join(",", newReferences);
         }
@@ -413,4 +383,16 @@ namespace EasyCsv.Core
             }
         }
     }
+}
+
+public readonly record struct ProcessingReference
+{
+    public ProcessingReference(int referenceCsvIndex, int referenceRowIndex)
+    {
+        ReferenceCsvIndex = referenceCsvIndex;
+        ReferenceRowIndex = referenceRowIndex;
+    }
+
+    public int ReferenceCsvIndex { get; }
+    public int ReferenceRowIndex { get; }
 }

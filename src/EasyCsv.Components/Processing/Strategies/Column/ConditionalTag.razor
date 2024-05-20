@@ -1,0 +1,186 @@
+﻿@namespace EasyCsv.Components
+@using EasyCsv.Components.Processing
+@inherits StrategyItemBase
+
+@if (CsvProcessor == null)
+{
+    throw new ArgumentException("EasyCsv: Attempted to render strategy options not within CsvProcessingStepper", nameof(CsvProcessingStepper));
+}
+<StrategyItem DisplayName="@DisplayName" DescriptionStr="@DescriptionStr" Description="Description" AllowRun="AllowRun()" StrategyPicked="StrategyPicked">
+    <Options>
+        <MudListItem>
+            <MudTextField Label="Tag To Add" Variant="Variant.Outlined" @bind-Value="_tagToAdd" Immediate="@Immediate"></MudTextField>
+        </MudListItem>
+        <MudListItem>
+            <MudSelect T="StringPredicates" Label="Predicate" @bind-Value="_selectedPredicate" Variant="Variant.Outlined" Immediate="@Immediate">
+                @foreach (var predicate in Enum.GetValues<StringPredicates>())
+                {
+                    <MudSelectItem Value="@predicate">@predicate</MudSelectItem>
+                }
+            </MudSelect>
+        </MudListItem>
+
+        @if (_selectedPredicate is StringPredicates.Contains or StringPredicates.StartsWith or StringPredicates.EndsWith or StringPredicates.Equals or StringPredicates.MatchesRegex or StringPredicates.ContainsAll)
+        {
+            var label = _selectedPredicate is StringPredicates.Contains or StringPredicates.StartsWith or StringPredicates.EndsWith or StringPredicates.ContainsAll
+                ? "Values (comma separated)"
+                : _selectedPredicate == StringPredicates.MatchesRegex
+                    ? "Regex Pattern"
+                    : "Value";
+            <MudListItem>
+                <MudTextField Label="@label" Variant="Variant.Outlined" @bind-Value="_values" Immediate="@Immediate"></MudTextField>
+            </MudListItem>
+            @if (_selectedPredicate != StringPredicates.MatchesRegex)
+            {
+                <MudListItem>
+                    <MudSelect T="StringComparison" Label="String Comparison" Variant="Variant.Outlined" @bind-Value="_stringComparison" Immediate="@Immediate">
+                        @foreach (var comparison in Enum.GetValues<StringComparison>())
+                        {
+                            <MudSelectItem Value="@comparison">@comparison</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudListItem>
+            }
+        }
+        else if (_selectedPredicate is StringPredicates.LengthEquals or StringPredicates.LengthGreaterThan or StringPredicates.LengthLessThan)
+        {
+            <MudListItem>
+                <MudNumericField T="int" Label="Length" Variant="Variant.Outlined" @bind-Value="_length" Immediate="@Immediate"></MudNumericField>
+            </MudListItem>
+        }
+        <MudListItem>
+            <MudSwitch @bind-Checked="_negatePredicate">
+                Negate Predicate
+                <MudTooltip Inline="true" Delay="750" RootClass="ml-3 strategy-option-tip-icon" RootStyle="vertical-align: middle;" Style="padding: 10px; max-width: 300px;" Text="Inverts the predicate that you have created. For example, StartsWith deletes any rows that starts with the value provided. Negating StartsWith would delete any row that DOESN'T start with the value provided.">
+                    <ChildContent>
+                        <MudIcon Icon="@Icons.Material.Filled.Info"></MudIcon>
+                    </ChildContent>
+                </MudTooltip>
+            </MudSwitch>
+        </MudListItem>
+    </Options>
+</StrategyItem>
+
+@code
+{
+    [Inject] public ISnackbar? Snackbar { get; set; }
+    [Parameter] public override string DisplayName { get; set; } = "Conditional Tag";
+    [Parameter] public override string DescriptionStr { get; set; } = "Will tag all rows that match the specified predicate in $column_name.";
+    [Parameter] public override RenderFragment<string>? Description { get; set; }
+    [Parameter] public bool Immediate { get; set; } = true;
+
+    private StringPredicates _selectedPredicate;
+    private string _tagToAdd = string.Empty;
+    private string _values = string.Empty;
+    private string _regexPattern = string.Empty;
+    private int _length;
+    private StringComparison _stringComparison = StringComparison.OrdinalIgnoreCase;
+    private bool _negatePredicate;
+
+    private bool AllowRun()
+    {
+        return !string.IsNullOrWhiteSpace(_tagToAdd) && _selectedPredicate switch
+        {
+            StringPredicates.Contains or StringPredicates.StartsWith or StringPredicates.EndsWith or
+                StringPredicates.Equals or StringPredicates.MatchesRegex or StringPredicates.ContainsAll => !string.IsNullOrWhiteSpace(_values),
+            StringPredicates.LengthEquals or StringPredicates.LengthGreaterThan or StringPredicates.LengthLessThan or
+                StringPredicates.IsEmptyOrWhitespace or StringPredicates.IsAlphabetical or StringPredicates.IsAlphanumeric or
+                StringPredicates.IsNumeric => true,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+    }
+
+    private async Task StrategyPicked(string columnName)
+    {
+        if (CsvProcessor?.Runner?.CurrentCsv == null) return;
+        var firstRow = CsvProcessor.Runner.CurrentCsv.CsvContent.FirstOrDefault();
+        if (firstRow == null) return;
+
+        Func<IReadonlyCell, bool> predicate = cell => false;
+
+        switch (_selectedPredicate)
+        {
+            case StringPredicates.IsEmptyOrWhitespace:
+                predicate = cell => string.IsNullOrWhiteSpace(cell.Value?.ToString());
+                break;
+            case StringPredicates.Contains:
+                var values = _values.Split(',').Select(v => v.Trim()).ToList();
+                predicate = cell => values.Any(value => cell.Value?.ToString()?.Contains(value, _stringComparison) == true);
+                break;
+            case StringPredicates.Equals:
+                predicate = cell => cell.Value?.ToString()?.Equals(_values, _stringComparison) == true;
+                break;
+            case StringPredicates.StartsWith:
+                var startValues = _values.Split(',').Select(v => v.Trim()).ToList();
+                predicate = cell => startValues.Any(value => cell.Value?.ToString()?.StartsWith(value, _stringComparison) == true);
+                break;
+            case StringPredicates.EndsWith:
+                var endValues = _values.Split(',').Select(v => v.Trim()).ToList();
+                predicate = cell => endValues.Any(value => cell.Value?.ToString()?.EndsWith(value, _stringComparison) == true);
+                break;
+            case StringPredicates.LengthEquals:
+                predicate = cell => cell.Value?.ToString()?.Length == _length;
+                break;
+            case StringPredicates.LengthGreaterThan:
+                predicate = cell => cell.Value?.ToString()?.Length > _length;
+                break;
+            case StringPredicates.LengthLessThan:
+                predicate = cell => cell.Value?.ToString()?.Length < _length;
+                break;
+            case StringPredicates.MatchesRegex:
+                var regex = new Regex(_regexPattern);
+                predicate = cell => cell.Value?.ToString() is { } str && regex.IsMatch(str);
+                break;
+            case StringPredicates.ContainsAll:
+                var allValues = _values.Split(',').Select(v => v.Trim()).ToList();
+                predicate = cell => allValues.All(value => cell.Value?.ToString()?.Contains(value, _stringComparison) == true);
+                break;
+            case StringPredicates.IsNumeric:
+                predicate = cell => decimal.TryParse(cell.Value?.ToString(), NumberStyles.Any, CultureInfo.CurrentCulture, out _);
+                break;
+            case StringPredicates.IsAlphabetical:
+                predicate = cell => cell.Value?.ToString()?.All(char.IsLetter) == true;
+                break;
+            case StringPredicates.IsAlphanumeric:
+                predicate = cell => cell.Value?.ToString()?.All(char.IsLetterOrDigit) == true;
+                break;
+        }
+
+        if (_negatePredicate)
+        {
+            var originalPredicate = predicate;
+            predicate = cell => !originalPredicate(cell);
+        }
+
+        int tagged = 0;
+        List<AddTagEdit> tagEdits = new();
+        foreach (var row in CsvProcessor.Runner.CurrentCsv.CsvContent)
+        {
+            var cell = new RowCell(columnName, row[columnName]);
+            if (predicate(cell))
+            {
+                tagged++;
+                var addTagEdit = new AddTagEdit(row, _tagToAdd);
+                tagEdits.Add(addTagEdit);
+            }
+        }
+
+        var tagsIndex = CsvProcessor.Runner.CurrentCsv.ColumnNames()?.IndexOf(x => x?.Equals(InternalColumnNames.Tags) == true);
+        IReversibleEdit[] edits;
+        if (tagsIndex < 0)
+        {
+            edits = [new AddColumnEdit(InternalColumnNames.Tags, null), ..tagEdits];
+        }
+        else
+        {
+            edits = [..tagEdits];
+        }
+        var compoundEdit = new CompoundEdit(edits);
+        await CsvProcessor.AddReversibleEdit(compoundEdit, makeBusy: false, applyColumnSort: true);
+
+        if (CsvProcessor.UseSnackBar)
+        {
+            Snackbar?.Add($"Tagged {tagged} rows");
+        }
+    }
+}

@@ -26,53 +26,122 @@ public partial class CsvProcessingStepper
     [Inject] public ISnackbar? Snackbar { get; set; }
     [Inject] public IDialogService? DialogService { get; set; }
     [Inject] public IJSRuntime? Js { get; set; }
-    [Parameter] public IEasyCsv? EasyCsv { get; set; }
-    [Parameter] public string? EasyCsvFileName { get; set; }
-    [Parameter] public bool UseSnackBar { get; set; } = true;
-
     /// <summary>
-    /// If true, this component will make a clone of the provided
-    /// EasyCsv and operate on the clone
+    /// The initial csv for the stepper
+    /// </summary>
+    [Parameter] public IEasyCsv? EasyCsv { get; set; }
+    /// <summary>
+    /// This strictly controls the file name displayed as the "Original Csv" in the "Working Csv" composition
+    /// </summary>
+    [Parameter] public string? EasyCsvFileName { get; set; }
+    /// <summary>
+    /// If true, a snackbar and UseProgressContext is false,
+    /// snackbar popups will be added whenever an operation completes
+    /// </summary>
+    [Parameter] public bool UseSnackBar { get; set; } = true;
+    /// <summary>
+    /// Place strategies that operate/look at a single column here
     /// </summary>
     [Parameter] public RenderFragment<string>? ColumnStrategies { get; set; }
+    /// <summary>
+    /// Place strategies that don't necessarily operate/look at a single column here
+    /// </summary>
     [Parameter] public RenderFragment? FullCsvStrategies { get; set; }
-    [Parameter] public RenderFragment? ErrorBoundaryContent { get; set; }
+    /// <summary>
+    /// The content that gets rendered if an error occurs in this components
+    /// </summary>
+    [Parameter] public RenderFragment<Exception>? ErrorBoundaryContent { get; set; }
+    /// <summary>
+    /// Placed directly after the Current Step text
+    /// </summary>
     [Parameter] public RenderFragment? AfterCurrentStep { get; set; }
-
-    [Parameter] public CloseBehaviour CloseBehaviour { get; set; } = Enums.CloseBehaviour.CloseButtonAndClickAway;
+    /// <summary>
+    /// Close behaviour for the strategy select popup. The popup for full csv and column operations
+    /// </summary>
+    [Parameter] public CloseBehaviour StrategySelectCloseBehaviour { get; set; } = Enums.CloseBehaviour.CloseButtonAndClickAway;
+    /// <summary>
+    /// If true, all strategies other than the selected one are hidden when one is selected
+    /// </summary>
     [Parameter] public bool HideOtherStrategiesOnSelect { get; set; } = true;
-    [Parameter] public bool SearchBar { get; set; } = true;
+    /// <summary>
+    /// If true, all progress popups will be indeterminate. This can be helpful if you like
+    /// progress popups over snackbar popups but don't like that progress updates make the operation
+    /// take longer.
+    /// </summary>
     [Parameter] public bool ForceIndeterminate { get; set; }
+    /// <summary>
+    /// If true, users can edit rows
+    /// </summary>
     [Parameter] public bool EnableRowEditing { get; set; } = true;
+    /// <summary>
+    /// If true, users will have a column with button to delete rows
+    /// </summary>
     [Parameter] public bool EnableRowDeleting { get; set; } = true;
+    /// <summary>
+    /// If true, clicking on a column name will sort the column. There are 3 sorting states,
+    /// Unsorted, Ascending, Descending. Unsorted is the original order of rows, ascending/descending
+    /// are string based
+    /// </summary>
     [Parameter] public bool EnableSorting { get; set; } = true;
-    [Parameter] public bool ShowColumnNameInStrategySelect { get; set; } = true;
-    [Parameter] public bool ShowAddReferenceCsv { get; set; } = true;
+    /// <summary>
+    /// If true, users are given a button to upload reference csvs
+    /// </summary>
+    [Parameter] public bool EnableAddReferenceCsv { get; set; } = true;
+    /// <summary>
+    /// If this is true and EnableRowEditing is ALSO true, users can control the input component
+    /// used to edit columns
+    /// </summary>
     [Parameter] public bool EnableChangeEditColumnValueType { get; set; } = true;
     [Parameter] public RunOperationNoneSelectedVisibility RunOperationNoneSelectedVisibility { get; set; } = RunOperationNoneSelectedVisibility.Hidden;
     [Parameter] public ColumnLocation TagsAndReferencesLocation { get; set; } = ColumnLocation.Beginning;
     [Parameter] public ResolveDuplicatesAutoSelect ResolveDuplicatesAutoSelect { get; set; } = ResolveDuplicatesAutoSelect.None;
-    [Parameter] public bool AllowControlTagsAndReferencesLocation { get; set; } = true;
-    [Parameter] public bool UseSearchBar { get; set; } = true;
+    /// <summary>
+    /// If true, users will have a button to control where the tags and references columns are
+    /// </summary>
+    [Parameter] public bool EnableControlTagsAndReferencesLocation { get; set; } = true;
     /// <summary>
     /// 2 is a good value for Blazor-Server, 50 is a good value for Blazor-Wasm
     /// </summary>
     [Parameter] public int DelayAfterProgressMilliseconds { get; set; } = 2;
+    /// <summary>
+    /// Minimum time to wait before performing a search query on the csv
+    /// </summary>
     [Parameter] public double SearchDebounceInterval { get; set; } = 250;
     [Parameter] public string? ViewFullCsvOperationsIcon { get; set; } = EasyCsvIcons.ColumnStrategies;
+    /// <summary>
+    /// If true, the expand button to see an operations option will be hidden until a strategy is selected
+    /// </summary>
     [Parameter] public bool HideExpandUnselected { get; set; }
     [Parameter] public string? ViewColumnOperationsIcon { get; set; } = EasyCsvIcons.FullCsvStrategies;
     /// <summary>
-    /// If true, operations will only run on filtered rows,
-    /// otherwise they will run on every row
+    /// The chip color that at chips will have in the References column
     /// </summary>
     [Parameter] public Color ReferenceChipColor { get; set; } = Color.Primary;
     [Parameter] public string MaxStrategySelectHeight { get; set; } = "600px";
+    /// <summary>
+    /// The default file name used when the user clicks the open download popup
+    /// </summary>
     [Parameter] public string DefaultDownloadFileName { get; set; } = "WorkingCsvSnapshot";
-    [Parameter] public bool AutoControlExpandOptionsOnSelect { get; set; } = true;
-    [Parameter] public bool OpenDownloadWithAllColumnsSelected { get; set; } = true; 
-    [Parameter] public bool AutoSelectAllColumnsToSearch { get; set; } = true; 
+    /// <summary>
+    /// If this is true, the stepper will automatically expand a strategies options when selected,
+    /// and automatically close a strategies options when deselected
+    /// </summary>
+    [Parameter] public bool EnableAutoControlExpandOptionsOnSelect { get; set; } = true;
+    /// <summary>
+    /// If true, all columns will automatically be selected to download when the open download popup is opened
+    /// </summary>
+    [Parameter] public bool AutoSelectAllColumnsDownload { get; set; } = true; 
+    /// <summary>
+    /// If true, all the columns will automatically be selected to search. This is enforced at the start and after every operation
+    /// </summary>
+    [Parameter] public bool AutoSelectAllColumnsSearch { get; set; } = true; 
+    /// <summary>
+    /// The default editing input to use for columns
+    /// </summary>
     [Parameter] public ColumnValueType DefaultColumnValueType { get; set; } = ColumnValueType.Text; 
+    /// <summary>
+    /// If true, progress snack bars will be used when provided
+    /// </summary>
     [Parameter] public bool UseProgressContext { get; set; } = true; 
     public StrategyRunner? Runner { get; private set; }
     internal CsvProcessingTable? CsvProcessingTable { get; private set; }

@@ -306,7 +306,7 @@
             Array.ForEach(columnNames, x => _columnValueTypes.TryAdd(x, Stepper!.DefaultColumnValueType));
             _cachedAllValues = _cachedAllValues.Where(x => columnNames.Contains(x.Key)).ToDictionary(x => x.Key, x => x.Value);
         }
-        if (Stepper?.AutoSelectAllColumnsToSearch == true && columnNames != null)
+        if (Stepper?.AutoSelectAllColumnsSearch == true && columnNames != null)
         {
             SearchColumns = columnNames;
         }
@@ -574,7 +574,7 @@
                            Click <span class="mx-2" ><MudIcon Icon="@Stepper.ViewColumnOperationsIcon"></MudIcon></span>to view&nbsp;<b>column</b>&nbsp;strategies
                        </div>
                    </div>
-                   @if (Stepper.UseSearchBar && columnNames != null)
+                   @if (columnNames != null)
                    {
                        <div class="csv-processing-toolbar-options">
                            <div class="csv-processing-toolbar-forward-back-container" >
@@ -687,30 +687,24 @@
                                            else
                                            {
                                                @:Column Strategies&nbsp;
-                                               @if (Stepper.ShowColumnNameInStrategySelect)
-                                               {
-                                                   @:(@column)
-                                               }
+                                               @:(@column)
                                            }
                                        </MudText>
                                        <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="x => TogglePopover(column, false)"></MudIconButton>
                                    </div>
                                </MudListSubheader>
-                               @if (Stepper.SearchBar)
-                               {
-                                   <MudListItem>
-                                       <div style="display: flex; flex-direction: row; gap: 60px; align-items: baseline;" >
-                                           <MudTextField T="string" Disabled="_columnStrategyBuckets[column].IsAnySelected()" Immediate="true" Label="Search strategies" Variant="Variant.Outlined" Value="_columnStrategyBuckets[column].SearchQuery"
-                                                         ValueChanged="_columnStrategyBuckets[column].SetSearchQuery"
-                                                         Clearable="true" OnClearButtonClick="() => _columnStrategyBuckets[column].SetSearchQuery(string.Empty)" />
-                                           @if (!fullCsv && Stepper.EnableRowEditing && Stepper.EnableChangeEditColumnValueType)
-                                           {
-                                               _columnValueTypes.TryAdd(column, Stepper.DefaultColumnValueType);
-                                               <ColumnValueTypeSelect Style="max-width: 210px;" Label="Editing Type" ColumnValueType="@_columnValueTypes[column]" ColumnValueTypeChanged="x => SetColumnValueType(column, x)" ></ColumnValueTypeSelect>
-                                           }
-                                       </div>
-                                   </MudListItem>
-                               }
+                               <MudListItem>
+                                   <div style="display: flex; flex-direction: row; gap: 60px; align-items: baseline;" >
+                                       <MudTextField T="string" Disabled="_columnStrategyBuckets[column].IsAnySelected()" Immediate="true" Label="Search strategies" Variant="Variant.Outlined" Value="_columnStrategyBuckets[column].SearchQuery"
+                                                     ValueChanged="_columnStrategyBuckets[column].SetSearchQuery"
+                                                     Clearable="true" OnClearButtonClick="() => _columnStrategyBuckets[column].SetSearchQuery(string.Empty)" />
+                                       @if (!fullCsv && Stepper.EnableRowEditing && Stepper.EnableChangeEditColumnValueType)
+                                       {
+                                           _columnValueTypes.TryAdd(column, Stepper.DefaultColumnValueType);
+                                           <ColumnValueTypeSelect Style="max-width: 210px;" Label="Editing Type" ColumnValueType="@_columnValueTypes[column]" ColumnValueTypeChanged="x => SetColumnValueType(column, x)" ></ColumnValueTypeSelect>
+                                       }
+                                   </div>
+                               </MudListItem>
                                @if (fullCsv)
                                {
                                    if (FullCsvOptions != null)
@@ -732,7 +726,7 @@
                                    </MudListItem>
                                }
                            </MudList>
-                           @if (_columnPopOverDict[column] && Stepper.CloseBehaviour is CloseBehaviour.ClickAway or CloseBehaviour.CloseButtonAndClickAway)
+                           @if (_columnPopOverDict[column] && Stepper.StrategySelectCloseBehaviour is CloseBehaviour.ClickAway or CloseBehaviour.CloseButtonAndClickAway)
                            {
                                <div @onclick="() => TogglePopover(column, false)" class="easy-csv-fullscreen-backdrop"></div>
                            }

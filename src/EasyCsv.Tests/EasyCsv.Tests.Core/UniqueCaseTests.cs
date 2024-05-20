@@ -6,10 +6,38 @@ using System.Globalization;
 using CsvHelper.Configuration.Attributes;
 using EasyCsv.Core.Configuration;
 using System.Text;
+using System.Drawing;
+using Newtonsoft.Json;
+using Point = NetTopologySuite.Geometries.Point;
 
 namespace EasyCsv.Tests.Core;
 public class UniqueCaseTests
 {
+    [Fact]
+    public async Task RunRapidApiListingFromCsv()
+    {
+        var csvConfig = new CsvConfiguration(CultureInfo.CurrentCulture)
+        {
+            ShouldUseConstructorParameters = x => true,
+            GetConstructor = x => x.ClassType.GetConstructors().FirstOrDefault(c => c.GetParameters().Length == 0) ?? x.ClassType.GetConstructors().FirstOrDefault(),
+            PrepareHeaderForMatch = x => x.Header.Trim()
+        };
+        var config = new EasyCsvConfiguration()
+        {
+            CsvHelperConfig = csvConfig
+        };
+        var csv = await EasyCsvFactory.FromFileAsync("C:\\Users\\sweed\\Downloads\\RapidApiPanamaCityAddresses.csv", config: config);
+        await csv!.MutateAsync(x =>
+        {
+            x.AddColumn("Country", "US");
+            x.ReplaceColumn("Address", "StreetLine");
+            x.ReplaceColumn("Estimated Value", "EstimatedValueAmount");
+            x.ReplaceColumn("Last Sold Date", "LastSaleDate");
+            x.ReplaceColumn("Sqft", "AreaSqFt");
+        });
+        var rapidApiAddresses = await csv.GetRecordsAsync<RapidApiAddress>();
+    }
+
 
     [Fact]
     public async Task SingleColumnCreateObjects()
@@ -207,3 +235,70 @@ public class SingleColumnExample
 {
     public string FullSiteAddress { get; set; }
 };
+public partial class RapidApiAddress
+{
+    private string DebuggerDisplay
+    {
+        get
+        {
+            return $"MasterAddressId: {MasterAddressId} | Full Address: {StreetLine}, {City}, {State}, {Zip} | Beds: {Beds} | Baths: {Baths}";
+        }
+    }
+    public int MasterAddressId { get; set; }
+
+    public string AssessorParcelNumber { get; set; }
+
+    public string StreetLine { get; set; }
+
+    public string City { get; set; }
+
+    public string State { get; set; }
+
+    public string Zip { get; set; }
+
+    public string Country { get; set; }
+    public string Url { get; set; }
+    [JsonIgnore]
+    [Ignore]
+    public Point Location { get; set; }
+
+    public int? Beds { get; set; }
+
+    public decimal? Baths { get; set; }
+
+    public int? Sleeps { get; set; }
+
+    public string EstimatedValuationDate { get; set; }
+
+    public int? EstimatedValueAmount { get; set; }
+
+    public string LastSaleDate { get; set; }
+
+    public int? LastSalePrice { get; set; }
+
+    public int? ListPrice { get; set; }
+
+    public int? PropertyUseCode { get; set; }
+
+    public string PropertyType { get; set; }
+
+    public string Image { get; set; }
+
+    public string Amenities { get; set; }
+
+    public int? YearBuilt { get; set; }
+
+    public int? AreaSqFt { get; set; }
+
+    public DateTime? LastSeen { get; set; }
+}
+
+public enum DataSource
+{
+    RapidApi
+}
+
+public class MasterAddress
+{
+
+}

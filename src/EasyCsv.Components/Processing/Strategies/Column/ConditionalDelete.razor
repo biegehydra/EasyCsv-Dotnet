@@ -42,16 +42,19 @@
                 <MudNumericField T="int" Label="Length" Variant="Variant.Outlined" @bind-Value="_length" Immediate="@Immediate" ></MudNumericField>
             </MudListItem>
         }
-        <MudListItem>
-            <MudSwitch @bind-Checked="_negatePredicate" >
-                Negate Predicate
-                <MudTooltip Inline="true" Delay="750" RootClass="ml-3 strategy-option-tip-icon" RootStyle="vertical-align: middle;" Style="padding: 10px; max-width: 300px;" Text="Inverts the predicate that you have created. For example, StartsWith deletes any rows that starts with the value provided. Negating StartsWith would delete any row that DOESN'T start with the value provided.">
-                    <ChildContent>
-                        <MudIcon Icon="@Icons.Material.Filled.Info"></MudIcon>
-                    </ChildContent>
-                </MudTooltip>
-            </MudSwitch>
-        </MudListItem>
+        @if (_selectedPredicate != StringPredicates.LengthGreaterThan && _selectedPredicate != StringPredicates.LengthLessThan)
+        {
+            <MudListItem>
+                <MudSwitch @bind-Checked="_negatePredicate" >
+                    Negate Predicate
+                    <MudTooltip Inline="true" Delay="750" RootClass="ml-3 strategy-option-tip-icon" RootStyle="vertical-align: middle;" Style="padding: 10px; max-width: 300px;" Text="Inverts the predicate that you have created. For example, negating StartsWith would delete any row that DOESN'T start with the value provided.">
+                        <ChildContent>
+                            <MudIcon Icon="@Icons.Material.Filled.Info"></MudIcon>
+                        </ChildContent>
+                    </MudTooltip>
+                </MudSwitch>
+            </MudListItem>
+        }
     </Options>
 </StrategyItem>
 

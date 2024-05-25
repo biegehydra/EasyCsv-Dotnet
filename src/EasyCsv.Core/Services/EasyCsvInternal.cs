@@ -20,6 +20,11 @@ namespace EasyCsv.Core
 
         public List<CsvRow> CsvContent { get; set; }
 
+        public void SetCsvContent(List<CsvRow> newRows)
+        {
+            CsvContent = newRows;
+        }
+
         public int RowCount() => CsvContent?.Count ?? 0;
 
         public bool ContainsColumn(string column, bool caseInsensitive = false) => ColumnNames()?.Contains(column, caseInsensitive ? StringComparer.CurrentCultureIgnoreCase : StringComparer.Ordinal) ?? false;

@@ -89,6 +89,7 @@
 
     private async Task StrategyPicked(string columnName)
     {
+        if (CsvProcessor?.Runner?.CurrentCsv == null) return;
         var progressContext = new OperationProgressContext($"Processing rows based on the selected condition");
         await Snackbar.OpenProgressSnackbar(progressContext, false);
 

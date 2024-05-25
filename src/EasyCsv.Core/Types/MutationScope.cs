@@ -19,7 +19,13 @@ namespace EasyCsv.Core
 
         public byte[]? ContentBytes => _csv.ContentBytes;
         public string? ContentStr => _csv.ContentStr;
+
         public List<CsvRow> CsvContent => _csv.CsvContent;
+
+        public void SetCsvContent(List<CsvRow> newRows)
+        {
+            _csv.SetCsvContent(newRows);
+        }
 
         public int RowCount()
         {

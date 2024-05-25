@@ -25,6 +25,7 @@ namespace EasyCsv.Core
         /// </summary>
         List<CsvRow> CsvContent { get; }
 
+        internal void SetCsvContent(List<CsvRow> newRows);
 
         /// <summary>
         /// Gets the number of rows in the CSV file.

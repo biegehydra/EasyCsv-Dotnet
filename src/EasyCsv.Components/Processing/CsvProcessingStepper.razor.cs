@@ -190,7 +190,7 @@ public partial class CsvProcessingStepper
             {
                 AddAggregateDeleteOperationResultSnackbar(aggregateOperationDeleteResult);
             }
-
+            
             await CsvProcessingTable.InvokeStateHasChanged();
             return aggregateOperationDeleteResult;
         }, _createAggregateDeleteOperationResultError);
@@ -333,9 +333,10 @@ public partial class CsvProcessingStepper
         }
     }
 
-    public ValueTask<OperationResult> AddReversibleEdit(IReversibleEdit reversibleEdit, bool makeBusy=false, bool applyColumnSort=true)
+    public ValueTask<OperationResult> AddReversibleEdit(IReversibleEdit reversibleEdit, bool applyColumnSort=true)
     {
         if (CsvProcessingTable == null || Runner == null) return ValueTask.FromResult(_runnerNull);
+        CsvProcessingTable.CancelEdit();
         return PerformOperationWithCatch(() =>
         {
             if (Runner.AddReversibleEdit(reversibleEdit))
@@ -345,9 +346,10 @@ public partial class CsvProcessingStepper
                 {
                     CsvProcessingTable.ApplyCurrentColumnSort();
                 }
+                CsvProcessingTable.SetColumnNames();
             }
             return new ValueTask<OperationResult>(new OperationResult(true));
-        }, _createOperationResultError, makeBusy);
+        }, _createOperationResultError, reversibleEdit.MakeBusy);
     }
 
     public ValueTask<OperationResult> PerformReferenceStrategy(ICsvReferenceProcessor csvReferenceProcessor, OperationProgressContext? progressContext = null)
@@ -479,20 +481,38 @@ public partial class CsvProcessingStepper
         CheckAddedCsvsAfterOperation(operationResult);
     }
 
-    public void GoForwardEdit()
+    public ValueTask<OperationResult> GoForwardEdit()
     {
-        if (Runner?.GoForwardEdit() == true)
+        if (CsvProcessingTable == null || Runner?.CurrentReversibleEdits == null) return ValueTask.FromResult(_runnerNull);
+        CsvProcessingTable.CancelEdit();
+        return PerformOperationWithCatch(() =>
         {
-            StateHasChanged();
-        }
+            if (Runner.GoForwardEdit())
+            {
+                CheckAddedCsvsAfterEdit();
+                CsvProcessingTable.ApplyCurrentColumnSort();
+                CsvProcessingTable.SetColumnNames();
+            }
+            return new ValueTask<OperationResult>(new OperationResult(true));
+        }, _createOperationResultError, 
+            makeBusy: Runner.CurrentReversibleEdits.IsValidIndex(Runner.CurrentRowEditIndex!.Value + 1) && Runner.CurrentReversibleEdits[Runner.CurrentRowEditIndex!.Value + 1].MakeBusy);
     }
 
-    public void GoBackEdit()
+    public ValueTask<OperationResult> GoBackEdit()
     {
-        if (Runner?.GoBackEdit() == true)
+        if (CsvProcessingTable == null || Runner?.CurrentReversibleEdits == null) return ValueTask.FromResult(_runnerNull);
+        CsvProcessingTable.CancelEdit();
+        return PerformOperationWithCatch(() =>
         {
-            StateHasChanged();
-        }
+            if (Runner.GoBackEdit())
+            {
+                CheckAddedCsvsAfterEdit();
+                CsvProcessingTable.ApplyCurrentColumnSort();
+                CsvProcessingTable.SetColumnNames();
+            }
+            return new ValueTask<OperationResult>(new OperationResult(true));
+        }, _createOperationResultError,
+        makeBusy: Runner.CurrentReversibleEdits.IsValidIndex(Runner.CurrentRowEditIndex ?? -1) && Runner.CurrentReversibleEdits[Runner.CurrentRowEditIndex!.Value].MakeBusy);
     }
 
     private HashSet<int>? FilteredRowIds(ICsvProcessor processor)

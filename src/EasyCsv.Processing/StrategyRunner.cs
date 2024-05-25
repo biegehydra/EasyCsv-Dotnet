@@ -175,7 +175,7 @@ public class StrategyRunner
 
         if (cellEdits.Count > 0)
         {
-            var columnEdit = new MakeColumnEdit(cellEdits, columnName);
+            var columnEdit = new PerformMultipleCellEdits(cellEdits, columnName);
             AddReversibleEdit(columnEdit);
         }
 
@@ -364,8 +364,8 @@ public readonly record struct CellEdit
 
 public class CompoundEdit : IReversibleEdit
 {
+    public bool MakeBusy { get; set; } = true;
     private readonly ICollection<IReversibleEdit> _edits;
-
     public CompoundEdit(ICollection<IReversibleEdit> edits)
     {
         _edits = edits;
@@ -388,12 +388,13 @@ public class CompoundEdit : IReversibleEdit
     }
 }
 
-public class MakeColumnEdit : IReversibleEdit
+public class PerformMultipleCellEdits : IReversibleEdit
 {
+    public bool MakeBusy { get; set; } = false;
     private readonly ICollection<CellEdit> _cellEdits;
     private readonly string _columnName;
 
-    public MakeColumnEdit(ICollection<CellEdit> cellEdits, string columnName)
+    public PerformMultipleCellEdits(ICollection<CellEdit> cellEdits, string columnName)
     {
         _cellEdits = cellEdits;
         _columnName = columnName;
@@ -418,34 +419,44 @@ public class MakeColumnEdit : IReversibleEdit
 
 public class AddRowsEdit : IReversibleEdit
 {
-    internal readonly ICollection<CsvRow> _rowsToAdd;
-
+    public bool MakeBusy { get; set; } = false;
+    private readonly ICollection<CsvRow> _rowsToAdd;
     public AddRowsEdit(ICollection<CsvRow> rowsToAdd)
     {
         _rowsToAdd = rowsToAdd;
     }
 
-    public void DoEdit(IEasyCsv csv, StrategyRunner runner)
+    public void UndoEdit(IEasyCsv csv, StrategyRunner runner)
     {
+        int requiredCapacity = csv.CsvContent.Count + _rowsToAdd.Count;
+        if (csv.CsvContent.Capacity < requiredCapacity)
+        {
+            csv.CsvContent.Capacity = requiredCapacity;
+        }
         foreach (var row in _rowsToAdd)
         {
             csv.CsvContent.Add(row);
         }
     }
 
-    public void UndoEdit(IEasyCsv csv, StrategyRunner runner)
+    public void DoEdit(IEasyCsv csv, StrategyRunner runner)
     {
-        foreach (var row in _rowsToAdd)
+        var remainingRows = new List<CsvRow>();
+        foreach (var row in csv.CsvContent)
         {
-            csv.CsvContent.Remove(row);
+            if (!_rowsToAdd.Contains(row))
+            {
+                remainingRows.Add(row);
+            }
         }
+        csv.SetCsvContent(remainingRows);
     }
 }
 
 public class DeleteRowEdit : IReversibleEdit
 {
+    public bool MakeBusy { get; } = false;
     private readonly CsvRow _row;
-
     public DeleteRowEdit(CsvRow row)
     {
         _row = row;
@@ -462,23 +473,34 @@ public class DeleteRowEdit : IReversibleEdit
 
 public class DeleteRowsEdit : IReversibleEdit
 {
-    private readonly ICollection<CsvRow> _rowsToDelete;
+    public bool MakeBusy { get; set; } = false;
+    private readonly HashSet<CsvRow> _rowsToDelete;
 
     public DeleteRowsEdit(ICollection<CsvRow> rowsToDelete)
     {
-        _rowsToDelete = rowsToDelete;
+        _rowsToDelete = new HashSet<CsvRow>(rowsToDelete);
     }
 
     public void DoEdit(IEasyCsv csv, StrategyRunner runner)
     {
-        foreach (var row in _rowsToDelete)
+        var remainingRows = new List<CsvRow>();
+        foreach (var row in csv.CsvContent)
         {
-            csv.CsvContent.Remove(row);
+            if (!_rowsToDelete.Contains(row))
+            {
+                remainingRows.Add(row);
+            }
         }
+        csv.SetCsvContent(remainingRows);
     }
 
     public void UndoEdit(IEasyCsv csv, StrategyRunner runner)
     {
+        int requiredCapacity = csv.CsvContent.Count + _rowsToDelete.Count;
+        if (csv.CsvContent.Capacity < requiredCapacity)
+        {
+            csv.CsvContent.Capacity = requiredCapacity;
+        }
         foreach (var row in _rowsToDelete)
         {
             csv.CsvContent.Add(row);
@@ -488,6 +510,7 @@ public class DeleteRowsEdit : IReversibleEdit
 
 public class ModifyRowEdit : IReversibleEdit
 {
+    public bool MakeBusy { get; } = false;
     public ModifyRowEdit(CsvRow row, CsvRow rowClone, CsvRow rowAfterOperation)
     {
         Row = row;
@@ -524,6 +547,7 @@ public class ModifyRowEdit : IReversibleEdit
 
 public class AddColumnEdit : IReversibleEdit
 {
+    public bool MakeBusy { get; set; } = true;
     private readonly string _columnName;
     private readonly string? _defaultValue;
     public AddColumnEdit(string columnName, string? defaultValue)
@@ -550,6 +574,7 @@ public class AddColumnEdit : IReversibleEdit
 
 internal struct RemoveColumnEditRow : IReversibleEdit
 {
+    public bool MakeBusy { get; } = false;
     private readonly Dictionary<string, object?> _newDictionary;
     private readonly CsvRow _row;
     private readonly string _columnName;
@@ -590,6 +615,7 @@ internal struct RemoveColumnEditRow : IReversibleEdit
 
 public class RemoveColumnEdit : IReversibleEdit
 {
+    public bool MakeBusy { get; set; } = true;
     private readonly string _columnName;
     private string[]? _columnValuesBefore;
     private readonly Dictionary<string, object?> _newDictionary = new();
@@ -631,24 +657,37 @@ public class RemoveColumnEdit : IReversibleEdit
 
 public class AddTagEdit : IReversibleEdit
 {
+    public bool MakeBusy { get; } = false;
     public AddTagEdit(CsvRow row, string tagToAdd)
     {
         Row = row;
         TagToAdd = tagToAdd;
     }
+
+    private bool _addedTag;
     public CsvRow Row { get; }
     public string TagToAdd { get; }
     public void DoEdit(IEasyCsv csv, StrategyRunner runner)
     {
+        if (!runner.CurrentTags!.Contains(TagToAdd))
+        {
+            runner.CurrentTags.Add(TagToAdd);
+            _addedTag = true;
+        }
         Row.AddProcessingTag(TagToAdd);
     }
     public void UndoEdit(IEasyCsv csv, StrategyRunner runner)
     {
         Row.RemoveProcessingTag(TagToAdd);
+        if (_addedTag)
+        {
+            runner.CurrentTags!.Remove(TagToAdd);
+        }
     }
 }
 public class RemoveTagEdit : IReversibleEdit
 {
+    public bool MakeBusy { get; } = false;
     public RemoveTagEdit(CsvRow row, string tagToRemove)
     {
         Row = row;
@@ -668,6 +707,7 @@ public class RemoveTagEdit : IReversibleEdit
 }
 public class RemoveReferenceEdit : IReversibleEdit
 {
+    public bool MakeBusy { get; } = false;
     public RemoveReferenceEdit(CsvRow row, int referenceCsvId, int referenceRowId)
     {
         Row = row;
@@ -689,6 +729,7 @@ public class RemoveReferenceEdit : IReversibleEdit
 }
 public class AddReferenceEdit : IReversibleEdit
 {
+    public bool MakeBusy { get; } = false;
     public AddReferenceEdit(CsvRow row, int referenceCsvId, int referenceRowId)
     {
         Row = row;
@@ -711,6 +752,7 @@ public class AddReferenceEdit : IReversibleEdit
 
 public interface IReversibleEdit
 {
+    public bool MakeBusy { get; }
     void DoEdit(IEasyCsv csv, StrategyRunner runner);
     void UndoEdit(IEasyCsv csv, StrategyRunner runner);
 }

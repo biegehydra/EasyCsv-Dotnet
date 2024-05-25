@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace EasyCsv.Core;
@@ -9,6 +10,10 @@ internal static class Utils
     public static bool IsValidIndex(int index, int size)
     {
         return index >= 0 && index < size;
+    }
+    public static bool IsValidIndex<T>(this IReadOnlyList<T> collection, int index)
+    {
+        return index >= 0 && index < collection.Count;
     }
 
 #if NETSTANDARD2_0

@@ -71,6 +71,7 @@
     [Parameter] public override string DescriptionStr { get; set; } = "Will tag all rows that match the specified predicate in $column_name.";
     [Parameter] public override RenderFragment<string>? Description { get; set; }
     [Parameter] public bool Immediate { get; set; } = true;
+    [Parameter] public int MakeBusyThreshold { get; set; } = 50_000;
     [Parameter] public StringPredicates[] AllowedPredicates { get; set; } = Enum.GetValues<StringPredicates>();
     private static StringComparison[] _stringComparisons = Enum.GetValues<StringComparison>();
     private StringPredicates _selectedPredicate;
@@ -96,7 +97,7 @@
 
     private async Task StrategyPicked(string columnName)
     {
-        if (CsvProcessor?.Runner?.CurrentCsv == null) return;
+        if (CsvProcessor?.Runner?.CurrentCsv == null || CsvProcessor.CsvProcessingTable == null) return;
         var firstRow = CsvProcessor.Runner.CurrentCsv.CsvContent.FirstOrDefault();
         if (firstRow == null) return;
 
@@ -158,7 +159,8 @@
 
         int tagged = 0;
         List<AddTagEdit> tagEdits = new();
-        foreach (var row in CsvProcessor.Runner.CurrentCsv.CsvContent)
+        var filterIndexes = CsvProcessor.CsvProcessingTable.FilteredRowIndexes();
+        foreach (var row in CsvProcessor.Runner.CurrentCsv.CsvContent.FilterByIndexes(filterIndexes))
         {
             var cell = new RowCell(columnName, row[columnName]);
             if (predicate(cell))
@@ -180,7 +182,8 @@
             edits = [..tagEdits];
         }
         var compoundEdit = new CompoundEdit(edits);
-        await CsvProcessor.AddReversibleEdit(compoundEdit, makeBusy: false, applyColumnSort: true);
+        compoundEdit.MakeBusy = edits.Length > MakeBusyThreshold;
+        await CsvProcessor.AddReversibleEdit(compoundEdit, applyColumnSort: true);
 
         if (CsvProcessor.UseSnackBar)
         {

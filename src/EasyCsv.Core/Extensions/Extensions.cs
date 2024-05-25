@@ -74,7 +74,11 @@ internal static class Extensions
             {
                 yield return item;
             }
-            else if (skip-- == 0)
+            else if (skip-- > 0)
+            {
+                // don't yield
+            }
+            else
             {
                 yield return item;
             }

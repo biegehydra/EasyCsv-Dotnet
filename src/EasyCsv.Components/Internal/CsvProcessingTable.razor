@@ -238,6 +238,7 @@
     private string[] _searchTags = [];
     private Dictionary<string, ColumnValueType> _columnValueTypes = [];
     private Dictionary<string, StrategyBucket> _columnStrategyBuckets = new();
+    private Dictionary<string, bool> _columnStrucuturePopoverDict = new();
     private Dictionary<string, string?[]> _cachedAllValues = new();
     private Dictionary<string, Color> _tagColors = new();
     private IEasyCsv? _easyCsv;
@@ -318,6 +319,7 @@
 
     private void OnEasyCsvChanged()
     {
+        _columnStrucuturePopoverDict.Clear();
         _columnPopOverDict.Clear();
         _columnStrategyBuckets.Clear();
         _referencesBackDropsOpen.Clear();
@@ -342,12 +344,27 @@
     {
         if (!open)
         {
+            _columnStrucuturePopoverDict[column] = open;
+            return OnPopoverToggled(open);
+        }
+        if (!_columnPopOverDict.Values.Any(x => x) && !_columnStrucuturePopoverDict.Values.Any(x => x))
+        {
+            _columnStrucuturePopoverDict[column] = true;
+            return OnPopoverToggled(open);
+        }
+        return Task.CompletedTask;
+    }
+
+    private Task ToggleStructurePopover(string column, bool open)
+    {
+        if (!open)
+        {
             _columnPopOverDict[column] = open;
             return OnPopoverToggled(open);
         }
-        if (!_columnPopOverDict.Values.Any(x => x))
+        if (!_columnPopOverDict.Values.Any(x => x) && !_columnStrucuturePopoverDict.Values.Any(x => x))
         {
-            _columnPopOverDict[column] = true;
+            _columnStrucuturePopoverDict[column] = true;
             return OnPopoverToggled(open);
         }
         return Task.CompletedTask;
@@ -737,6 +754,31 @@
                            }
                        </CascadingValue>
                    </CascadingValue>
+               </MudPopover>;
+    }
+
+    private RenderFragment StructurePopover(string column, Origin anchorOrigin, Origin transformOrigin, bool fullCsv)
+    {
+        _columnStrucuturePopoverDict.TryAdd(column, false);
+        return @<MudPopover Open="_columnPopOverDict[column]" Style="@($"max-height:{Stepper.MaxStrategySelectHeight}")" Class="csv-processing-popover"
+                            OverflowBehavior="OverflowBehavior.FlipAlways" AnchorOrigin="anchorOrigin" TransformOrigin="transformOrigin">
+                   <MudList Clickable="true" Style="z-index: inherit">
+                       <MudListSubheader>
+                           <div style="display: flex; flex-direction: row; justify-content: space-between">
+                               <MudText Class="mt-4" Typo="Typo.h5">Structure Operations</MudText>
+                               <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="x => ToggleStructurePopover(column, false)"></MudIconButton>
+                           </div>
+                       </MudListSubheader>
+                       <MudListItem>
+                           <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between;">
+
+                           </div>
+                       </MudListItem>
+                   </MudList>
+                   @if (_columnStrucuturePopoverDict[column] && Stepper.StrategySelectCloseBehaviour is CloseBehaviour.ClickAway or CloseBehaviour.CloseButtonAndClickAway)
+                   {
+                       <div @onclick="() => TogglePopover(column, false)" class="easy-csv-fullscreen-backdrop"></div>
+                   }
                </MudPopover>;
     }
 

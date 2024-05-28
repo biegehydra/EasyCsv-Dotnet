@@ -32,12 +32,14 @@
 
 	<ItemGroup>
 	  <Content Remove="Internals\ColumnValueTypeSelect.razor" />
+	  <Content Remove="Internal\StructureOperationsOptions.razor" />
 	  <Content Remove="Processing\StringReplaceStrategy.razor" />
 	</ItemGroup>
 
 
 	<ItemGroup>
 		<None Include="Icon.png" Pack="true" PackagePath="\" />
+		<None Include="Internal\StructureOperationsOptions.razor" />
 		<None Include="Processing\ColumnValueTypeSelect.razor" />
 		<None Include="LICENSE.txt" Pack="true" PackagePath="\" />
 		<None Include="README.md" Pack="true" PackagePath="\" />
@@ -73,7 +75,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <_ContentIncludedByDefault Remove="Internal\StructureOperationsOptions.razor" />
 	  <_ContentIncludedByDefault Remove="Processing\StringReplaceStrategy.razor" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <UpToDateCheckInput Remove="Internal\StructureOperationsOptions.razor" />
 	</ItemGroup>
 
 </Project>

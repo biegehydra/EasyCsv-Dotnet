@@ -1,0 +1,34 @@
+﻿@using EasyCsv.Components.Processing
+<MudListItem>
+    <MudSelect T="StructureOperation?" Value="_structureOperation"  >
+        <MudSelectItem T="StructureOperation" Value="StructureOperation.RemoveColumn" ></MudSelectItem>
+        <MudSelectItem T="StructureOperation" Value="StructureOperation.MoveColumnAfter" ></MudSelectItem>
+        <MudSelectItem T="StructureOperation" Value="StructureOperation.MoveColumnBefore" ></MudSelectItem>
+        <MudSelectItem T="StructureOperation" Value="StructureOperation.SwapColumns" ></MudSelectItem>
+    </MudSelect>
+    @if (_structureOperation is StructureOperation.MoveColumnAfter or StructureOperation.MoveColumnBefore
+                or StructureOperation.SwapColumns)
+    {
+        @{
+            string val = _structureOperation == StructureOperation.MoveColumnAfter 
+                            ? "After" 
+                            : _structureOperation == StructureOperation.MoveColumnAfter
+                                ? "Before"
+                                : "Swap With";
+        }
+        <ColumnSelect @bind-ColumnName="@_columnName"  Label="@val"  ></ColumnSelect>
+    }
+</MudListItem>
+
+@code {
+    [Parameter] public CsvProcessingStepper Stepper { get; set; }
+    private StructureOperation? _structureOperation;
+    private string? _columnName;
+    private enum StructureOperation
+    {
+        RemoveColumn,
+        MoveColumnAfter,
+        MoveColumnBefore,
+        SwapColumns
+    }
+}

@@ -54,6 +54,11 @@ namespace EasyCsv.Core
             return _csv.ColumnNames();
         }
 
+        public int ColumnIndex(string columnName)
+        {
+            return _csv.ColumnIndex(columnName);
+        }
+
         public Task<List<T>> GetRecordsAsync<T>(bool strict = false, CsvContextProfile? csvContextProfile = null)
         {
             return _csv.GetRecordsAsync<T>(strict, csvContextProfile);

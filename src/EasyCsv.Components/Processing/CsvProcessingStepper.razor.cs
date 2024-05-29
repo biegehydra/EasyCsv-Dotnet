@@ -113,6 +113,7 @@ public partial class CsvProcessingStepper
     /// </summary>
     [Parameter] public bool HideExpandUnselected { get; set; }
     [Parameter] public string? ViewColumnOperationsIcon { get; set; } = EasyCsvIcons.FullCsvStrategies;
+    [Parameter] public string? StructureOperationsIcon { get; set; } = Icons.Material.Filled.Edit;
     /// <summary>
     /// The chip color that at chips will have in the References column
     /// </summary>

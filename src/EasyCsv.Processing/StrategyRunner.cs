@@ -613,6 +613,32 @@ internal struct RemoveColumnEditRow : IReversibleEdit
     }
 }
 
+public class MoveColumnEdit : IReversibleEdit
+{
+    public MoveColumnEdit(string columnName, int newIndex)
+    {
+        ColumnName = columnName;
+        NewIndex = newIndex;
+    }
+    private int? _oldIndex;
+    public string ColumnName { get; }
+    public int NewIndex { get; }
+    public bool MakeBusy { get; set; } = true;
+    public void DoEdit(IEasyCsv csv, StrategyRunner runner)
+    {
+        if (_oldIndex == null)
+        {
+            _oldIndex = csv.ColumnNames()!.IndexOf(ColumnName);
+        }
+        csv.MoveColumn(ColumnName, NewIndex);
+    }
+
+    public void UndoEdit(IEasyCsv csv, StrategyRunner runner)
+    {
+        csv.MoveColumn(ColumnName, _oldIndex!.Value);
+    }
+}
+
 public class RemoveColumnEdit : IReversibleEdit
 {
     public bool MakeBusy { get; set; } = true;
@@ -646,7 +672,7 @@ public class RemoveColumnEdit : IReversibleEdit
         {
             foreach (var removeColumnEditRow in _removeColumnEdits)
             {
-                removeColumnEditRow.DoEdit(csv, runner);
+                removeColumnEditRow.UndoEdit(csv, runner);
             }
             var newColumnNames = csv.ColumnNames()!;
             var temp = runner._steps[runner.CurrentIndex];

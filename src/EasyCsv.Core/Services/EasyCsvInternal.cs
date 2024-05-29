@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using EasyCsv.Core.Configuration;
+using EasyCsv.Core.Extensions;
 
 [assembly: InternalsVisibleTo("EasyCsv.Files")]
 [assembly: InternalsVisibleTo("EasyCsv.Components")]
@@ -87,6 +88,15 @@ namespace EasyCsv.Core
         public string[]? ColumnNames()
         {
             return CsvContent?.FirstOrDefault()?.Keys.ToArray();
+        }
+
+        public int ColumnIndex(string columnName)
+        {
+            if (CsvContent == null! || CsvContent.Count == 0)
+            {
+                return -1;
+            }
+            return CsvContent.First().Keys.IndexOf(columnName, StringComparer.Ordinal);
         }
 
         private static List<CsvRow> CloneContent(List<CsvRow>? content)

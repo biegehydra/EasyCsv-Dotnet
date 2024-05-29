@@ -145,6 +145,7 @@
             {
                 int mid = columnNames.Length / 2;
                 var anchorOrigin = i >= mid ? Origin.BottomLeft : Origin.BottomRight;
+                var structureAnchorOrigin = i < mid ? Origin.BottomLeft : Origin.BottomRight;
                 var transformOrigin = i >= mid ? Origin.TopRight : Origin.TopLeft;
                 var column = columnNames[i];
                 string? cursorStyle = Stepper.EnableSorting ? "cursor: pointer; user-select: none;" : null;
@@ -159,8 +160,14 @@
                                 <MudIconButton Disabled="Busy" Icon="@Stepper.ViewColumnOperationsIcon" OnClick="_ => TogglePopover(column)"></MudIconButton>
                             </MudTooltip>
                         </div>
+                        <div class="csv-processing-table-th-button">
+                            <MudTooltip Delay="750" Text="Structure Operations">
+                                <MudIconButton Disabled="Busy" Icon="@Stepper.StructureOperationsIcon" OnClick="_ => ToggleStructurePopover(column)"></MudIconButton>
+                            </MudTooltip>
+                        </div>
                     </div>
                     @StrategyBucketPopover(column, anchorOrigin, transformOrigin, fullCsv: false)
+                    @StructurePopover(column, structureAnchorOrigin, transformOrigin)
                 </MudTh>
             }
             @if (Stepper.TagsAndReferencesLocation == ColumnLocation.End)
@@ -238,6 +245,7 @@
     private string[] _searchTags = [];
     private Dictionary<string, ColumnValueType> _columnValueTypes = [];
     private Dictionary<string, StrategyBucket> _columnStrategyBuckets = new();
+    private Dictionary<string, bool> _columnStrucuturePopoverDict = new();
     private Dictionary<string, string?[]> _cachedAllValues = new();
     private Dictionary<string, Color> _tagColors = new();
     private IEasyCsv? _easyCsv;
@@ -318,6 +326,7 @@
 
     private void OnEasyCsvChanged()
     {
+        _columnStrucuturePopoverDict.Clear();
         _columnPopOverDict.Clear();
         _columnStrategyBuckets.Clear();
         _referencesBackDropsOpen.Clear();
@@ -338,17 +347,38 @@
         return TogglePopover(column, !value);
     }
 
+    internal Task ToggleStructurePopover(string column)
+    {
+        bool value = _columnStrucuturePopoverDict[column];
+        return ToggleStructurePopover(column, !value);
+    }
+
     private Task TogglePopover(string column, bool open)
     {
-        if (!open)
+        if (open == false)
         {
-            _columnPopOverDict[column] = open;
-            return OnPopoverToggled(open);
+            _columnPopOverDict[column] = false;
+            return OnPopoverToggled(false);
         }
-        if (!_columnPopOverDict.Values.Any(x => x))
+        if (!_columnPopOverDict.Values.Any(x => x) && !_columnStrucuturePopoverDict.Values.Any(x => x))
         {
             _columnPopOverDict[column] = true;
             return OnPopoverToggled(open);
+        }
+        return Task.CompletedTask;
+    }
+
+    private Task ToggleStructurePopover(string column, bool open)
+    {
+        if (open == false)
+        {
+            _columnStrucuturePopoverDict[column] = false;
+            return OnPopoverToggled(false);
+        }
+        if (!_columnPopOverDict.Values.Any(x => x) && !_columnStrucuturePopoverDict.Values.Any(x => x))
+        {
+            _columnStrucuturePopoverDict[column] = true;
+            return OnPopoverToggled(true);
         }
         return Task.CompletedTask;
     }
@@ -732,6 +762,35 @@
                                }
                            </MudList>
                            @if (_columnPopOverDict[column] && Stepper.StrategySelectCloseBehaviour is CloseBehaviour.ClickAway or CloseBehaviour.CloseButtonAndClickAway)
+                           {
+                               <div @onclick="() => TogglePopover(column, false)" class="easy-csv-fullscreen-backdrop"></div>
+                           }
+                       </CascadingValue>
+                   </CascadingValue>
+               </MudPopover>;
+    }
+
+    private RenderFragment StructurePopover(string column, Origin anchorOrigin, Origin transformOrigin)
+    {
+        _columnStrucuturePopoverDict.TryAdd(column, false);
+        return @<MudPopover Open="_columnStrucuturePopoverDict[column]" Style="@($"max-height:{Stepper.MaxStrategySelectHeight}")" Class="csv-processing-popover"
+                            OverflowBehavior="OverflowBehavior.FlipAlways" AnchorOrigin="anchorOrigin" TransformOrigin="transformOrigin">
+                    <CascadingValue TValue="CsvProcessingStepper" Value="Stepper" IsFixed="true">
+                       <CascadingValue TValue="StrategyBucket" Value="_columnStrategyBuckets[column]" IsFixed="true">
+                           <MudList Clickable="true" Style="z-index: inherit">
+                               <MudListSubheader>
+                                   <div style="display: flex; flex-direction: row; justify-content: space-between">
+                                       <MudText Class="mt-4" Typo="Typo.h5">Structure Operations</MudText>
+                                       <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="x => ToggleStructurePopover(column, false)"></MudIconButton>
+                                   </div>
+                               </MudListSubheader>
+                               <MudListItem>
+                                   <div style="display: flex; flex-direction: row; align-items: center; gap: 20px;">
+                                       <StructureOperationsOptions></StructureOperationsOptions>
+                                   </div>
+                               </MudListItem>
+                           </MudList>
+                           @if (_columnStrucuturePopoverDict[column] && Stepper.StrategySelectCloseBehaviour is CloseBehaviour.ClickAway or CloseBehaviour.CloseButtonAndClickAway)
                            {
                                <div @onclick="() => TogglePopover(column, false)" class="easy-csv-fullscreen-backdrop"></div>
                            }

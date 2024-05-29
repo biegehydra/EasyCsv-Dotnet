@@ -58,6 +58,8 @@ namespace EasyCsv.Core
         string[]? ColumnNames();
 
 
+        int ColumnIndex(string columnName);
+
 
         /// <summary>
         /// Gets the records of the CSV content as a list of objects of type T.

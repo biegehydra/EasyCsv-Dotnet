@@ -1,0 +1,63 @@
+﻿@inherits StrategyBucketItemBase
+<div class="max-width: 50%" >
+    <MudSelect T="StructureOperation?" Variant="Variant.Outlined" @bind-Value="_structureOperation" Clearable="true" OnClearButtonClick="() => _structureOperation = null" >
+        <MudSelectItem T="StructureOperation?" Value="StructureOperation.Delete" ></MudSelectItem>
+        <MudSelectItem T="StructureOperation?" Value="StructureOperation.Rename" ></MudSelectItem>
+        <MudSelectItem T="StructureOperation?" Value="StructureOperation.MoveAfter" ></MudSelectItem>
+        <MudSelectItem T="StructureOperation?" Value="StructureOperation.MoveBefore" ></MudSelectItem>
+        <MudSelectItem T="StructureOperation?" Value="StructureOperation.SwapWith" ></MudSelectItem>
+    </MudSelect>
+</div>
+@if (_structureOperation is StructureOperation.MoveAfter or StructureOperation.MoveBefore
+     or StructureOperation.SwapWith or StructureOperation.Rename)
+{
+    string val = _structureOperation == StructureOperation.MoveAfter
+        ? "After"
+        : _structureOperation == StructureOperation.MoveAfter
+            ? "Before"
+            : _structureOperation == StructureOperation.Rename
+                ? "New Name"
+                : "Swap With";
+    <ColumnSelect @bind-ColumnName="@_columnName"  Label="@val"  ></ColumnSelect>
+}
+<MudIconButton Disabled="Disabled()" Icon="@Icons.Material.Filled.Check" Color="Color.Info" OnClick="OnConfirm" ></MudIconButton>
+
+@code {
+    private StructureOperation? _structureOperation = StructureOperation.Delete;
+    private string? _columnName;
+
+    private bool Disabled()
+    {
+        return _structureOperation switch
+        {
+            StructureOperation.SwapWith or StructureOperation.Rename or StructureOperation.MoveBefore or StructureOperation.MoveAfter => string.IsNullOrWhiteSpace(_columnName),
+            StructureOperation.Delete => false,
+            null => true,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+    }
+    private enum StructureOperation
+    {
+        Delete,
+        Rename,
+        MoveAfter,
+        MoveBefore,
+        SwapWith
+    }
+
+    private async Task OnConfirm()
+    {
+        if (Disabled() || CsvProcessor?.Runner?.CurrentCsv == null) return;
+        IReversibleEdit edit = _structureOperation switch
+        {
+            StructureOperation.Delete => new RemoveColumnEdit(StrategyBucket.ColumnName),
+            StructureOperation.Rename => new MoveColumnEdit(StrategyBucket.ColumnName, CsvProcessor.Runner.CurrentCsv.ColumnIndex(StrategyBucket.ColumnName)),
+            StructureOperation.MoveAfter => new MoveColumnEdit(StrategyBucket.ColumnName, CsvProcessor.Runner.CurrentCsv.ColumnIndex(_columnName!) - 1),
+            StructureOperation.MoveBefore => new MoveColumnEdit(StrategyBucket.ColumnName, CsvProcessor.Runner.CurrentCsv.ColumnIndex(_columnName!) + 1),
+            StructureOperation.SwapWith => new MoveColumnEdit(StrategyBucket.ColumnName, CsvProcessor.Runner.CurrentCsv.ColumnIndex(_columnName!)),
+            _ => throw new ArgumentOutOfRangeException()
+        };
+        await CsvProcessor.AddReversibleEdit(edit);
+    }
+
+}

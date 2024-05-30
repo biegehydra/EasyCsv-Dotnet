@@ -428,14 +428,14 @@ public class PerformMultipleCellEdits : IReversibleEdit
 
 public class AddRowsEdit : IReversibleEdit
 {
-    public bool MakeBusy { get; set; } = false;
-    private readonly ICollection<CsvRow> _rowsToAdd;
+    public bool MakeBusy { get; set; }
+    private readonly HashSet<CsvRow> _rowsToAdd;
     public AddRowsEdit(ICollection<CsvRow> rowsToAdd)
     {
-        _rowsToAdd = rowsToAdd;
+        _rowsToAdd = new HashSet<CsvRow>(rowsToAdd);
     }
 
-    public void UndoEdit(IEasyCsv csv, StrategyRunner runner)
+    public void DoEdit(IEasyCsv csv, StrategyRunner runner)
     {
         int requiredCapacity = csv.CsvContent.Count + _rowsToAdd.Count;
         if (csv.CsvContent.Capacity < requiredCapacity)
@@ -448,9 +448,9 @@ public class AddRowsEdit : IReversibleEdit
         }
     }
 
-    public void DoEdit(IEasyCsv csv, StrategyRunner runner)
+    public void UndoEdit(IEasyCsv csv, StrategyRunner runner)
     {
-        var remainingRows = new List<CsvRow>();
+        var remainingRows = new List<CsvRow>(csv.RowCount() - _rowsToAdd.Count);
         foreach (var row in csv.CsvContent)
         {
             if (!_rowsToAdd.Contains(row))
@@ -492,7 +492,7 @@ public class DeleteRowsEdit : IReversibleEdit
 
     public void DoEdit(IEasyCsv csv, StrategyRunner runner)
     {
-        var remainingRows = new List<CsvRow>();
+        var remainingRows = new List<CsvRow>(csv.RowCount() - _rowsToDelete.Count);
         foreach (var row in csv.CsvContent)
         {
             if (!_rowsToDelete.Contains(row))

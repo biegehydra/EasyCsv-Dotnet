@@ -18,6 +18,7 @@
 {
     [Inject] public ISnackbar? Snackbar { get; set; }
     [Parameter] public bool Immediate { get; set; } = true;
+    [Parameter] public bool Indeterminate { get; set; } = true;
     [Parameter] public override string? DisplayName { get; set; } = "Divide And Replicate";
     [Parameter] public override string? DescriptionStr { get; set; } = "Will split the values in $column_name, on a specified delimiter, into parts and then create a copy of the row for each part";
 
@@ -53,7 +54,7 @@
     {
         if (!AllowRun) return;
         var progressContext = new OperationProgressContext($"Dividing and replicating values in {StrategyBucket.ColumnName} on `{_delimiter}`");
-        await Snackbar.OpenProgressSnackbar(progressContext, false);
+        await Snackbar.OpenProgressSnackbar(progressContext, Indeterminate);
         var divideAndReplicateStrategy = new DivideAndReplicateStrategy(columnName, y => y?.ToString()?.Split(_delimiter).Cast<object?>().ToArray(), progressContext.ProgressChanged);
         _ = await CsvProcessor.PerformCsvStrategy(divideAndReplicateStrategy, progressContext);
     }

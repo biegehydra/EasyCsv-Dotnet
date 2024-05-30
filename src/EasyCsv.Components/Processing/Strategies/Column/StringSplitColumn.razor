@@ -28,6 +28,7 @@
     [Parameter] public override string? DescriptionStr { get; set; } = "Will split all the values in $column_name, on a specified delimiter, into new columns";
     [Parameter] public override RenderFragment<string>? Description { get; set; }
     [Parameter] public bool Immediate { get; set; } = true;
+    [Parameter] public bool Indeterminate { get; set; } = true;
     private bool AllowRun => _newColumnNames?.Contains(',') == true && !string.IsNullOrWhiteSpace(_delimiter);
     private static readonly Dictionary<string, string> ExampleOptions = new Dictionary<string, string>()
     {
@@ -60,7 +61,7 @@
     {
         if (!AllowRun) return;
         var progressContext = new OperationProgressContext($"Splitting values in {StrategyBucket.ColumnName} on '{_delimiter}'");
-        await Snackbar.OpenProgressSnackbar(progressContext, false);
+        await Snackbar.OpenProgressSnackbar(progressContext, Indeterminate);
         var splitParsingStrategy = new StringSplitColumnStrategy(columnName, _newColumnNames!.Split(','), _delimiter!, _removeSplitColumn, onProgress: progressContext.ProgressChanged);
         _ = await CsvProcessor.PerformCsvStrategy(splitParsingStrategy, progressContext);
     }

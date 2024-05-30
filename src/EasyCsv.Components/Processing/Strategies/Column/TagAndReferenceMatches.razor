@@ -27,6 +27,7 @@
     [Parameter] public override string? DescriptionStr { get; set; } = "Will compare all the values in $column_name in the Working Csv to all the values in the selected column of the reference csv. On any exact matches, the specified tag will be added to the row, and a link to the reference table will be created.";
     [Parameter] public override RenderFragment<string>? Description { get; set; }
     [Parameter] public bool Immediate { get; set; } = true;
+    [Parameter] public bool Indeterminate { get; set; } = true;
 
     private bool AllowRun => !string.IsNullOrWhiteSpace(StrategyBucket.ColumnName) && !string.IsNullOrWhiteSpace(_referenceColumnName) && _referenceCsvId is >= 0;
     private string? _referenceColumnName;
@@ -41,7 +42,7 @@
             return;
         }
         var progressContext = new OperationProgressContext($"Running {DisplayName}");
-        await Snackbar.OpenProgressSnackbar(progressContext, false);
+        await Snackbar.OpenProgressSnackbar(progressContext, Indeterminate);
         var tagAndReferenceMatchesStrategy = new TagAndReferenceMatchesStrategy(_referenceCsvId.Value, StrategyBucket.ColumnName, _referenceColumnName, _tagToAdd, onProgress: progressContext.ProgressChanged);
         _ = await CsvProcessor.PerformReferenceStrategy(tagAndReferenceMatchesStrategy, progressContext);
     }

@@ -82,7 +82,7 @@
 
     private async Task OnProgressChangeChanged(double newProgress)
     {
-        if (OperationProgressContext.ForceIndeterminate)
+        if (Indeterminate || OperationProgressContext.ForceIndeterminate)
         {
             return;
         } 

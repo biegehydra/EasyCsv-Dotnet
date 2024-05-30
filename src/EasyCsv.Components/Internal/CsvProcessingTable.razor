@@ -145,7 +145,6 @@
             {
                 int mid = columnNames.Length / 2;
                 var anchorOrigin = i >= mid ? Origin.BottomLeft : Origin.BottomRight;
-                var structureAnchorOrigin = i < mid ? Origin.BottomLeft : Origin.BottomRight;
                 var transformOrigin = i >= mid ? Origin.TopRight : Origin.TopLeft;
                 var column = columnNames[i];
                 string? cursorStyle = Stepper.EnableSorting ? "cursor: pointer; user-select: none;" : null;
@@ -160,14 +159,8 @@
                                 <MudIconButton Disabled="Busy" Icon="@Stepper.ViewColumnOperationsIcon" OnClick="_ => TogglePopover(column)"></MudIconButton>
                             </MudTooltip>
                         </div>
-                        <div class="csv-processing-table-th-button">
-                            <MudTooltip Delay="750" Text="Structure Operations">
-                                <MudIconButton Disabled="Busy" Icon="@Stepper.StructureOperationsIcon" OnClick="_ => ToggleStructurePopover(column)"></MudIconButton>
-                            </MudTooltip>
-                        </div>
                     </div>
-                    @StrategyBucketPopover(column, anchorOrigin, transformOrigin, fullCsv: false)
-                    @StructurePopover(column, structureAnchorOrigin, transformOrigin)
+                    @StrategyBucketPopover(column, Origin.BottomCenter, Origin.TopCenter, fullCsv: false)
                 </MudTh>
             }
             @if (Stepper.TagsAndReferencesLocation == ColumnLocation.End)
@@ -245,7 +238,7 @@
     private string[] _searchTags = [];
     private Dictionary<string, ColumnValueType> _columnValueTypes = [];
     private Dictionary<string, StrategyBucket> _columnStrategyBuckets = new();
-    private Dictionary<string, bool> _columnStrucuturePopoverDict = new();
+    private Dictionary<string, (bool Picked, bool DelayComplete)> _columnStructurePopoverDict = new();
     private Dictionary<string, string?[]> _cachedAllValues = new();
     private Dictionary<string, Color> _tagColors = new();
     private IEasyCsv? _easyCsv;
@@ -326,7 +319,7 @@
 
     private void OnEasyCsvChanged()
     {
-        _columnStrucuturePopoverDict.Clear();
+        _columnStructurePopoverDict.Clear();
         _columnPopOverDict.Clear();
         _columnStrategyBuckets.Clear();
         _referencesBackDropsOpen.Clear();
@@ -349,7 +342,7 @@
 
     internal Task ToggleStructurePopover(string column)
     {
-        bool value = _columnStrucuturePopoverDict[column];
+        bool value = _columnStructurePopoverDict[column].Picked;
         return ToggleStructurePopover(column, !value);
     }
 
@@ -358,9 +351,14 @@
         if (open == false)
         {
             _columnPopOverDict[column] = false;
+            var keys = _columnStructurePopoverDict.Keys.ToArray();
+            foreach (var key in keys)
+            {
+                _columnStructurePopoverDict[key] = (false, false);
+            }
             return OnPopoverToggled(false);
         }
-        if (!_columnPopOverDict.Values.Any(x => x) && !_columnStrucuturePopoverDict.Values.Any(x => x))
+        if (!_columnPopOverDict.Values.Any(x => x) && !_columnStructurePopoverDict.Values.Any(x => x.Picked))
         {
             _columnPopOverDict[column] = true;
             return OnPopoverToggled(open);
@@ -372,12 +370,13 @@
     {
         if (open == false)
         {
-            _columnStrucuturePopoverDict[column] = false;
+            _columnStructurePopoverDict[column] = (false, false);
             return OnPopoverToggled(false);
         }
-        if (!_columnPopOverDict.Values.Any(x => x) && !_columnStrucuturePopoverDict.Values.Any(x => x))
+        if (_columnPopOverDict.FirstOrDefault(x => x.Value) is { } kvp && kvp.Key?.Equals(column) == true  
+                                                                       && !_columnStructurePopoverDict.Values.Any(x => x.Picked))
         {
-            _columnStrucuturePopoverDict[column] = true;
+            _columnStructurePopoverDict[column] = (true, false);
             return OnPopoverToggled(true);
         }
         return Task.CompletedTask;
@@ -707,6 +706,7 @@
             _columnStrategyBuckets.Add(column, new StrategyBucket(column, InvokeStateHasChanged));
         }
         _columnStrategyBuckets[column].SetOrigins(anchorOrigin, transformOrigin);
+        _columnStructurePopoverDict.TryAdd(column, (false, false));
         return @<MudPopover Open="_columnPopOverDict[column]" Style="@($"max-height:{Stepper.MaxStrategySelectHeight}")" Class="csv-processing-popover"
                             OverflowBehavior="OverflowBehavior.FlipAlways" AnchorOrigin="anchorOrigin" TransformOrigin="transformOrigin">
                    <CascadingValue TValue="CsvProcessingStepper" Value="Stepper" IsFixed="true">
@@ -723,6 +723,12 @@
                                            {
                                                @:Column Strategies&nbsp;
                                                @:(@column)
+                                               if (_columnStructurePopoverDict[column].Picked && !_columnStructurePopoverDict[column].DelayComplete)
+                                               {
+                                                   <RenderDelay Delay="5" DelayComplete="() => { _columnStructurePopoverDict[column] = (true, true); }" ></RenderDelay>
+                                               }
+                                               <MudIconButton Disabled="Busy" Icon="@Stepper.StructureOperationsIcon" OnClick="_ => ToggleStructurePopover(column)"></MudIconButton>
+                                               @StructurePopover(column, Origin.BottomRight, Origin.TopCenter)
                                            }
                                        </MudText>
                                        <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="x => TogglePopover(column, false)"></MudIconButton>
@@ -765,6 +771,10 @@
                            {
                                <div @onclick="() => TogglePopover(column, false)" class="easy-csv-fullscreen-backdrop"></div>
                            }
+                           @if (_columnStructurePopoverDict[column].DelayComplete && Stepper.StrategySelectCloseBehaviour is CloseBehaviour.ClickAway or CloseBehaviour.CloseButtonAndClickAway)
+                           {
+                               <div @onclick="() => ToggleStructurePopover(column, false)" class="easy-csv-fullscreen-backdrop"></div>
+                           }
                        </CascadingValue>
                    </CascadingValue>
                </MudPopover>;
@@ -772,29 +782,26 @@
 
     private RenderFragment StructurePopover(string column, Origin anchorOrigin, Origin transformOrigin)
     {
-        _columnStrucuturePopoverDict.TryAdd(column, false);
-        return @<MudPopover Open="_columnStrucuturePopoverDict[column]" Style="@($"max-height:{Stepper.MaxStrategySelectHeight}")" Class="csv-processing-popover"
+        return @<MudPopover Open="_columnStructurePopoverDict[column].DelayComplete"
                             OverflowBehavior="OverflowBehavior.FlipAlways" AnchorOrigin="anchorOrigin" TransformOrigin="transformOrigin">
                     <CascadingValue TValue="CsvProcessingStepper" Value="Stepper" IsFixed="true">
-                       <CascadingValue TValue="StrategyBucket" Value="_columnStrategyBuckets[column]" IsFixed="true">
-                           <MudList Clickable="true" Style="z-index: inherit">
-                               <MudListSubheader>
-                                   <div style="display: flex; flex-direction: row; justify-content: space-between">
-                                       <MudText Class="mt-4" Typo="Typo.h5">Structure Operations</MudText>
-                                       <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="x => ToggleStructurePopover(column, false)"></MudIconButton>
-                                   </div>
-                               </MudListSubheader>
-                               <MudListItem>
-                                   <div style="display: flex; flex-direction: row; align-items: center; gap: 20px;">
-                                       <StructureOperationsOptions OnComplete="() => ToggleStructurePopover(column, false)"></StructureOperationsOptions>
-                                   </div>
-                               </MudListItem>
-                           </MudList>
-                           @if (_columnStrucuturePopoverDict[column] && Stepper.StrategySelectCloseBehaviour is CloseBehaviour.ClickAway or CloseBehaviour.CloseButtonAndClickAway)
-                           {
-                               <div @onclick="() => ToggleStructurePopover(column, false)" class="easy-csv-fullscreen-backdrop"></div>
-                           }
-                       </CascadingValue>
+                        <CascadingValue TValue="StrategyBucket" Value="_columnStrategyBuckets[column]" IsFixed="true">
+                            <MudList Clickable="true" Style="z-index: inherit">
+                                <MudListSubheader>
+                                    <div style="display: flex; flex-direction: row; justify-content: space-between">
+                                        <MudText Class="mt-4" Typo="Typo.h5">
+                                            Restructure Column
+                                        </MudText>
+                                        <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="x => ToggleStructurePopover(column, false)"></MudIconButton>
+                                    </div>
+                                </MudListSubheader>
+                                <MudListSubheader>
+                                    <div style="display: flex; flex-direction: column; align-items: baseline; gap: 15px; z-index: inherit; min-width: 350px;">
+                                        <StructureOperationsOptions OnComplete="() => { ToggleStructurePopover(column, false); TogglePopover(column, false); }"></StructureOperationsOptions>
+                                    </div>
+                                </MudListSubheader>
+                            </MudList>
+                        </CascadingValue>
                    </CascadingValue>
                </MudPopover>;
     }

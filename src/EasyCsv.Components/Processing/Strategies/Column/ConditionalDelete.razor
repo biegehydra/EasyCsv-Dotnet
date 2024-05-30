@@ -4,7 +4,7 @@
 
 @if (CsvProcessor == null)
 {
-    throw new ArgumentException("EasyCsv: Attempted to render strategy options not within CsvProcessingStepper", nameof(CsvProcessingStepper));
+    throw new ArgumentException("Attempted to render strategy options not within CsvProcessingStepper", nameof(CsvProcessingStepper));
 }
 <StrategyItem DisplayName="@DisplayName" DescriptionStr="@DescriptionStr" Description="Description" AllowRun="AllowRun()" StrategyPicked="StrategyPicked">
     <Options>
@@ -65,6 +65,7 @@
     [Parameter] public override string DescriptionStr { get; set; } = "Will delete all rows that match the specified predicate in $column_name.";
     [Parameter] public override RenderFragment<string>? Description { get; set; }
     [Parameter] public bool Immediate { get; set; } = true;
+    [Parameter] public bool Indeterminate { get; set; } = true;
     [Parameter] public StringPredicates[] AllowedPredicates { get; set; } = Enum.GetValues<StringPredicates>();
     private static StringComparison[] _stringComparisons = Enum.GetValues<StringComparison>();
     private StringPredicates _selectedPredicate;
@@ -90,8 +91,8 @@
     private async Task StrategyPicked(string columnName)
     {
         if (CsvProcessor?.Runner?.CurrentCsv == null) return;
-        var progressContext = new OperationProgressContext($"Processing rows based on the selected condition");
-        await Snackbar.OpenProgressSnackbar(progressContext, false);
+        var progressContext = new OperationProgressContext($"Deleting rows based on predicate");
+        await Snackbar.OpenProgressSnackbar(progressContext, Indeterminate);
 
         Func<IReadonlyCell, bool> predicate = cell => false;
 

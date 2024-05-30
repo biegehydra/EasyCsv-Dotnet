@@ -34,6 +34,7 @@
     [Parameter] public override string? DisplayName { get; set; } = "Combine Columns";
     [Parameter] public override string? DescriptionStr { get; set; } = "Combine the specified columns using a delimiter into a new column.";
     [Parameter] public override RenderFragment<string>? Description { get; set; }
+    [Parameter] public bool Indeterminate { get; set; } = true;
 
     private static Dictionary<string, string> _exampleOptions = new ()
     {
@@ -69,7 +70,7 @@
     {
         if (!AllowRun) return;
         var progressContext = new OperationProgressContext($"Running {DisplayName}");
-        await Snackbar.OpenProgressSnackbar(progressContext, false);
+        await Snackbar.OpenProgressSnackbar(progressContext, Indeterminate);
         var joinColumnsStrategy = new JoinColumnsStrategy(_columnsToJoin!, _newColumnName!, _delimiter!, _removeJoinedColumns, onProgress: progressContext.ProgressChanged);
         _ = await CsvProcessor.PerformCsvStrategy(joinColumnsStrategy, progressContext);
     }

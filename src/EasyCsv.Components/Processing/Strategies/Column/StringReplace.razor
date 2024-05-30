@@ -39,6 +39,7 @@
     [Parameter] public StringComparison DefaultStringComparisonType { get; set; } = StringComparison.OrdinalIgnoreCase;
     [Parameter] public Variant Variant { get; set; } = Variant.Filled;
     [Parameter] public bool Immediate { get; set; } = true;
+    [Parameter] public bool Indeterminate { get; set; } = true;
     [Parameter] public bool ShowStringComparisonInput { get; set; } = true;
     private bool AllowRun => !string.IsNullOrWhiteSpace(_valueToReplace);
     protected override void OnInitialized()
@@ -91,7 +92,7 @@
         if (!AllowRun) return;
         Func<StringReplaceStrategy, string> completeMessage = x => $"{x.ReplacedCount} {(x.ReplacedCount == 1 ? "value" : "values")} replaced";
         var progressContext = new OperationProgressContext<StringReplaceStrategy>($"Replacing all '{_valueToReplace}' with '{_newValue}' in {StrategyBucket.ColumnName}", completeMessage);
-        await Snackbar.OpenProgressSnackbar(progressContext, false);
+        await Snackbar.OpenProgressSnackbar(progressContext, Indeterminate);
         var stringReplaceStrategy = new StringReplaceStrategy(StrategyBucket.ColumnName, _valueToReplace!, _newValue!, _comparison);
         _ = await CsvProcessor.PerformColumnStrategy(stringReplaceStrategy, progressContext);
     }

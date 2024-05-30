@@ -1,27 +1,28 @@
 ﻿@inherits StrategyBucketItemBase
-<div class="max-width: 50%" >
-    <MudSelect T="StructureOperation?" Variant="Variant.Outlined" @bind-Value="_structureOperation" Clearable="true" OnClearButtonClick="() => _structureOperation = null" >
-        <MudSelectItem T="StructureOperation?" Value="StructureOperation.Delete" ></MudSelectItem>
-        <MudSelectItem T="StructureOperation?" Value="StructureOperation.Rename" ></MudSelectItem>
-        <MudSelectItem T="StructureOperation?" Value="StructureOperation.MoveAfter" ></MudSelectItem>
-        <MudSelectItem T="StructureOperation?" Value="StructureOperation.MoveBefore" ></MudSelectItem>
-        <MudSelectItem T="StructureOperation?" Value="StructureOperation.SwapWith" ></MudSelectItem>
-    </MudSelect>
-</div>
-@if (_structureOperation is StructureOperation.MoveAfter or StructureOperation.MoveBefore or StructureOperation.SwapWith)
+<MudSelect T="StructureOperation?" Label="Restructure Operation" Variant="Variant.Outlined" @bind-Value="_structureOperation" Clearable="true" OnClearButtonClick="() => _structureOperation = null" >
+    <MudSelectItem T="StructureOperation?" Value="StructureOperation.Delete" ></MudSelectItem>
+    <MudSelectItem T="StructureOperation?" Value="StructureOperation.Rename" ></MudSelectItem>
+    <MudSelectItem T="StructureOperation?" Value="StructureOperation.MoveAfter" ></MudSelectItem>
+    <MudSelectItem T="StructureOperation?" Value="StructureOperation.MoveBefore" ></MudSelectItem>
+    <MudSelectItem T="StructureOperation?" Value="StructureOperation.SwapPositionsWith" ></MudSelectItem>
+</MudSelect>
+@if (_structureOperation is StructureOperation.MoveAfter or StructureOperation.MoveBefore or StructureOperation.SwapPositionsWith)
 {
     string val = _structureOperation == StructureOperation.MoveAfter
-        ? "After"
+        ? "After Column Name"
         : _structureOperation == StructureOperation.MoveAfter
-            ? "Before"
-            : "Swap With";
-    <ColumnSelect Immediate="true" @bind-ColumnName="@_columnName"  Label="@val"  ></ColumnSelect>
+            ? "Before Column Name"
+            : "Other Column Name";
+    <ColumnSelect  Immediate="true" @bind-ColumnName="@_columnName"  Label="@val"  ></ColumnSelect>
 }
 else if (_structureOperation is StructureOperation.Rename)
 {
     <MudTextField Label="New Name" Variant="Variant.Outlined" @bind-Value="_columnName" Immediate="true"></MudTextField>
 }
-<MudIconButton Disabled="Disabled()" Icon="@Icons.Material.Filled.Check" Color="Color.Info" OnClick="OnConfirm" ></MudIconButton>
+@if (_structureOperation != null)
+{
+    <MudButton Disabled="Disabled()" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" Color="Color.Info" OnClick="OnConfirm" >Confirm</MudButton>
+}
 
 @code {
     [Parameter] public EventCallback OnComplete { get; set; }
@@ -32,7 +33,7 @@ else if (_structureOperation is StructureOperation.Rename)
     {
         return _structureOperation switch
         {
-            StructureOperation.SwapWith or StructureOperation.Rename or StructureOperation.MoveBefore or StructureOperation.MoveAfter => string.IsNullOrWhiteSpace(_columnName),
+            StructureOperation.SwapPositionsWith or StructureOperation.Rename or StructureOperation.MoveBefore or StructureOperation.MoveAfter => string.IsNullOrWhiteSpace(_columnName),
             StructureOperation.Delete => false,
             null => true,
             _ => throw new ArgumentOutOfRangeException()
@@ -44,13 +45,29 @@ else if (_structureOperation is StructureOperation.Rename)
         Rename,
         MoveAfter,
         MoveBefore,
-        SwapWith
+        SwapPositionsWith
     }
 
     private async Task OnConfirm()
     {
         if (Disabled() || CsvProcessor?.Runner?.CurrentCsv == null) return;
         var makeBusy = CsvProcessor.Runner.CurrentCsv.RowCount() > 100000;
+        var maxIndex = CsvProcessor.Runner.CurrentCsv.ColumnCount() - 1;
+        bool forward = false;
+        int newIndex = 0;
+        if (_structureOperation is StructureOperation.MoveAfter or StructureOperation.MoveBefore)
+        {
+            int oldIndex = CsvProcessor.Runner.CurrentCsv.ColumnIndex(StrategyBucket.ColumnName);
+            int columnIndex = CsvProcessor.Runner.CurrentCsv.ColumnIndex(_columnName!);
+            forward = columnIndex > oldIndex;
+            newIndex = _structureOperation == StructureOperation.MoveBefore
+                ? (forward
+                    ? Math.Max(0, CsvProcessor.Runner.CurrentCsv.ColumnIndex(_columnName!) - 1)
+                    : CsvProcessor.Runner.CurrentCsv.ColumnIndex(_columnName!))
+                : (forward 
+                    ? CsvProcessor.Runner.CurrentCsv.ColumnIndex(_columnName!)
+                    : Math.Min(maxIndex, CsvProcessor.Runner.CurrentCsv.ColumnIndex(_columnName!) + 1));
+        }
         IReversibleEdit edit = _structureOperation switch
         {
             StructureOperation.Delete => new RemoveColumnEdit(StrategyBucket.ColumnName)
@@ -61,15 +78,15 @@ else if (_structureOperation is StructureOperation.Rename)
             {
                 MakeBusy = makeBusy
             },
-            StructureOperation.MoveAfter => new MoveColumnEdit(StrategyBucket.ColumnName, CsvProcessor.Runner.CurrentCsv.ColumnIndex(_columnName!))
+            StructureOperation.MoveAfter => new MoveColumnEdit(StrategyBucket.ColumnName, newIndex)
             {
                 MakeBusy = makeBusy
             },
-            StructureOperation.MoveBefore => new MoveColumnEdit(StrategyBucket.ColumnName, CsvProcessor.Runner.CurrentCsv.ColumnIndex(_columnName!) - 1)
+            StructureOperation.MoveBefore => new MoveColumnEdit(StrategyBucket.ColumnName, newIndex)
             {
                 MakeBusy = makeBusy
             },
-            StructureOperation.SwapWith => new SwapColumnEdit(StrategyBucket.ColumnName, _columnName!)
+            StructureOperation.SwapPositionsWith => new SwapColumnEdit(StrategyBucket.ColumnName, _columnName!)
             {
                 MakeBusy = makeBusy
             },

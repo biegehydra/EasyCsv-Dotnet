@@ -54,6 +54,16 @@ namespace EasyCsv.Core
             return _csv.ColumnNames();
         }
 
+        public string? ColumnAtIndex(int index)
+        {
+            return _csv.ColumnAtIndex(index);
+        }
+
+        public int ColumnCount()
+        {
+            return _csv.ColumnCount();
+        }
+
         public int ColumnIndex(string columnName)
         {
             return _csv.ColumnIndex(columnName);

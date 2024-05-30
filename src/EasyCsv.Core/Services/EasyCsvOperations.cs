@@ -84,30 +84,22 @@ namespace EasyCsv.Core
 
         public IEasyCsv MoveColumn(int oldIndex, int newIndex)
         {
-            if (oldIndex < 0)
-                throw new ArgumentException("Index cannot be negative", nameof(oldIndex));
-            if (newIndex < 0)
-                throw new ArgumentException("Index cannot be negative", nameof(newIndex));
-            var columnNames = ColumnNames();
-            if (columnNames == null) return this;
-            if (oldIndex < columnNames.Length)
-            {
-                return MoveColumn(columnNames[oldIndex], newIndex);
-            }
-            throw new ArgumentException($"Index outside bounds of csv. Headers Count: {columnNames.Length}, Index: {oldIndex}", nameof(oldIndex));
+            var columnName = ColumnAtIndex(oldIndex);
+            return MoveColumn(columnName!, newIndex);
         }
 
         public IEasyCsv MoveColumn(string columnName, int newIndex)
         {
+            if (columnName == null)
+            {
+                throw new ArgumentException("Column name cannot be null", nameof(columnName));
+            }
             if (newIndex < 0)
             {
                 throw new ArgumentException("Index cannot be negative", nameof(newIndex));
             }
 
-            var headers = ColumnNames();
-            if (CsvContent == null || headers == null) return this;
-
-            var oldIndex = headers.IndexOf(columnName);
+            var oldIndex = ColumnIndex(columnName);
             if (oldIndex < 0)
             {
                 throw new ArgumentException($"Column doesn't exist. Column Name: `{columnName}`");
@@ -116,24 +108,30 @@ namespace EasyCsv.Core
             {
                 return this;
             }
+            var newIndexCurrentColumnName = ColumnAtIndex(newIndex);
+            if (newIndexCurrentColumnName == null)
+            {
+                throw new ArgumentException($"newIndex is not a valid: {newIndex}. Column Count: {ColumnNames()?.Length}");
+            }
             var newRowData = new Dictionary<string, object?>();
             bool forward = newIndex > oldIndex;
+            var columnNames = ColumnNames();
             foreach (var row in CsvContent)
             {
-                for (int i = 0; i < row.Count; i++)
+                for (int i = 0; i < columnNames!.Length; i++)
                 {
                     if (i == oldIndex) continue;
                     if (forward)
                     {
-                        newRowData[headers[i]] = row.ValueAt(i);
+                        newRowData[columnNames[i]] = row[columnNames[i]];
                     }
                     if (i == newIndex)
                     {
-                        newRowData[columnName] = row.ValueAt(oldIndex);
+                        newRowData[columnName] = row[columnName];
                     }
                     if (!forward)
                     {
-                        newRowData[headers[i]] = row.ValueAt(i);
+                        newRowData[columnNames[i]] = row[columnNames[i]];
                     }
                 }
                 row.Clear();
@@ -397,7 +395,7 @@ namespace EasyCsv.Core
         public IEasyCsv SwapColumns(int columnOneIndex, int columnTwoIndex)
         {
             var headers = ColumnNames();
-            if (CsvContent == null || headers is not {Length: >= 2} || columnOneIndex == columnTwoIndex) return this;
+            if (CsvContent == null! || headers is not {Length: >= 2} || columnOneIndex == columnTwoIndex) return this;
             if (columnOneIndex < 0)
                 throw new ArgumentException("Index cannot be negative", nameof(columnOneIndex));
             if (columnTwoIndex < 0)
@@ -424,7 +422,7 @@ namespace EasyCsv.Core
                     }
                     else
                     {
-                        reorderedRowData[headers[i]] = row.ValueAt(i);
+                        reorderedRowData[headers[i]] = row[headers[i]];
                     }
                 }
                 row.Clear();

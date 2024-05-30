@@ -90,6 +90,16 @@ namespace EasyCsv.Core
             return CsvContent?.FirstOrDefault()?.Keys.ToArray();
         }
 
+        public string? ColumnAtIndex(int index)
+        {
+            return CsvContent?.FirstOrDefault()?.Keys.ElementAtOrDefault(index);
+        }
+
+        public int ColumnCount()
+        {
+            return CsvContent?.FirstOrDefault()?.Keys.Count ?? 0;
+        }
+
         public int ColumnIndex(string columnName)
         {
             if (CsvContent == null! || CsvContent.Count == 0)

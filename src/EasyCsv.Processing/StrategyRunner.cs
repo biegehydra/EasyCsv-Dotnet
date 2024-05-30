@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using EasyCsv.Core.Extensions;
 using EasyCsv.Processing.Strategies;
+using System.Text;
 
 [assembly: InternalsVisibleTo("EasyCsv.Components")]
 namespace EasyCsv.Processing;
@@ -28,6 +29,14 @@ public class StrategyRunner
         var clone = baseCsv.Clone(); 
         _steps.Add((clone, clone.ColumnNames()!, AllUniqueTags(clone), new List<IReversibleEdit>(), OriginalRowIndexes(clone), new CurrentRowEditIndex()));
         SetCurrentIndexSafe(0);
+    }
+
+    public void RecomputeCurrentColumnNames()
+    {
+        if (CurrentCsv == null) return;
+        var newColumnNames = CurrentCsv.ColumnNames()!;
+        var temp = _steps[CurrentIndex];
+        _steps[CurrentIndex] = (temp.Csv, newColumnNames, temp.Tags, temp.ReversibleEdits, temp.OriginalRowIndexes, temp.CurrentRowEditIndex);
     }
 
     public OperationResult AddRows(ICollection<CsvRow> rowsToAdd)
@@ -559,16 +568,12 @@ public class AddColumnEdit : IReversibleEdit
     public void DoEdit(IEasyCsv csv, StrategyRunner runner)
     {
         csv.AddColumn(_columnName, _defaultValue);
-        var newColumnNames = csv.ColumnNames()!;
-        var temp = runner._steps[runner.CurrentIndex];
-        runner._steps[runner.CurrentIndex] = (temp.Csv, newColumnNames, temp.Tags, temp.ReversibleEdits, temp.OriginalRowIndexes, temp.CurrentRowEditIndex);
+        runner.RecomputeCurrentColumnNames();
     }
     public void UndoEdit(IEasyCsv csv, StrategyRunner runner)
     {
         csv.RemoveColumn(_columnName);
-        var newColumnNames = csv.ColumnNames()!;
-        var temp = runner._steps[runner.CurrentIndex];
-        runner._steps[runner.CurrentIndex] = (temp.Csv, newColumnNames, temp.Tags, temp.ReversibleEdits, temp.OriginalRowIndexes, temp.CurrentRowEditIndex);
+        runner.RecomputeCurrentColumnNames();
     }
 }
 
@@ -597,19 +602,51 @@ internal struct RemoveColumnEditRow : IReversibleEdit
 
     public void UndoEdit(IEasyCsv csv, StrategyRunner runner)
     {
-        for (int i = 0; i < _row.Count; i++)
+        int i = 0;
+        foreach (var kvp in _row)
         {
             if (i == _columnIndex)
             {
                 _newDictionary[_columnName] = _beforeValue;
             }
-            _newDictionary[_columnNamesBefore[i]] = _row.ValueAt(i);
+            _newDictionary[kvp.Key] = kvp.Value;
+            i++;
         }
         _row.Clear();
         foreach (var kvp in _newDictionary)
         {
             _row.Add(kvp.Key, kvp.Value);
         }
+    }
+}
+
+public class SwapColumnEdit : IReversibleEdit
+{
+    private readonly string _columnName;
+    private readonly string _otherColumnName;
+    public bool MakeBusy { get; set; }
+
+    public SwapColumnEdit(string columnName, string otherColumnName)
+    {
+        _columnName = columnName;
+        _otherColumnName = otherColumnName;
+    }
+    public void DoEdit(IEasyCsv csv, StrategyRunner runner)
+    {
+        csv.Mutate(x =>
+        {
+            x.SwapColumns(_columnName, _otherColumnName);
+        }, saveChanges: false);
+        runner.RecomputeCurrentColumnNames();
+    }
+
+    public void UndoEdit(IEasyCsv csv, StrategyRunner runner)
+    {
+        csv.Mutate(x =>
+        {
+            x.SwapColumns(_columnName, _otherColumnName);
+        }, saveChanges: false);
+        runner.RecomputeCurrentColumnNames();
     }
 }
 
@@ -631,11 +668,36 @@ public class MoveColumnEdit : IReversibleEdit
             _oldIndex = csv.ColumnNames()!.IndexOf(ColumnName);
         }
         csv.MoveColumn(ColumnName, NewIndex);
+        runner.RecomputeCurrentColumnNames();
     }
 
     public void UndoEdit(IEasyCsv csv, StrategyRunner runner)
     {
         csv.MoveColumn(ColumnName, _oldIndex!.Value);
+        runner.RecomputeCurrentColumnNames();
+    }
+}
+
+public class RenameColumnEdit : IReversibleEdit
+{
+    public RenameColumnEdit(string columnName, string newColumnName)
+    {
+        ColumnName = columnName;
+        NewColumnName = newColumnName;
+    }
+    public string ColumnName { get; }
+    public string NewColumnName { get; }
+    public bool MakeBusy { get; set; } = true;
+    public void DoEdit(IEasyCsv csv, StrategyRunner runner)
+    {
+        csv.ReplaceColumn(ColumnName, NewColumnName);
+        runner.RecomputeCurrentColumnNames();
+    }
+
+    public void UndoEdit(IEasyCsv csv, StrategyRunner runner)
+    {
+        csv.ReplaceColumn(NewColumnName, ColumnName);
+        runner.RecomputeCurrentColumnNames();
     }
 }
 
@@ -662,9 +724,7 @@ public class RemoveColumnEdit : IReversibleEdit
         {
             removeColumnEditRow.DoEdit(csv, runner);
         }
-        var newColumnNames = csv.ColumnNames()!;
-        var temp = runner._steps[runner.CurrentIndex];
-        runner._steps[runner.CurrentIndex] = (temp.Csv, newColumnNames, temp.Tags, temp.ReversibleEdits, temp.OriginalRowIndexes, temp.CurrentRowEditIndex);
+        runner.RecomputeCurrentColumnNames();
     }
     public void UndoEdit(IEasyCsv csv, StrategyRunner runner)
     {
@@ -674,9 +734,7 @@ public class RemoveColumnEdit : IReversibleEdit
             {
                 removeColumnEditRow.UndoEdit(csv, runner);
             }
-            var newColumnNames = csv.ColumnNames()!;
-            var temp = runner._steps[runner.CurrentIndex];
-            runner._steps[runner.CurrentIndex] = (temp.Csv, newColumnNames, temp.Tags, temp.ReversibleEdits, temp.OriginalRowIndexes, temp.CurrentRowEditIndex);
+            runner.RecomputeCurrentColumnNames();
         }
     }
 }
@@ -711,6 +769,7 @@ public class AddTagEdit : IReversibleEdit
         }
     }
 }
+
 public class RemoveTagEdit : IReversibleEdit
 {
     public bool MakeBusy { get; } = false;

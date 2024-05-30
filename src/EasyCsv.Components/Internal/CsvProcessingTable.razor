@@ -786,13 +786,13 @@
                                </MudListSubheader>
                                <MudListItem>
                                    <div style="display: flex; flex-direction: row; align-items: center; gap: 20px;">
-                                       <StructureOperationsOptions></StructureOperationsOptions>
+                                       <StructureOperationsOptions OnComplete="() => ToggleStructurePopover(column, false)"></StructureOperationsOptions>
                                    </div>
                                </MudListItem>
                            </MudList>
                            @if (_columnStrucuturePopoverDict[column] && Stepper.StrategySelectCloseBehaviour is CloseBehaviour.ClickAway or CloseBehaviour.CloseButtonAndClickAway)
                            {
-                               <div @onclick="() => TogglePopover(column, false)" class="easy-csv-fullscreen-backdrop"></div>
+                               <div @onclick="() => ToggleStructurePopover(column, false)" class="easy-csv-fullscreen-backdrop"></div>
                            }
                        </CascadingValue>
                    </CascadingValue>

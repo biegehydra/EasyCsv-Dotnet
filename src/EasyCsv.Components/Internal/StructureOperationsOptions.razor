@@ -8,21 +8,23 @@
         <MudSelectItem T="StructureOperation?" Value="StructureOperation.SwapWith" ></MudSelectItem>
     </MudSelect>
 </div>
-@if (_structureOperation is StructureOperation.MoveAfter or StructureOperation.MoveBefore
-     or StructureOperation.SwapWith or StructureOperation.Rename)
+@if (_structureOperation is StructureOperation.MoveAfter or StructureOperation.MoveBefore or StructureOperation.SwapWith)
 {
     string val = _structureOperation == StructureOperation.MoveAfter
         ? "After"
         : _structureOperation == StructureOperation.MoveAfter
             ? "Before"
-            : _structureOperation == StructureOperation.Rename
-                ? "New Name"
-                : "Swap With";
-    <ColumnSelect @bind-ColumnName="@_columnName"  Label="@val"  ></ColumnSelect>
+            : "Swap With";
+    <ColumnSelect Immediate="true" @bind-ColumnName="@_columnName"  Label="@val"  ></ColumnSelect>
+}
+else if (_structureOperation is StructureOperation.Rename)
+{
+    <MudTextField Label="New Name" Variant="Variant.Outlined" @bind-Value="_columnName" Immediate="true"></MudTextField>
 }
 <MudIconButton Disabled="Disabled()" Icon="@Icons.Material.Filled.Check" Color="Color.Info" OnClick="OnConfirm" ></MudIconButton>
 
 @code {
+    [Parameter] public EventCallback OnComplete { get; set; }
     private StructureOperation? _structureOperation = StructureOperation.Delete;
     private string? _columnName;
 
@@ -48,16 +50,33 @@
     private async Task OnConfirm()
     {
         if (Disabled() || CsvProcessor?.Runner?.CurrentCsv == null) return;
+        var makeBusy = CsvProcessor.Runner.CurrentCsv.RowCount() > 100000;
         IReversibleEdit edit = _structureOperation switch
         {
-            StructureOperation.Delete => new RemoveColumnEdit(StrategyBucket.ColumnName),
-            StructureOperation.Rename => new MoveColumnEdit(StrategyBucket.ColumnName, CsvProcessor.Runner.CurrentCsv.ColumnIndex(StrategyBucket.ColumnName)),
-            StructureOperation.MoveAfter => new MoveColumnEdit(StrategyBucket.ColumnName, CsvProcessor.Runner.CurrentCsv.ColumnIndex(_columnName!) - 1),
-            StructureOperation.MoveBefore => new MoveColumnEdit(StrategyBucket.ColumnName, CsvProcessor.Runner.CurrentCsv.ColumnIndex(_columnName!) + 1),
-            StructureOperation.SwapWith => new MoveColumnEdit(StrategyBucket.ColumnName, CsvProcessor.Runner.CurrentCsv.ColumnIndex(_columnName!)),
+            StructureOperation.Delete => new RemoveColumnEdit(StrategyBucket.ColumnName)
+            {
+                MakeBusy = makeBusy
+            },
+            StructureOperation.Rename => new RenameColumnEdit(StrategyBucket.ColumnName, _columnName!)
+            {
+                MakeBusy = makeBusy
+            },
+            StructureOperation.MoveAfter => new MoveColumnEdit(StrategyBucket.ColumnName, CsvProcessor.Runner.CurrentCsv.ColumnIndex(_columnName!))
+            {
+                MakeBusy = makeBusy
+            },
+            StructureOperation.MoveBefore => new MoveColumnEdit(StrategyBucket.ColumnName, CsvProcessor.Runner.CurrentCsv.ColumnIndex(_columnName!) - 1)
+            {
+                MakeBusy = makeBusy
+            },
+            StructureOperation.SwapWith => new SwapColumnEdit(StrategyBucket.ColumnName, _columnName!)
+            {
+                MakeBusy = makeBusy
+            },
             _ => throw new ArgumentOutOfRangeException()
         };
         await CsvProcessor.AddReversibleEdit(edit);
+        await OnComplete.InvokeAsync();
     }
 
 }

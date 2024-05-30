@@ -57,6 +57,9 @@ namespace EasyCsv.Core
         /// <returns>An IEnumerable of string containing the CSV headers.</returns>
         string[]? ColumnNames();
 
+        string? ColumnAtIndex(int index);
+
+        int ColumnCount();
 
         int ColumnIndex(string columnName);
 

@@ -143,24 +143,19 @@
             }
             @for (var i = 0; i < columnNames.Length; i++)
             {
-                int mid = columnNames.Length / 2;
-                var anchorOrigin = i >= mid ? Origin.BottomLeft : Origin.BottomRight;
-                var transformOrigin = i >= mid ? Origin.TopRight : Origin.TopLeft;
                 var column = columnNames[i];
                 string? cursorStyle = Stepper.EnableSorting ? "cursor: pointer; user-select: none;" : null;
                 if (i == tagsColumnIndex || i == referenceColumnIndex) continue;
                 <MudTh Class="csv-processing-table-th">
                     <div style="display: flex; flex-direction: row; gap: 10px; align-items: center;">
-                        <div @onclick="() => OnColumnNameClick(column)" @onclick:stopPropagation="Stepper.EnableSorting" style="@cursorStyle" class="csv-processing-table-th-name">
-                            @column
-                        </div>
-                        <div class="csv-processing-table-th-button">
-                            <MudTooltip Delay="750" Text="View Column Strategies">
-                                <MudIconButton Disabled="Busy" Icon="@Stepper.ViewColumnOperationsIcon" OnClick="_ => TogglePopover(column)"></MudIconButton>
-                            </MudTooltip>
-                        </div>
+                        @if (Stepper.EnableSorting)
+                        {
+                            <MudTableSortLabel T="CsvRow" SortDirectionChanged="x => OnColumnNameClick(column, x)">
+                                @column
+                            </MudTableSortLabel>
+                        }
+                        @TableHeader(column, cursorStyle)
                     </div>
-                    @StrategyBucketPopover(column, Origin.BottomCenter, Origin.TopCenter, fullCsv: false)
                 </MudTh>
             }
             @if (Stepper.TagsAndReferencesLocation == ColumnLocation.End)
@@ -437,39 +432,28 @@
 
     #region Sorting
 
-    private string? _currentSortedColumn;
-    private SortDirection _currentSortDirection = SortDirection.Ascending;
-    private void OnColumnNameClick(string columnName)
+    private string? _currentSortedColumn = null;
+    private SortDirection _currentSortDirection;
+    private void OnColumnNameClick(string columnName, SortDirection sortDirection)
     {
         if (Stepper?.Runner?.CurrentCsv == null || !Stepper.EnableSorting) return;
-        if (_currentSortedColumn == columnName)
+        _currentSortedColumn = columnName;
+        _currentSortDirection = sortDirection;
+        if (sortDirection == SortDirection.None)
         {
-            _currentSortDirection = _currentSortDirection == SortDirection.Ascending
-            ? SortDirection.Descending
-            : _currentSortDirection == SortDirection.Descending
-                ? SortDirection.None
-                : SortDirection.Ascending;
-            if (_currentSortDirection == SortDirection.None)
-            {
-                Stepper.Runner.SortCurrentCsvBackToOriginalOrder();
-            }
-            else
-            {
-                bool ascending = _currentSortDirection == SortDirection.Ascending;
-                Stepper.Runner.CurrentCsv.Mutate(x =>
-            {
-                x.SortCsv(columnName, ascending);
-            }, saveChanges: false);
-            }
+            Stepper.Runner.SortCurrentCsvBackToOriginalOrder();
         }
         else
         {
-            _currentSortedColumn = columnName;
-            _currentSortDirection = SortDirection.Ascending;
+            if (!Stepper.Runner.CurrentCsvColumnNames!.Contains(_currentSortedColumn))
+            {
+                return;
+            }
+            bool ascending = sortDirection == SortDirection.Ascending;
             Stepper.Runner.CurrentCsv.Mutate(x =>
-        {
-            x.SortCsv(columnName, ascending: true);
-        }, saveChanges: false);
+            {
+                x.SortCsv(columnName, ascending);
+            }, saveChanges: false);
         }
     }
 
@@ -482,19 +466,16 @@
         }
         else
         {
+            if (!Stepper.Runner.CurrentCsvColumnNames!.Contains(_currentSortedColumn))
+            {
+                return;
+            }
             bool ascending = _currentSortDirection == SortDirection.Ascending;
             Stepper.Runner.CurrentCsv!.Mutate(x =>
-        {
-            x.SortCsv(_currentSortedColumn, ascending);
-        }, saveChanges: false);
+            {
+                x.SortCsv(_currentSortedColumn, ascending);
+            }, saveChanges: false);
         }
-    }
-
-    private enum SortDirection
-    {
-        Ascending,
-        Descending,
-        None
     }
 
     #endregion
@@ -570,6 +551,24 @@
     }
 
     #endregion
+
+    private RenderFragment TableHeader(string column, string? cursorStyle)
+    {
+        return @<text>
+                    @if (!Stepper.EnableSorting)
+                    {
+                        @column
+                    }
+                    <div class="csv-processing-table-th-button" @onclick:stopPropagation="true" @onmouseover:stopPropagation="true"
+                         @onmouseenter:stopPropagation="true" @onmouseleave:stopPropagation="true" @onmouseout:stopPropagation="true"
+                         @onmousedown:stopPropagation="true" @onmouseup:stopPropagation="true">
+                        <MudTooltip Delay="750" Text="View Column Strategies">
+                            <MudIconButton Disabled="Busy" Icon="@Stepper.ViewColumnOperationsIcon" OnClick="_ => TogglePopover(column)"></MudIconButton>
+                        </MudTooltip>
+                    </div>
+                    @StrategyBucketPopover(column, Origin.BottomCenter, Origin.TopCenter, fullCsv: false)
+                </text>;
+    }
 
     private RenderFragment? TagDataCell(int tagsColumnIndex, CsvRow row, bool allowDelete=true)
     {
@@ -727,7 +726,9 @@
                                                {
                                                    <RenderDelay Delay="5" DelayComplete="() => { _columnStructurePopoverDict[column] = (true, true); }" ></RenderDelay>
                                                }
-                                               <MudIconButton Disabled="Busy" Icon="@Stepper.StructureOperationsIcon" OnClick="_ => ToggleStructurePopover(column)"></MudIconButton>
+                                               <MudTooltip Delay="700" Inline="true" Text="Restructure Operations">
+                                                   <MudIconButton Disabled="Busy" Icon="@Stepper.StructureOperationsIcon" OnClick="_ => ToggleStructurePopover(column)"></MudIconButton>
+                                               </MudTooltip>
                                                @StructurePopover(column, Origin.BottomRight, Origin.TopCenter)
                                            }
                                        </MudText>

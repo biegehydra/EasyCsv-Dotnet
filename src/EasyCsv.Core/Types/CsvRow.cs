@@ -395,4 +395,5 @@ public readonly record struct ProcessingReference
 
     public int ReferenceCsvIndex { get; }
     public int ReferenceRowIndex { get; }
+    public override string ToString() => $"{ReferenceCsvIndex}-{ReferenceRowIndex}";
 }

@@ -12,7 +12,22 @@
     .csv-table-header-matcher .mud-table-container {
         max-height: 60vh;
     }
+    .csv-headers-th {
+        width: 215px;
+    }
 
+    .default-value-th {
+        width: 225px;
+    }
+
+    .preview-information-container {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3; /* Number of lines before truncation */
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
 </style>
 
 @if (ExpectedHeaders != null)
@@ -25,14 +40,14 @@
     <MudTable T="ExpectedHeader" Class="csv-table-header-matcher" Style="@tableStyle" FixedHeader="true" RowsPerPage="100" Items="ExpectedHeaders" 
               Striped="true" Bordered Dense Hover Elevation="2">
          <HeaderContent>
-             <MudTh>Matched</MudTh>
-             <MudTh>@ExpectedHeaderThStr</MudTh>
-             <MudTh>Preview Information</MudTh>
+             <MudTh Class="matched-th" >Matched</MudTh>
+             <MudTh Class="expected-header-th" >@ExpectedHeaderThStr</MudTh>
+             <MudTh Class="preview-information-th">Preview Information</MudTh>
              @if (!HideDefaultValueColumn)
              {
-                 <MudTh>Default Value</MudTh>
+                 <MudTh Class="default-value-th" >Default Value</MudTh>
              }
-             <MudTh>Csv Headers</MudTh>
+             <MudTh Class="csv-headers-th" >Csv Headers</MudTh>
          </HeaderContent>
          <RowTemplate Context="expectedHeader">
              @{
@@ -46,7 +61,7 @@
                      firstNotEmptyRow = Csv?.CsvContent?.FirstOrDefault(x => x.TryGetValue(currentHeaderName, out var value) && value != null);
                  }
             }
-             <MudTd DataLabel="Matched:" Class="extra-dense" >
+             <MudTd DataLabel="Matched:" Class="extra-dense matched-td" >
                 @{
                     MatchState matchState = MatchState.Missing;
                     if (expectedHeaderAlreadyMapped)
@@ -64,7 +79,7 @@
                     @DisplayMatchState(matchState)
                  }
              </MudTd>
-             <MudTd DataLabel="Expected Header:" Class="extra-dense" >
+             <MudTd DataLabel="Expected Header:" Class="extra-dense expected-header-td" >
                  <div class="align-items-center" style="display: flex; flex-direction: row;">
                      @if (expectedHeader.DisplayName == expectedHeader.CSharpPropertyName)
                      {
@@ -76,19 +91,21 @@
                      }
                  </div>
              </MudTd>
-             <MudTd DataLabel="Preview Information:" Class="extra-dense" >
-                 @if (firstNotEmptyRow != null)
-                 {
-                     @firstNotEmptyRow[currentHeaderName!]?.ToString()
-                 }
-                 else if (expectedHeader.HasValue)
-                 {
-                     @expectedHeader.Value
-                 }
+             <MudTd DataLabel="Preview Information:" Class="extra-dense preview-information-td">
+                 <div class="preview-information-container" >
+                     @if (firstNotEmptyRow != null)
+                     {
+                         @firstNotEmptyRow[currentHeaderName!]?.ToString()
+                     }
+                     else if (expectedHeader.HasValue)
+                     {
+                         @expectedHeader.Value
+                     }
+                 </div>
              </MudTd>
              @if (!HideDefaultValueColumn)
              {
-                 <MudTd DataLabel="Default Value:" Class="extra-dense" >
+                 <MudTd DataLabel="Default Value:" Class="extra-dense default-value-td" >
                 @if (expectedHeader.Config.DefaultValueType != DefaultValueType.None || expectedHeader.Config.DefaultValueRenderFragment != null)
                  {
                      if (expectedHeaderAlreadyMapped)
@@ -130,7 +147,7 @@
                  }
              </MudTd>
              }
-             <MudTd DataLabel="Csv Headers:" Class="extra-dense">
+             <MudTd DataLabel="Csv Headers:" Class="extra-dense csv-headers-td">
                 <MudAutocomplete T="string" Disabled="Frozen" Class="text-field-margin-fix" Value="originalHeader" ValueChanged="x => ReplaceColumn(x, expectedHeader)" Variant="Variant.Filled"
                                  Placeholder="Select a csv header"
                                  SelectValueOnTab="true"

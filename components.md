@@ -1,6 +1,19 @@
 # EasyCsv.Components
 
 EasyCsv.Components provides you with 3 components. They are available to test at this [example website](https://d143idkvxttaq3.cloudfront.net/processing)                                                                                                         
+## Links
+- [CsvProcessingStepper](#csvprocessingstepper)
+  - [Create Processsor/Evaluator](#create-processsorevaluator)
+  - [Create Strategy Options Component](#create-strategy-options-component)
+  - [Add Options Components To CsvProcessingStepper](#add-options-components-to-csvprocessingstepper)
+  - [Reversible Edits](#reversible-edits)
+- [CsvFileInput](#csvfileinput)
+- [CsvTableHeaderMatcher](#csvtableheadermatcher)
+  - [Expected Headers](#expected-headers)
+  - [Expected Header Options](#expected-header-options)
+  - [Expected Header Config](#expected-header-config)
+  - [Additional CsvTableHeaderMatcher Options](#additional-csvtableheadermatcher-options)
+  - [Multiple Types](#multiple-types)
 
 ## Installation (CsvProcessingStepper is in beta package)
 
@@ -17,7 +30,7 @@ The csv processing stepper is like a miniature version of excel/google sheets th
 - Performing dedupe operations
 - Specifying an operation to only operate on filtered rows
 
-### Create a Processsor/Evaluator
+### Create Processsor/Evaluator
 To create your own strategies, you must first implement one of these [Interfaces](https://github.com/biegehydra/EasyCsv-Dotnet/blob/master/src/EasyCsv.Processing/Interfaces.cs). 
 
 Take for example this `TagRowsStrategy`
@@ -51,8 +64,8 @@ This strategy implements `IFullCsvProcessor` which operates on an entire csv. Th
 
 More examples can be found [here](https://github.com/biegehydra/EasyCsv-Dotnet/tree/master/src/EasyCsv.Processing/Strategies).
 
-### Create Component For Strategy Options
-Once you have written you strategy, to integrate it with the CsvProcessingStepper, it is recommended to write a `StrategyItem` wrapper for the strategy. Take for example the wrapper for the `DivideAndReplicate` strategy.
+### Create Strategy Options Component
+Once you have written your strategy, to integrate it with the CsvProcessingStepper, it is recommended to write a `StrategyItem` wrapper to execute the strategy and manage its options. Take for example the wrapper for the `DivideAndReplicate` strategy.
 
 ```html
 @inherits StrategyItemBase
@@ -116,14 +129,14 @@ The options inherits from `StrategyItemBase` which gives you access to the `Stra
 
 ![2024-05-12_13-54](https://github.com/biegehydra/EasyCsv-Dotnet/assets/84036995/ce563585-f299-4aa4-8234-c6fcd70f9938)
 
-All you need to do in your component is give your StrategyItem a `DisplayName`, optionally define an `<Options>` section, and subscribe a callback to `StrategyPicked` that will create your strategy/reversible edit and use the CsvProcessor to perform it. The `CsvProcessingStepper` has a function to perform each operation you in the interfaces file. The `Description`, `DescriptionStr` `BeforeCsvExample`, `AfterCsvExample`, and `Example Options` are optional parameters for the UI.
+All you need to do in your component is give your StrategyItem a `DisplayName`, optionally define an `<Options>` section, and subscribe a callback to `StrategyPicked` that will create your strategy/reversible edit and use the CsvProcessor to perform it. The `CsvProcessingStepper` has a function to perform each operation you in the [interfaces](https://github.com/biegehydra/EasyCsv-Dotnet/blob/master/src/EasyCsv.Processing/Interfaces.cs) file. `Description`, `DescriptionStr` `BeforeCsvExample`, `AfterCsvExample`, and `Example Options` are optional parameters for the UI.
 
 `AllowRun` controls whether the `RunOperation` button is disabled or not. When the "Run Operation" button is clicked, the `StrategyPicked` callback is called (calling `RunDivideAndReplicate` here) with the column name of the StrategyBucket this component is rendered in.
 
 There are 7 input components integrated with the stepper that you can use in your options components. `<ColumnSelect/>`, `<MultiColumnSelect/>`, `<TagSelect/>`, `<MultiTagSelect/>`, `<ReferenceCsvSelect/>`, `<ReferenceColumnSelect/>`, `<MultiReferenceColumnSelect/>`. All of these are used in the example website.
 
 ### Add Options Components To CsvProcessingStepper
-Once your done write your `StrategyItem` wrappers, just put them in the `<ColumnStrategies>` or `<FullCsvStrategies>` section of the CsvProcessingStepper. Note, when a **full csv** strategy is picked, the column name will be `InternalColumnNames.FullCsvOperations` or "_FullCsvOperations" in the `StrategyPicked` callback
+Once you're done write your `StrategyItem` wrappers, just put them in the `<ColumnStrategies>` or `<FullCsvStrategies>` section of the CsvProcessingStepper. Note, when a **full csv** strategy is picked, the column name will be `InternalColumnNames.FullCsvOperations` or "_FullCsvOperations" in the `StrategyPicked` callback
 
  ```html
 <CsvProcessingStepper @ref="_csvProcessor" EasyCsv="_easyCsv" EasyCsvFileName="Example.csv">
@@ -148,14 +161,16 @@ In addition to operations, which should be used for complex operations because t
 ```csharp
 public interface IReversibleEdit
 {
-    void DoEdit(IEasyCsv csv);
-    void UndoEdit(IEasyCsv csv);
+    public bool MakeBusy { get; } // Just controls whether the UI will make everything disabled while this operation runs
+    void DoEdit(IEasyCsv csv, StrategyRunner runner);
+    void UndoEdit(IEasyCsv csv, StrategyRunner runner);
 }
 ```
 For example, this is the ModifyRowEdit class. The `DoEdit` and `UndoEdit` methods provide the working csv, but do not require you to use them
 ```csharp
 public class ModifyRowEdit : IReversibleEdit
 {
+    public bool MakeBusy { get; } = false;
     public ModifyRowEdit(CsvRow row, CsvRow rowClone, CsvRow rowAfterOperation)
     {
         Row = row;
@@ -166,11 +181,11 @@ public class ModifyRowEdit : IReversibleEdit
     public CsvRow Row { get; }
     public CsvRow RowClone { get; }
     public CsvRow RowAfterOperation { get; }
-    public void DoEdit(IEasyCsv csv)
+    public void DoEdit(IEasyCsv csv, StrategyRunner runner)
     {
         RowAfterOperation.MapValuesTo(Row);
     }
-    public void UndoEdit(IEasyCsv csv)
+    public void UndoEdit(IEasyCsv csv, StrategyRunner runner)
     {
         RowClone.MapValuesTo(Row);
     }
@@ -183,13 +198,13 @@ After calling `CsvProcessingStepper.AddReversibleEdit(IReversibleEdit reversible
 ## CsvFileInput
 
 
-The first is just a simple Csv input component that will automatically convert the selected `IBrowserFile` into an `IEasyCsv` and fire off an event.
+The first is just a simple Csv input component that will automatically convert the selected `IBrowserFile` into an `IEasyCsv` and fire off an event. It can be `FileInputVariant.Paper` as shown below or a regular mudblazor button with `FileInputVariant.Button`.
 
 ![Screenshot_78](https://github.com/biegehydra/EasyCsv-Dotnet/assets/84036995/818dcdbc-9ea0-4893-b070-b2933a42b795)
 
 ## CsvTableHeaderMatcher
 
-This component takes the `IEasyCsv` that you got from the `CsvFileInput` (or elsewhere) and allows users to map the csv headers to expected headers or provide default values.
+This component takes the `IEasyCsv` that you get from the `CsvFileInput` component (or elsewhere) and allows users to map the csv headers to expected headers or provide default values.
 
 ![Screenshot_80](https://github.com/biegehydra/EasyCsv-Dotnet/assets/84036995/106a64d5-9937-4193-bc04-75350577c14a)
 
@@ -197,7 +212,7 @@ This component takes the `IEasyCsv` that you got from the `CsvFileInput` (or els
 ### Expected Headers
 
 
-All of this works through the `ExpectedHeaders` parameter which takes a `List<ExpectedHeader>`. There should be one `ExpectedHeader` for each C# property on your class that you want data for. Alternatively, you can can provide a value for `AutoGenerateExpectedHeadersType` and a default `ExpectedHeader` will be generated for each public instance variable with a setter.
+All of this works through the `ExpectedHeaders` parameter which takes a `ICollection<ExpectedHeader>`. There should be one `ExpectedHeader` for each C# property on your class that you want data for. Alternatively, you can can provide a value for `AutoGenerateExpectedHeadersType` and a default `ExpectedHeader` will be generated for each public instance variable with a setter.
 
 ### Expected Header Options
 EH - Expected Header
@@ -208,8 +223,7 @@ The options for the EH essentially lets you control how users will be able to pr
 
 **Display Name (string)**: This defines what to display for this EH in the "Expected Header" column.
 
-**ValuesToMatch (List<string>)**: When a Csv is imported, the matcher will attempt to figure out which of the csv headers match to your EHs. It does this by performing matching on each of the values in this list. For example, if you have an EH for a `Zip` property. You might want `ValuesToMatch` to look like `new List<string>() { "Zip", "Zip Code", "Postal Code" }`. How the matching is done is explained in the AutoMatching section.
-
+**ValuesToMatch (ICollection<string>)**: When a Csv is imported, the matcher will attempt to figure out which of the csv headers match to your EHs. It does this by performing matching on each of the values in this ICollection. For example, if you have an EH for a `Zip` property. You might want `ValuesToMatch` to look like `new string[] { "Zip", "Zip Code", "Postal Code" }`. How the matching is done is explained in the AutoMatching section.
 
 ### Expected Header Config
 
@@ -229,29 +243,35 @@ ExpectedHeader throughConfigurator = new ExpectedHeader(nameof(Person.DateOfBirt
 **Default Value Type (DefaultValueType)**: Options are `None`, `Text`, `DateTime`, `CheckBox`, and `TriStateCheckBox`. These will control what MudBlazor input component is used in the default value column. This value is ignored if a value is provided for `DefaultValueRenderFragment`
 **DefaultValueRenderFragment (RenderFragment\<DefaultValueRenderFragmentsArgs\>)**: If you would like a custom input element in "Default Value" column, you can define that here. An example of how to do this can be seen [here](https://github.com/biegehydra/EasyCsv-Dotnet/blob/76fac05fbb2476839aab7f8fa7b805211e4e9e94/src/ExampleBlazorApp/Pages/Index.razor#L118).
 
-**AutoMatching** Lets you select an automatching level for a specific property in case you need more granular control.
+**AutoMatching**: Lets you select an automatching level for a specific property in case you need more granular control. By default, expected headers have the same automatching level of the table.
 
-There are a few static `ExpectedHeaderConfig`s on `ExpectedHeaderConfig` that you can use such as `Default`, `Required`, `TextDefaultValue` and `RequiredTextDefaultValue` since these are commonly used.
+There are a few static configs on `ExpectedHeaderConfig` that you can use: `ExpectedHeaderConfig.Default`, `ExpectedHeaderConfig.Required`, `ExpectedHeaderConfig.TextDefaultValue` and `ExpectedHeaderConfig.RequiredTextDefaultValue` since these are commonly used.
 
 ### Additional CsvTableHeaderMatcher Options
 
 **HideDefaultValueColumn**: When true, the default value column is hidden.
 
+**HidePreviewInformationColumn**: When true, the preview information column is hidden.
+
+**Initial OrderBy**: Let's you control how expected headers should be ordered in the table after initial matching completes.
+
 **Frozen**: When true, no changes can be made to the matcher. Default value input fields will be disabled and csv header mappings can't be changed.
 
-**AutoMatch**: Controls how `ValuesToMatch` on `ExpectedHeader`s will be compared to csv headers during matching. If the `ValuesToMatch` contains a single value "FirstName", this is how what it would match to with the different options
+**AutoMatch**: Controls how `ValuesToMatch` on `ExpectedHeader` will be compared to the csv headers during matching. For example, if `ValuesToMatch` contains a single value "FirstName", this is what it would match to with the different options:
 - Exact: "FirstName"
 - Strict: "FirstNme"
 - Lenient: "First"
 
+Auto matching just uses a simple Levenshtein Distance algorithm, the dependancy on `FuzzySharp` has been removed.
+
 **DisplayMatchState (RenderFragment\<MatchState\>)**: Lets you control what gets rendered in the "Matched" column.
 
-### Dynamic Headers
+### Multiple Types
 
 If for whatever reason you need the `CsvTableHeaderMatcher` to work for multiple types, you are able to.
-To do this, all you need to do is provide a new value for `ExpectedHeaders`. This **HAS** to be a new list,
-don't just add items to your existing expected headers list. This will trigger the component to be reset
-and use the new expected headers. You will have to keep track of what type you want to read from when you call
+To do this, all you need to do is provide a new value for `ExpectedHeaders`. This **HAS** to be a new collection,
+don't just add items to your existing existing collection. Assigning a new collection will trigger the component to be reset
+and use the new expected headers. You have to keep track of what type you want to read from when you call
 `GetRecords<T>`. 
 For example,
 

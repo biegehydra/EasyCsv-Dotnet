@@ -3,7 +3,7 @@
 EasyCsv.Components provides you with 3 components. They are available to test at this [example website](https://d143idkvxttaq3.cloudfront.net/processing)                                                                                                         
 ## Links
 - [CsvProcessingStepper](#csvprocessingstepper)
-  - [Create a Processsor/Evaluator](#create-a-processorevaluator)
+  - [Create a Processsor/Evaluator](#create-a-processsorevaluator)
   - [Create Component For Strategy Options](#create-component-for-strategy-options)
   - [Add Options Components To CsvProcessingStepper](#add-options-components-to-csvprocessingstepper)
   - [Reversible Edits](#reversible-edits)

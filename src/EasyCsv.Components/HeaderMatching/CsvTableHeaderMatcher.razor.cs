@@ -19,29 +19,26 @@ public partial class CsvTableHeaderMatcher
     [Inject] private ISnackbar? Snackbar { get; set; }
     [Inject] private ILogger<CsvTableHeaderMatcher>? Logger { get; set; }
 
-    private HashSet<ExpectedHeader>? _expectedHeaders;
+    private bool _expectedHeadersDirty = false;
+    private List<ExpectedHeader>? _expectedHeaders;
     /// <summary>
     /// These headers that users match their csv headers to.
     /// </summary>
     [Parameter]
-    public ICollection<global::EasyCsv.Components.ExpectedHeader>? ExpectedHeaders
+    public ICollection<ExpectedHeader>? ExpectedHeaders
     {
         get => _expectedHeaders;
         set
         {
-            if (_expectedHeaders == null)
-            {
-                _expectedHeaders = value?.ToHashSet();
-                return;
-            }
-
+            var distinct = value?.Distinct().Select(x => x.DeepClone()).ToList();
             // Only want backing to change when the expected headers actually change. Without this,
             // we lose the ordering applies to the expected headers when the parameters get set even
             // if it's the same expected headers.
-            if (value != null && (value.Count != _expectedHeaders.Count || _expectedHeaders.Any(x => value.All(y => y.Equals(x) == false))))
+            if (_expectedHeaders == null || distinct == null || (distinct.Count != _expectedHeaders.Count || _expectedHeaders.Any(x => distinct.All(y => y.Equals(x) == false))))
             {
                 Reset();
-                _expectedHeaders = value.Select(x => x.DeepClone()).ToHashSet();
+                _expectedHeaders = distinct;
+                _expectedHeadersDirty = distinct is {Count: > 0};
             }
         }
     }
@@ -64,8 +61,6 @@ public partial class CsvTableHeaderMatcher
     /// Controls how csv headers are automatically mapped to expected headers.
     /// </summary>
     [Parameter] public AutoMatching AutoMatch { get; set; } = AutoMatching.Strict;
-
-    [Parameter] public string ExpectedHeaderThStr { get; set; } = "Expected Header";
 
     [Parameter] public Func<string, string, int> PartialRatio { get; set; } = _PartialRatio_Default; // for you chatgpt
     [Parameter] public Func<string, string, int> Ratio { get; set; } = _Ratio_Default;// for you chatgpt
@@ -102,6 +97,16 @@ public partial class CsvTableHeaderMatcher
     /// </summary>
     [Parameter]
     public bool HideDefaultValueColumn { get; set; }
+
+    [Parameter]
+    public bool HidePreviewInformationColumn { get; set; }
+
+    /// <summary>
+    /// By default, columns will be ordered by required, then by whether auto mapping succeeds.
+    /// Choose from any of the provided options for different behaviour
+    /// </summary>
+    [Parameter]
+    public ExpectedHeaderOrdering InitialOrdering { get; set; } = ExpectedHeaderOrdering.RequiredDescendingThenMappedDescending;
 
     /// <summary>
     /// If not null, expected headers will be automatically generated in OnInitialized from
@@ -146,6 +151,12 @@ public partial class CsvTableHeaderMatcher
     /// </summary>
     [Parameter] public RenderFragment<MatchState> DisplayMatchState { get; set; } = _DisplayMatchState;
 
+    [Parameter] public HeaderMatcherThConfig ThConfig { get; set; } = new ();
+
+    [Parameter] public bool UsePagination { get; set; }
+
+    [Parameter] public int RowsPerPage { get; set; } = 10;
+
     // As the tool is used, the actually headers in the easy csv will change.
     // This dict will let us track the changes and update the easy csv accordingly
     private Dictionary<string, string> _originalHeaderCurrentHeaderDict = new();
@@ -182,7 +193,7 @@ public partial class CsvTableHeaderMatcher
     protected override async Task OnParametersSetAsync()
     {
         if (_expectedHeaders == null) { return; }
-        if (Csv == null || (_cachedCsv != null && _cachedCsv == Csv)) return;
+        if ((Csv == null || (_cachedCsv != null && _cachedCsv == Csv)) && !_expectedHeadersDirty) return;
         if (Csv?.ColumnNames() == null)
         {
             await FinishedAutoMatching.InvokeAsync();
@@ -196,9 +207,26 @@ public partial class CsvTableHeaderMatcher
             _mappedDict[header] = null;
         }
         await MatchFileHeadersWithExpectedHeaders();
-        _expectedHeaders = _expectedHeaders
-            .OrderByDescending(x => x.Config.IsRequired)
-            .ThenByDescending(x => _mappedDict.ContainsValue(x)).ToHashSet();
+        _expectedHeaders = InitialOrdering switch
+        {
+            ExpectedHeaderOrdering.RequiredDescendingThenMappedDescending => _expectedHeaders
+                .OrderByDescending(x => x.Config.IsRequired)
+                .ThenByDescending(x => _mappedDict.ContainsValue(x))
+                .ToList(),
+            ExpectedHeaderOrdering.MappedDescendingThenRequiredDescending => _expectedHeaders
+                .OrderByDescending(x => _mappedDict.ContainsValue(x))
+                .ThenByDescending(x => x.Config.IsRequired)
+                .ToList(),
+            ExpectedHeaderOrdering.RequiredDescending => _expectedHeaders
+                .OrderByDescending(x => x.Config.IsRequired)
+                .ToList(),
+            ExpectedHeaderOrdering.MappedDescending => _expectedHeaders
+                .OrderByDescending(x => _mappedDict.ContainsValue(x))
+                .ToList(),
+            ExpectedHeaderOrdering.NoOrdering => _expectedHeaders,
+            _ => throw new ArgumentOutOfRangeException(nameof(InitialOrdering))
+        };
+        _expectedHeadersDirty = false;
         StateHasChanged();
         await FinishedAutoMatching.InvokeAsync();
     }
@@ -453,6 +481,24 @@ public partial class CsvTableHeaderMatcher
 
         return true;
     }
+}
+
+public enum ExpectedHeaderOrdering
+{
+    RequiredDescendingThenMappedDescending,
+    MappedDescendingThenRequiredDescending,
+    RequiredDescending,
+    MappedDescending,
+    NoOrdering
+}
+
+public class HeaderMatcherThConfig
+{
+    public string Matched { get; init; }= "Matched";
+    public string ExpectedHeaders { get; init; } = "ExpectedHeaders";
+    public string PreviewInformation { get; init; } = "Preview Information";
+    public string DefaultValue = "Default Value";
+    public string CsvHeaders = "Csv Headers";
 }
 
 #pragma warning disable BL0007

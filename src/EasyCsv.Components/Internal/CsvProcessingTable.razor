@@ -95,6 +95,15 @@
     .csv-processing-table .mud-table-cell input[type="text"] {
         padding: 15px 12px 10px;
     }
+
+    .stepper-data-cell-container {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3; /* Number of lines before truncation */
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
 </style>
 
 @if (Stepper?.Runner is {CurrentCsv: not null, CurrentCsvColumnNames: not null} && ColumnOptions != null) 
@@ -188,7 +197,11 @@
                 var value = row.ValueAt(i);
                 if (i != tagsColumnIndex && i != referenceColumnIndex)
                 {
-                    <MudTd Class="extra-dense">@value</MudTd>
+                    <MudTd Class="extra-dense">
+                        <div class="stepper-data-cell-container">
+                            @value
+                        </div>
+                    </MudTd>
                 }
             }
             @if (Stepper.TagsAndReferencesLocation == ColumnLocation.End)

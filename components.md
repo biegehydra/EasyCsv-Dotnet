@@ -65,7 +65,7 @@ This strategy implements `IFullCsvProcessor` which operates on an entire csv. Th
 More examples can be found [here](https://github.com/biegehydra/EasyCsv-Dotnet/tree/master/src/EasyCsv.Processing/Strategies).
 
 ### Create Strategy Options Component
-Once you have written your strategy, to integrate it with the CsvProcessingStepper, it is recommended to write a `StrategyItem` wrapper for the executing the strategy and managing its options. Take for example the wrapper for the `DivideAndReplicate` strategy.
+Once you have written your strategy, to integrate it with the CsvProcessingStepper, it is recommended to write a `StrategyItem` wrapper to execute the strategy and manage its options. Take for example the wrapper for the `DivideAndReplicate` strategy.
 
 ```html
 @inherits StrategyItemBase

@@ -5,7 +5,7 @@
     <MudSelect Immediate="Immediate" Disabled="Disabled" Label="@Label" T="string" @bind-Value="ColumnName" Clearable="true" OnClearButtonClick="x => ColumnName = null"
                Variant="@Variant" Style="min-width: 250px;">
         @{
-            var columnNames = CsvProcessor.Runner.CurrentCsvColumnNames.Where(x => x.Equals(InternalColumnNames.Tags, StringComparison.OrdinalIgnoreCase) == false);
+            var columnNames = CsvProcessor.Runner.CurrentCsvColumnNames.Except(ExceptColumns).Where(x => x.Equals(InternalColumnNames.Tags, StringComparison.OrdinalIgnoreCase) == false);
             if (Except != null)
             {
                 columnNames = columnNames.Except(Except);
@@ -52,6 +52,7 @@
     [Parameter] public bool Disabled { get; set; }
     [Parameter] public string Label { get; set; } = "Column Name";
     [Parameter] public Variant Variant { get; set; } = Variant.Outlined;
+    [Parameter] public ICollection<string> ExceptColumns { get; set; } = [];
     [Parameter] public Func<ICollection<string>, string?>? AutoMatchColumn { get; set; }
     protected override void OnInitialized()
     {

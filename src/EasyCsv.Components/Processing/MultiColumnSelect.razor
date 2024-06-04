@@ -6,7 +6,7 @@
     <MudSelect Immediate="Immediate" Disabled="Disabled" Label="@Label" T="string" MultiSelection="true" MultiSelectionTextFunc="@(MultiSelectionTextFunc)"
                SelectedValues="ColumnNames" SelectedValuesChanged="x => ColumnNames = x?.ToArray() ?? []" Variant="@Variant" Style="min-width: 300px;"
                Clearable="true" OnClearButtonClick="x => ColumnNames = []" SelectAll="@SelectAll" SelectAllText="@SelectAllText">
-        @foreach (var value in CsvProcessor.Runner.CurrentCsvColumnNames.Where(x => x.Equals(InternalColumnNames.Tags, StringComparison.OrdinalIgnoreCase) == false))
+        @foreach (var value in CsvProcessor.Runner.CurrentCsvColumnNames.Except(ExceptColumns).Where(x => x.Equals(InternalColumnNames.Tags, StringComparison.OrdinalIgnoreCase) == false))
         {
             <MudSelectItem Value="value">@value</MudSelectItem>
         }
@@ -48,6 +48,7 @@
     [Parameter] public bool SelectAll { get; set; }
     [Parameter] public string? SelectAllText { get; set; }
     [Parameter] public Func<ICollection<string>, string[]?>? AutoMatchColumns { get; set; }
+    [Parameter] public ICollection<string> ExceptColumns { get; set; } = [];
 
     protected override void OnInitialized()
     {

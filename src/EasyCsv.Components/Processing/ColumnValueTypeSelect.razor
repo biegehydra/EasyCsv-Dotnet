@@ -2,7 +2,7 @@
 @inherits StrategyBucketItemBase
 <MudSelect T="ColumnValueType" Immediate="Immediate" Disabled="Disabled" Label="@Label" HelperText="@HelperText" @bind-Value="ColumnValueType" 
            Variant="@Variant" Style="@Style">
-    @foreach (var value in Enum.GetValues<ColumnValueType>())
+    @foreach (var value in Enum.GetValues<ColumnValueType>().Except(ExceptValueTypes))
     {
         <MudSelectItem Value="value">@value</MudSelectItem>
     }
@@ -31,4 +31,5 @@
     [Parameter] public string Label { get; set; } = "Column Value Type";
     [Parameter] public string? HelperText { get; set; }
     [Parameter] public Variant Variant { get; set; } = Variant.Outlined;
+    [Parameter] public ICollection<ColumnValueType> ExceptValueTypes { get; set; } = [];
 }

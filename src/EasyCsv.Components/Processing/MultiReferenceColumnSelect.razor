@@ -10,7 +10,7 @@
         }
         @if (CsvProcessor.Runner.IsReferenceIndexValid(ReferenceCsvId) && (referenceColumnNames = CsvProcessor.Runner.ReferenceCsvs[ReferenceCsvId].Csv.ColumnNames()) != null)
         {
-            @foreach (var referenceColumnName in referenceColumnNames)
+            @foreach (var referenceColumnName in referenceColumnNames.Except(ExceptColumns))
             {
                 <MudSelectItem Value="referenceColumnName">@referenceColumnName</MudSelectItem>
             }
@@ -50,6 +50,7 @@
     [Parameter] public string Label { get; set; } = "Reference Column Names";
     [Parameter] public Variant Variant { get; set; } = Variant.Outlined;
     [Parameter] public Func<ICollection<string>, string[]?>? AutoMatchColumns { get; set; }
+    [Parameter] public ICollection<string> ExceptColumns { get; set; } = [];
 
     private bool _initialized = false;
     protected override void OnParametersSet()

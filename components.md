@@ -187,7 +187,7 @@ After calling `CsvProcessingStepper.AddReversibleEdit(IReversibleEdit reversible
 ## CsvFileInput
 
 
-The first is just a simple Csv input component that will automatically convert the selected `IBrowserFile` into an `IEasyCsv` and fire off an event.
+The first is just a simple Csv input component that will automatically convert the selected `IBrowserFile` into an `IEasyCsv` and fire off an event. It can be `FileInputVariant.Paper` as shown below or a regular mudblazor button with `FileInputVariant.Button`.
 
 ![Screenshot_78](https://github.com/biegehydra/EasyCsv-Dotnet/assets/84036995/818dcdbc-9ea0-4893-b070-b2933a42b795)
 

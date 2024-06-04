@@ -3,8 +3,8 @@
 EasyCsv.Components provides you with 3 components. They are available to test at this [example website](https://d143idkvxttaq3.cloudfront.net/processing)                                                                                                         
 ## Links
 - [CsvProcessingStepper](#csvprocessingstepper)
-  - [Create a Processsor/Evaluator](#create-a-processsorevaluator)
-  - [Create Component For Strategy Options](#create-component-for-strategy-options)
+  - [Create Processsor/Evaluator](#create-processsorevaluator)
+  - [Create Strategy Options Component](#create-strategy-options-component)
   - [Add Options Components To CsvProcessingStepper](#add-options-components-to-csvprocessingstepper)
   - [Reversible Edits](#reversible-edits)
 - [CsvFileInput](#csvfileinput)
@@ -30,7 +30,7 @@ The csv processing stepper is like a miniature version of excel/google sheets th
 - Performing dedupe operations
 - Specifying an operation to only operate on filtered rows
 
-### Create a Processsor/Evaluator
+### Create Processsor/Evaluator
 To create your own strategies, you must first implement one of these [Interfaces](https://github.com/biegehydra/EasyCsv-Dotnet/blob/master/src/EasyCsv.Processing/Interfaces.cs). 
 
 Take for example this `TagRowsStrategy`
@@ -64,7 +64,7 @@ This strategy implements `IFullCsvProcessor` which operates on an entire csv. Th
 
 More examples can be found [here](https://github.com/biegehydra/EasyCsv-Dotnet/tree/master/src/EasyCsv.Processing/Strategies).
 
-### Create Component For Strategy Options
+### Create Strategy Options Component
 Once you have written you strategy, to integrate it with the CsvProcessingStepper, it is recommended to write a `StrategyItem` wrapper for the strategy. Take for example the wrapper for the `DivideAndReplicate` strategy.
 
 ```html

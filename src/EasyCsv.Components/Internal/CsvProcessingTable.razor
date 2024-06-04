@@ -175,7 +175,7 @@
             @if (Stepper.EnableRowDeleting)
             {
                 <MudTd>
-                    <MudIconButton Disabled="Busy || _rowBeingEdited != null" Icon="@Icons.Material.Filled.Delete" OnClick="x => DeleteRow(row)" > </MudIconButton>
+                    <MudIconButton Disabled="Busy || _rowBeingEdited != null" Icon="@Icons.Material.Filled.Delete" Size="Size.Small" OnClick="x => DeleteRow(row)" > </MudIconButton>
                 </MudTd>
             }
             @if (Stepper.TagsAndReferencesLocation == ColumnLocation.Beginning)

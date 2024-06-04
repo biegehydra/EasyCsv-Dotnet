@@ -6,7 +6,7 @@ EasyCsv.Components provides you with 3 components. They are available to test at
 
 [![NuGet](https://img.shields.io/nuget/dt/EasyCsv.Components?label=NuGet%20Downloads&style=plastic)](https://www.nuget.org/packages/EasyCsv.Components/)
 
-`NuGet\Install-Package EasyCsv.Components -Version=2.0.0-beta8.1`
+`NuGet\Install-Package EasyCsv.Components -Version=2.0.0-beta8.2`
 
 ## CsvProcessingStepper
 

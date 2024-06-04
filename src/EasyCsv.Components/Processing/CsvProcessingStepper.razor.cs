@@ -135,11 +135,28 @@ public partial class CsvProcessingStepper
     /// <summary>
     /// If true, all the columns will automatically be selected to search. This is enforced at the start and after every operation
     /// </summary>
-    [Parameter] public bool AutoSelectAllColumnsSearch { get; set; } = true; 
+    [Parameter] public bool AutoSelectAllColumnsSearch { get; set; } = true;
+
+    private ColumnValueType _default;
+
     /// <summary>
     /// The default editing input to use for columns
     /// </summary>
-    [Parameter] public ColumnValueType DefaultColumnValueType { get; set; } = ColumnValueType.Text; 
+    [Parameter]
+    public ColumnValueType DefaultColumnValueType
+    {
+        get => _default;
+        set
+        {
+            if (CsvProcessingTable != null && _default != value)
+            {
+                CsvProcessingTable.DefaultColumnValueTypeChanged(_default, value);
+            }
+
+            _default = value;
+        }
+    }
+
     /// <summary>
     /// If true, progress snack bars will be used when provided
     /// </summary>

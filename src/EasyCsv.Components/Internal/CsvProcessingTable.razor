@@ -289,6 +289,17 @@
         }
     }
 
+    public void DefaultColumnValueTypeChanged(ColumnValueType previousDefault, ColumnValueType newDefault)
+    {
+        foreach (var (key, val) in _columnValueTypes.ToDictionary(x => x.Key, x => x.Value))
+        {
+            if (val == previousDefault)
+            {
+                _columnValueTypes[key] = newDefault;
+            }
+        }
+    }
+
     internal void SetColumnNames()
     {
         var columnNames = Stepper?.Runner?.CurrentCsvColumnNames;
@@ -732,7 +743,10 @@
                                                @StructurePopover(column, Origin.BottomRight, Origin.TopCenter)
                                            }
                                        </MudText>
-                                       <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="x => TogglePopover(column, false)"></MudIconButton>
+                                       @if (Stepper.StrategySelectCloseBehaviour is CloseBehaviour.CloseButton or CloseBehaviour.CloseButtonAndClickAway)
+                                       {
+                                           <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="x => TogglePopover(column, false)"></MudIconButton>
+                                       }
                                    </div>
                                </MudListSubheader>
                                <MudListItem>

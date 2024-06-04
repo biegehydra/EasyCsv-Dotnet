@@ -34,11 +34,15 @@
     .strategy-item-selected {
 
     }
-
-    .strategy-item-unselected > .mud-icon-root {
-        display: none;
-    }
 </style>
+@if (CsvProcessor?.HideExpandUnselected == true)
+{
+    <style>
+        .strategy-item-unselected > .mud-icon-root {
+            display: none;
+        }
+    </style>
+}
 
 @if (!string.IsNullOrWhiteSpace(DisplayName) && (IsSelected || StrategyBucket.MatchesSearchQuery(this)) && (!CsvProcessor.HideOtherStrategiesOnSelect || !StrategyBucket.IsOtherStrategySelected(this)))
 {
@@ -166,7 +170,7 @@
 
     private RenderFragment? MudListItemChildContent()
     {
-        bool stopPropagation = CsvProcessor?.HideExpandUnselected == true ? true : false;
+        bool stopPropagation = CsvProcessor?.HideExpandUnselected == true;
         return @<div style="display: flex; flex-direction: row; align-items: center; gap: 15px;" @onclick:stopPropagation="stopPropagation">
                    <MudCheckBox T="bool" Disabled="StrategyBucket.IsOtherStrategySelected(this)"  Value="IsSelected" ValueChanged="SelectedChanged"></MudCheckBox>
                    @DisplayName

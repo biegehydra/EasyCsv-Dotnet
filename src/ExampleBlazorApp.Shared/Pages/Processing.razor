@@ -1,6 +1,7 @@
 ﻿@using EasyCsv.Core.Configuration
 @using CsvHelper.Configuration
 @using System.Globalization
+@using EasyCsv.Components.Enums
 @using EasyCsv.Processing.Strategies
 @page "/processing"
 <style>
@@ -14,8 +15,27 @@
 @if (_easyCsv != null)
 {
 <CsvProcessingStepper @ref="_csvProcessor" EasyCsvFileName="Example.csv" EasyCsv="_easyCsv"
-                      ResolveDuplicatesAutoSelect="ResolveDuplicatesAutoSelect.FirstRow" HideExpandUnselected="true"
-                      DelayAfterProgressMilliseconds="50" >
+                      DelayAfterProgressMilliseconds="50"
+                      StrategySelectCloseBehaviour="_strategySelectCloseBehaviour"
+                      HideOtherStrategiesOnSelect="_hideOtherStrategiesOnSelect"
+                      ForceIndeterminate="_forceIndeterminate"
+                      EnableRowEditing="_enableRowEditing"
+                      EnableRowDeleting="_enableRowDeleting"
+                      EnableSorting="_enableSorting"
+                      EnableAddReferenceCsv="_enableAddReferenceCsv"
+                      EnableChangeEditColumnValueType="_enableChangeEditColumnValueType"
+                      RunOperationNoneSelectedVisibility="_runOperationNoneSelectedVisibility"
+                      TagsAndReferencesLocation="_tagsAndReferencesLocation"
+                      ResolveDuplicatesAutoSelect="_resolveDuplicatesAutoSelect"
+                      EnableControlTagsAndReferencesLocation="_enableControlTagsAndReferencesLocation"
+                      HideExpandUnselected="_hideExpandUnselected"
+                      DefaultDownloadFileName="@_defaultDownloadFileName"
+                      EnableAutoControlExpandOptionsOnSelect="_enableAutoControlExpandOptionsOnSelect"
+                      AutoSelectAllColumnsDownload="_autoSelectAllColumnsDownload"
+                      AutoSelectAllColumnsSearch="_autoSelectAllColumnsSearch"
+                      DefaultColumnValueType="_defaultColumnValueType"
+                      UseProgressContext="_useSnackbar" 
+                      >
     <ColumnStrategies>
         <FindDedupesExactMatchColumn MustSelectRow="false" />
         <ConditionalDelete />
@@ -42,9 +62,90 @@ else if (_loaded)
 {
     <CsvFileInput CsvValid="_easyCsv != null" OnCsvUpload="x => _easyCsv = x.Csv" > </CsvFileInput>
 }
+@if (_easyCsv != null)
+{
+    <br />
+    <br />
+    <MudText Typo="Typo.h5">Configurations</MudText>
+    <br />
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px 25px;">
+        <MudCheckBox @bind-Checked="_enableRowEditing" Color="Color.Primary">Enable Row Editing</MudCheckBox>
+        <MudCheckBox @bind-Checked="_enableRowDeleting" Color="Color.Primary">Enable Row Deleting</MudCheckBox>
+        <MudCheckBox @bind-Checked="_enableSorting" Color="Color.Primary">Enable Sorting</MudCheckBox>
+        <MudCheckBox @bind-Checked="_useSnackbar" Color="Color.Primary">Use Snackbar</MudCheckBox>
+        <MudCheckBox @bind-Checked="_hideOtherStrategiesOnSelect" Color="Color.Primary">Hide Other Strategies On Select</MudCheckBox>
+        <MudCheckBox @bind-Checked="_forceIndeterminate" Color="Color.Primary">Force Indeterminate Progress</MudCheckBox>
+        <MudCheckBox @bind-Checked="_enableAddReferenceCsv" Color="Color.Primary">Enable Add Reference CSV</MudCheckBox>
+        <MudCheckBox @bind-Checked="_enableChangeEditColumnValueType" Color="Color.Primary">Enable Change Edit Column Value Type</MudCheckBox>
+        <MudCheckBox @bind-Checked="_enableControlTagsAndReferencesLocation" Color="Color.Primary">Enable Control Tags And References Location</MudCheckBox>
+        <MudCheckBox @bind-Checked="_hideExpandUnselected" Color="Color.Primary">Hide Expand Unselected</MudCheckBox>
+        <MudCheckBox @bind-Checked="_enableAutoControlExpandOptionsOnSelect" Color="Color.Primary">Enable Auto Control Expand Options On Select</MudCheckBox>
+        <MudCheckBox @bind-Checked="_autoSelectAllColumnsDownload" Color="Color.Primary">Auto Select All Columns Download</MudCheckBox>
+        <MudCheckBox @bind-Checked="_autoSelectAllColumnsSearch" Color="Color.Primary">Auto Select All Columns Search</MudCheckBox>
+
+        <MudTextField @bind-Value="@_defaultDownloadFileName" Label="Default Download File Name"/>
+        <MudSelect T="CloseBehaviour" @bind-Value="_strategySelectCloseBehaviour" Label="Strategy Select Close Behaviour">
+            @foreach (var item in Enum.GetValues<CloseBehaviour>())
+            {
+                <MudSelectItem T="CloseBehaviour" Value="@item">@item</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudSelect T="RunOperationNoneSelectedVisibility" @bind-Value="_runOperationNoneSelectedVisibility" Label="Run Operation None Selected Visibility">
+            @foreach (var item in Enum.GetValues<RunOperationNoneSelectedVisibility>())
+            {
+                <MudSelectItem T="RunOperationNoneSelectedVisibility" Value="@item">@item</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudSelect T="ColumnLocation" @bind-Value="_tagsAndReferencesLocation" Label="Tags and References Location">
+            @foreach (var item in Enum.GetValues<ColumnLocation>())
+            {
+                <MudSelectItem T="ColumnLocation" Value="@item">@item</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudSelect T="ResolveDuplicatesAutoSelect" @bind-Value="_resolveDuplicatesAutoSelect" Label="Resolve Duplicates Auto Select">
+            @foreach (var item in Enum.GetValues<ResolveDuplicatesAutoSelect>())
+            {
+                <MudSelectItem T="ResolveDuplicatesAutoSelect" Value="@item">@item</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudSelect T="ColumnValueType" @bind-Value="_defaultColumnValueType" Label="Default Column Value Type">
+            @foreach (var item in Enum.GetValues<ColumnValueType>())
+            {
+                <MudSelectItem T="ColumnValueType" Value="@item">@item</MudSelectItem>
+            }
+        </MudSelect>
+    </div>
+}
 @code {
     [Inject] public NavigationManager NavigationManager { get; set; }
     [Inject] public ISnackbar? Snackbar { get; set; }
+
+
+    private bool _enableSorting = true;
+    private bool _useSnackbar = true;
+    private bool _hideOtherStrategiesOnSelect = true;
+    private bool _forceIndeterminate = false;
+    private bool _enableRowEditing = true;
+    private bool _enableRowDeleting = true;
+    private bool _enableAddReferenceCsv = true;
+    private bool _enableChangeEditColumnValueType = true;
+    private bool _enableControlTagsAndReferencesLocation = true;
+    private bool _hideExpandUnselected = false;
+    private string _defaultDownloadFileName = "WorkingCsvSnapshot";
+    private bool _enableAutoControlExpandOptionsOnSelect = true;
+    private bool _autoSelectAllColumnsDownload = true;
+    private bool _autoSelectAllColumnsSearch = true;
+    
+    private CloseBehaviour _strategySelectCloseBehaviour = CloseBehaviour.CloseButtonAndClickAway;
+    private RunOperationNoneSelectedVisibility _runOperationNoneSelectedVisibility = RunOperationNoneSelectedVisibility.Hidden;
+    private ColumnLocation _tagsAndReferencesLocation = ColumnLocation.Beginning;
+    private ResolveDuplicatesAutoSelect _resolveDuplicatesAutoSelect = ResolveDuplicatesAutoSelect.None;
+    private ColumnValueType _defaultColumnValueType = ColumnValueType.Text;
+
     private CsvProcessingStepper _csvProcessor = null!;
     private IEasyCsv? _easyCsv;
     private bool _loaded = false;

@@ -1,6 +1,10 @@
 # EasyCsv.Components
 
 EasyCsv.Components provides you with 3 components. They are available to test at this [example website](https://d143idkvxttaq3.cloudfront.net/processing)                                                                                                         
+## Links
+- [CsvProcessingStepper](#csvprocessingstepper)
+- [CsvFileInput](#csvfileinput)
+- [CsvTableHeaderMatcher](#csvtableheadermatcher)
 
 ## Installation (CsvProcessingStepper is in beta package)
 

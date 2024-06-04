@@ -10,10 +10,16 @@
 {
     string val = _structureOperation == StructureOperation.MoveAfter
         ? "After Column Name"
-        : _structureOperation == StructureOperation.MoveAfter
+        : _structureOperation == StructureOperation.MoveBefore
             ? "Before Column Name"
             : "Other Column Name";
-    <ColumnSelect  Immediate="true" @bind-ColumnName="@_columnName"  Label="@val"  ></ColumnSelect>
+    string[] exceptColumns = (_structureOperation, _columnIndex) switch
+    {
+        (StructureOperation.MoveAfter, >= 0) => CsvProcessor.Runner!.CurrentCsvColumnNames!.IsValidIndex(_columnIndex.Value - 1) ? [CsvProcessor.Runner!.CurrentCsvColumnNames![_columnIndex.Value - 1]] : [],
+        (StructureOperation.MoveBefore, >= 0) => CsvProcessor.Runner!.CurrentCsvColumnNames!.IsValidIndex(_columnIndex.Value + 1) ? [CsvProcessor.Runner!.CurrentCsvColumnNames![_columnIndex.Value + 1]] : [],
+        _ => []
+    };
+    <ColumnSelect Immediate="true" @bind-ColumnName="@_columnName" Label="@val" ExceptColumns="exceptColumns" ></ColumnSelect>
 }
 else if (_structureOperation is StructureOperation.Rename)
 {
@@ -28,6 +34,14 @@ else if (_structureOperation is StructureOperation.Rename)
     [Parameter] public EventCallback OnComplete { get; set; }
     private StructureOperation? _structureOperation = StructureOperation.Delete;
     private string? _columnName;
+    private int? _columnIndex;
+    protected override void OnInitialized()
+    {
+        if (StrategyBucket != null! && CsvProcessor != null!)
+        {
+            _columnIndex = CsvProcessor.Runner!.CurrentCsvColumnNames!.IndexOf(StrategyBucket.ColumnName);
+        }
+    }
 
     private bool Disabled()
     {

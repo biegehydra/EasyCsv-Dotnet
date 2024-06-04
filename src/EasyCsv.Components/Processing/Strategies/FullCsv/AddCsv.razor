@@ -42,7 +42,7 @@
             </div>
         </TitleContent>
         <DialogContent>
-            <CsvTableHeaderMatcher @ref="_tableHeaderMatcher" ExpectedHeaderThStr="Current Header" AutoMatch="AutoMatching.Lenient" ExpectedHeaders="_expectedHeaders" Frozen="_busyReadCsv" Csv="_csvToAdd"/>
+            <CsvTableHeaderMatcher @ref="_tableHeaderMatcher" ThConfig="@(new HeaderMatcherThConfig(){ ExpectedHeaders="Working Csv Headers" })" AutoMatch="AutoMatching.Lenient" ExpectedHeaders="_expectedHeaders" Frozen="_busyReadCsv" Csv="_csvToAdd" />
         </DialogContent>
         <DialogActions>
             <MudButton Disabled="CsvProcessor?.Busy == true" StartIcon="@Icons.Material.Filled.Close" Variant="Variant.Outlined" Color="Color.Default" OnClick="x => _isAddDataDialogVisible = false">Cancel</MudButton>

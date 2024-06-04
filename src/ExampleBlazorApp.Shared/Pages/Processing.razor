@@ -45,7 +45,7 @@
         <DivideAndReplicate />
         <TagAndReferenceMatches />
         <StrategyItem DisplayName="Tag Invalid Email" DescriptionStr="Tag all rows with an invalid email in $column_name"
-                      BeforeCsvExample="_beforeExample" AfterCsvExample="_afterExample" StrategyPicked="OnTagPicked" />
+                      BeforeCsvExample="BeforeExample" AfterCsvExample="AfterExample" StrategyPicked="OnTagPicked" />
     </ColumnStrategies>
     <FullCsvStrategies>
         <AddCsv />
@@ -69,50 +69,49 @@ else if (_loaded)
     <MudText Typo="Typo.h5">Configurations</MudText>
     <br />
     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px 25px;">
-        <MudCheckBox @bind-Checked="_enableRowEditing" Color="Color.Primary">Enable Row Editing</MudCheckBox>
-        <MudCheckBox @bind-Checked="_enableRowDeleting" Color="Color.Primary">Enable Row Deleting</MudCheckBox>
-        <MudCheckBox @bind-Checked="_enableSorting" Color="Color.Primary">Enable Sorting</MudCheckBox>
-        <MudCheckBox @bind-Checked="_useSnackbar" Color="Color.Primary">Use Snackbar</MudCheckBox>
-        <MudCheckBox @bind-Checked="_hideOtherStrategiesOnSelect" Color="Color.Primary">Hide Other Strategies On Select</MudCheckBox>
-        <MudCheckBox @bind-Checked="_forceIndeterminate" Color="Color.Primary">Force Indeterminate Progress</MudCheckBox>
-        <MudCheckBox @bind-Checked="_enableAddReferenceCsv" Color="Color.Primary">Enable Add Reference CSV</MudCheckBox>
-        <MudCheckBox @bind-Checked="_enableChangeEditColumnValueType" Color="Color.Primary">Enable Change Edit Column Value Type</MudCheckBox>
-        <MudCheckBox @bind-Checked="_enableControlTagsAndReferencesLocation" Color="Color.Primary">Enable Control Tags And References Location</MudCheckBox>
-        <MudCheckBox @bind-Checked="_hideExpandUnselected" Color="Color.Primary">Hide Expand Unselected</MudCheckBox>
-        <MudCheckBox @bind-Checked="_enableAutoControlExpandOptionsOnSelect" Color="Color.Primary">Enable Auto Control Expand Options On Select</MudCheckBox>
-        <MudCheckBox @bind-Checked="_autoSelectAllColumnsDownload" Color="Color.Primary">Auto Select All Columns Download</MudCheckBox>
-        <MudCheckBox @bind-Checked="_autoSelectAllColumnsSearch" Color="Color.Primary">Auto Select All Columns Search</MudCheckBox>
-
-        <MudTextField @bind-Value="@_defaultDownloadFileName" Label="Default Download File Name"/>
-        <MudSelect T="CloseBehaviour" @bind-Value="_strategySelectCloseBehaviour" Label="Strategy Select Close Behaviour">
+        <MudCheckBox @bind-Value="_enableRowEditing" Color="Color.Primary">Enable Row Editing</MudCheckBox>
+        <MudCheckBox @bind-Value="_enableRowDeleting" Color="Color.Primary">Enable Row Deleting</MudCheckBox>
+        <MudCheckBox @bind-Value="_enableSorting" Color="Color.Primary">Enable Sorting</MudCheckBox>
+        <MudCheckBox @bind-Value="_useSnackbar" Color="Color.Primary">Use Snackbar</MudCheckBox>
+        <MudCheckBox @bind-Value="_hideOtherStrategiesOnSelect" Color="Color.Primary">Hide Other Strategies On Select</MudCheckBox>
+        <MudCheckBox @bind-Value="_forceIndeterminate" Color="Color.Primary">Force Indeterminate Progress</MudCheckBox>
+        <MudCheckBox @bind-Value="_enableAddReferenceCsv" Color="Color.Primary">Enable Add Reference CSV</MudCheckBox>
+        <MudCheckBox @bind-Value="_enableChangeEditColumnValueType" Color="Color.Primary">Enable Change Edit Column Value Type</MudCheckBox>
+        <MudCheckBox @bind-Value="_enableControlTagsAndReferencesLocation" Color="Color.Primary">Enable Control Tags And References Location</MudCheckBox>
+        <MudCheckBox @bind-Value="_hideExpandUnselected" Color="Color.Primary">Hide Expand Unselected</MudCheckBox>
+        <MudCheckBox @bind-Value="_enableAutoControlExpandOptionsOnSelect" Color="Color.Primary">Enable Auto Control Expand Options On Select</MudCheckBox>
+        <MudCheckBox @bind-Value="_autoSelectAllColumnsDownload" Color="Color.Primary">Auto Select All Columns Download</MudCheckBox>
+        <MudCheckBox @bind-Value="_autoSelectAllColumnsSearch" Color="Color.Primary">Auto Select All Columns Search</MudCheckBox>
+        <MudTextField @bind-Value="@_defaultDownloadFileName" Label="Default Download File Name" Variant="Variant.Filled" />
+        <MudSelect T="CloseBehaviour" @bind-Value="_strategySelectCloseBehaviour" Label="Strategy Select Close Behaviour" Variant="Variant.Filled">
             @foreach (var item in Enum.GetValues<CloseBehaviour>())
             {
                 <MudSelectItem T="CloseBehaviour" Value="@item">@item</MudSelectItem>
             }
         </MudSelect>
 
-        <MudSelect T="RunOperationNoneSelectedVisibility" @bind-Value="_runOperationNoneSelectedVisibility" Label="Run Operation None Selected Visibility">
+        <MudSelect T="RunOperationNoneSelectedVisibility" @bind-Value="_runOperationNoneSelectedVisibility" Label="Run Operation None Selected Visibility" Variant="Variant.Filled">
             @foreach (var item in Enum.GetValues<RunOperationNoneSelectedVisibility>())
             {
                 <MudSelectItem T="RunOperationNoneSelectedVisibility" Value="@item">@item</MudSelectItem>
             }
         </MudSelect>
 
-        <MudSelect T="ColumnLocation" @bind-Value="_tagsAndReferencesLocation" Label="Tags and References Location">
+        <MudSelect T="ColumnLocation" @bind-Value="_tagsAndReferencesLocation" Label="Tags and References Location" Variant="Variant.Filled">
             @foreach (var item in Enum.GetValues<ColumnLocation>())
             {
                 <MudSelectItem T="ColumnLocation" Value="@item">@item</MudSelectItem>
             }
         </MudSelect>
 
-        <MudSelect T="ResolveDuplicatesAutoSelect" @bind-Value="_resolveDuplicatesAutoSelect" Label="Resolve Duplicates Auto Select">
+        <MudSelect T="ResolveDuplicatesAutoSelect" @bind-Value="_resolveDuplicatesAutoSelect" Label="Resolve Duplicates Auto Select" Variant="Variant.Filled">
             @foreach (var item in Enum.GetValues<ResolveDuplicatesAutoSelect>())
             {
                 <MudSelectItem T="ResolveDuplicatesAutoSelect" Value="@item">@item</MudSelectItem>
             }
         </MudSelect>
 
-        <MudSelect T="ColumnValueType" @bind-Value="_defaultColumnValueType" Label="Default Column Value Type">
+        <MudSelect T="ColumnValueType" @bind-Value="_defaultColumnValueType" Label="Default Column Value Type" Variant="Variant.Filled">
             @foreach (var item in Enum.GetValues<ColumnValueType>())
             {
                 <MudSelectItem T="ColumnValueType" Value="@item">@item</MudSelectItem>
@@ -121,7 +120,7 @@ else if (_loaded)
     </div>
 }
 @code {
-    [Inject] public NavigationManager NavigationManager { get; set; }
+    [Inject] public NavigationManager NavigationManager { get; set; } = null!;
     [Inject] public ISnackbar? Snackbar { get; set; }
 
 
@@ -156,7 +155,7 @@ else if (_loaded)
 
     }
 
-    private static readonly Dictionary<string, string>[] _beforeExample =
+    private static readonly Dictionary<string, string>[] BeforeExample =
     [
         new Dictionary<string, string>()
         {
@@ -167,7 +166,7 @@ else if (_loaded)
             {"Email", "real-email@test.com"},
         }
     ];
-    private static readonly Dictionary<string, string>[] _afterExample =
+    private static readonly Dictionary<string, string>[] AfterExample =
     [
         new Dictionary<string, string>()
         {

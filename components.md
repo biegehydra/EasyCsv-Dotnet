@@ -13,7 +13,7 @@ EasyCsv.Components provides you with 3 components. They are available to test at
   - [Expected Header Options](#expected-header-options)
   - [Expected Header Config](#expected-header-config)
   - [Additional CsvTableHeaderMatcher Options](#additional-csvtableheadermatcher-options)
-  - [Multiple Types](#multiples-types)
+  - [Multiple Types](#multiple-types)
 
 ## Installation (CsvProcessingStepper is in beta package)
 

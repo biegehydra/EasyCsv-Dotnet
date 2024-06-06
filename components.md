@@ -206,7 +206,7 @@ This component takes the `IEasyCsv` that you get from the `CsvFileInput` compone
 
 ![Screenshot_80](https://github.com/biegehydra/EasyCsv-Dotnet/assets/84036995/106a64d5-9937-4193-bc04-75350577c14a)
 
-#### Additional Configurations
+#### Configurations
 
 **HideDefaultValueColumn**: When true, the default value column is hidden.
 

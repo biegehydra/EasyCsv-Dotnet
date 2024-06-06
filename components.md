@@ -10,7 +10,6 @@ EasyCsv.Components provides you with 3 components. They are available to test at
 - [CsvFileInput](#csvfileinput)
 - [CsvTableHeaderMatcher](#csvtableheadermatcher)
   - [Expected Headers](#expected-headers)
-  - [Expected Header Options](#expected-header-options)
   - [Expected Header Config](#expected-header-config)
   - [Additional CsvTableHeaderMatcher Options](#additional-csvtableheadermatcher-options)
   - [Multiple Types](#multiple-types)
@@ -212,12 +211,14 @@ This component takes the `IEasyCsv` that you get from the `CsvFileInput` compone
 ### Expected Headers
 
 
-All of this works through the `ExpectedHeaders` parameter which takes a `ICollection<ExpectedHeader>`. There should be one `ExpectedHeader` for each C# property on your class that you want data for. Alternatively, you can can provide a value for `AutoGenerateExpectedHeadersType` and a default `ExpectedHeader` will be generated for each public instance variable with a setter.
+All mapping from the csv to your C# class works through the `ExpectedHeaders` parameter. It takes an `ICollection<ExpectedHeader>`. 
 
-### Expected Header Options
+For example, if trying to map to `Foo`, there should be one `ExpectedHeader` for each property on `Foo` that you want data for. Alternatively, you can can provide a `Type` to `AutoGenerateExpectedHeadersType` and a default `ExpectedHeader` will be generated for each public instance variable on `Foo` with a setter.
+
+#### Constructor Parameters
 EH - Expected Header
 
-The options for the EH essentially lets you control how users will be able to provide a value for your C# property and how it will be displayed.
+These parameters essentially defines the property/field on `Foo` that you are mapping to, how it will be displayed, and what values to automatch to.
 
 **CSharpPropertyName (string)**: This is defines which property on the class you will be getting records for that data for this EH will go to. For robust code, assign it with `nameof`
 

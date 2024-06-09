@@ -22,7 +22,7 @@ EasyCsv is a simple and efficient .NET library for handling CSV files in your pr
 
 Install the EasyCsv package via NuGet:
 
-`NuGet\Install-Package EasyCsv`
+`NuGet\Install-Package EasyCsv -Version 2.0.0-beta8.2`
 
 ## Usage
 

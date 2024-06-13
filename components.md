@@ -19,7 +19,7 @@ EasyCsv.Components provides you with 3 components. They are available to test at
 
 `NuGet\Install-Package EasyCsv.Components -Version=2.0.0-beta8.2`
 
-Add to <body> tag in _Index.cshtml (server) or index.html (wasm)
+Add to \<body\> tag in _Index.cshtml (server) or index.html (wasm)
 ```html
 <script src="_content/EasyCsv.Components/EasyCsv.js"></script>
 ```

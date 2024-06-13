@@ -10,9 +10,7 @@ EasyCsv.Components provides you with 3 components. They are available to test at
 - [CsvFileInput](#csvfileinput)
 - [CsvTableHeaderMatcher](#csvtableheadermatcher)
   - [Expected Headers](#expected-headers)
-  - [Expected Header Options](#expected-header-options)
   - [Expected Header Config](#expected-header-config)
-  - [Additional CsvTableHeaderMatcher Options](#additional-csvtableheadermatcher-options)
   - [Multiple Types](#multiple-types)
 
 ## Installation (CsvProcessingStepper is in beta package)
@@ -20,6 +18,11 @@ EasyCsv.Components provides you with 3 components. They are available to test at
 [![NuGet](https://img.shields.io/nuget/dt/EasyCsv.Components?label=NuGet%20Downloads&style=plastic)](https://www.nuget.org/packages/EasyCsv.Components/)
 
 `NuGet\Install-Package EasyCsv.Components -Version=2.0.0-beta8.2`
+
+Add to \<body\> tag in _Index.cshtml (server) or index.html (wasm)
+```html
+<script src="_content/EasyCsv.Components/EasyCsv.js"></script>
+```
 
 ## CsvProcessingStepper
 
@@ -208,26 +211,44 @@ This component takes the `IEasyCsv` that you get from the `CsvFileInput` compone
 
 ![Screenshot_80](https://github.com/biegehydra/EasyCsv-Dotnet/assets/84036995/106a64d5-9937-4193-bc04-75350577c14a)
 
+#### Configurations
+
+**HideDefaultValueColumn**: When true, the default value column is hidden.
+
+**HidePreviewInformationColumn**: When true, the preview information column is hidden.
+
+**Initial OrderBy**: Let's you control how expected headers should be ordered in the table after initial matching completes.
+
+**Frozen**: When true, no changes can be made to the matcher. Default value input fields will be disabled and csv header mappings can't be changed.
+
+**AutoMatch**: Controls how `ValuesToMatch` on `ExpectedHeader` will be compared to the csv headers during matching. For example, if `ValuesToMatch` contains a single value "FirstName", this is what it would match to with the different options:
+- Exact: "FirstName"
+- Strict: "FirstNme"
+- Lenient: "First"
+
+Auto matching just uses a simple Levenshtein Distance algorithm, the dependancy on `FuzzySharp` has been removed.
+
+**DisplayMatchState (RenderFragment\<MatchState\>)**: Lets you control what gets rendered in the "Matched" column.
 
 ### Expected Headers
 
 
-All of this works through the `ExpectedHeaders` parameter which takes a `ICollection<ExpectedHeader>`. There should be one `ExpectedHeader` for each C# property on your class that you want data for. Alternatively, you can can provide a value for `AutoGenerateExpectedHeadersType` and a default `ExpectedHeader` will be generated for each public instance variable with a setter.
+All mapping from the csv to your C# class works through the `ExpectedHeaders` parameter. It takes an `ICollection<ExpectedHeader>`. 
 
-### Expected Header Options
-EH - Expected Header
+For example, if trying to map to `Foo`, there should be one `ExpectedHeader` for each property on `Foo` that you want data for. Alternatively, you can can provide a `Type` to `AutoGenerateExpectedHeadersType` and a default `ExpectedHeader` will be generated for each public instance variable on `Foo` with a setter.
 
-The options for the EH essentially lets you control how users will be able to provide a value for your C# property and how it will be displayed.
+#### Constructor Parameters
 
-**CSharpPropertyName (string)**: This is defines which property on the class you will be getting records for that data for this EH will go to. For robust code, assign it with `nameof`
+These parameters essentially defines the property/field on `Foo` that you are mapping to, how it will be displayed, and what values to automatch to.
 
-**Display Name (string)**: This defines what to display for this EH in the "Expected Header" column.
+**CSharpPropertyName (string)**: When users map a column to an ExpectedHeader, the column name gets renamed to this. If there already exists a column with this name, the existing column that equals CSharpPropertyName For robust code, assign it with `nameof`
 
-**ValuesToMatch (ICollection<string>)**: When a Csv is imported, the matcher will attempt to figure out which of the csv headers match to your EHs. It does this by performing matching on each of the values in this ICollection. For example, if you have an EH for a `Zip` property. You might want `ValuesToMatch` to look like `new string[] { "Zip", "Zip Code", "Postal Code" }`. How the matching is done is explained in the AutoMatching section.
+**Display Name (string)**: This defines what to display for in the "Expected Header" column of the table.
+
+**ValuesToMatch (ICollection<string>)**: When a Csv is imported, the matcher will attempt to figure out which of the csv headers match to your this expected header. It does this by performing matching on each of the values in this ICollection. For example, if you have an Expected Header for a `Zip` property. You might want `ValuesToMatch` to look like `new string[] { "Zip", "Zip Code", "Postal Code" }`. How the matching is done is explained in the AutoMatching section.
 
 ### Expected Header Config
-
-The rest of the options are either provided through the `ExpectedHeaderConfig` or through an `Action<ExpectedHeaderConfigurator>`.
+There are additional configurations that can be provided through an `ExpectedHeaderConfig` or `Action<ExpectedHeaderConfigurator>`. These options are to make Expected Headers required, configure default values, and configure automatching.
 
 Ex: 
 ```
@@ -246,25 +267,6 @@ ExpectedHeader throughConfigurator = new ExpectedHeader(nameof(Person.DateOfBirt
 **AutoMatching**: Lets you select an automatching level for a specific property in case you need more granular control. By default, expected headers have the same automatching level of the table.
 
 There are a few static configs on `ExpectedHeaderConfig` that you can use: `ExpectedHeaderConfig.Default`, `ExpectedHeaderConfig.Required`, `ExpectedHeaderConfig.TextDefaultValue` and `ExpectedHeaderConfig.RequiredTextDefaultValue` since these are commonly used.
-
-### Additional CsvTableHeaderMatcher Options
-
-**HideDefaultValueColumn**: When true, the default value column is hidden.
-
-**HidePreviewInformationColumn**: When true, the preview information column is hidden.
-
-**Initial OrderBy**: Let's you control how expected headers should be ordered in the table after initial matching completes.
-
-**Frozen**: When true, no changes can be made to the matcher. Default value input fields will be disabled and csv header mappings can't be changed.
-
-**AutoMatch**: Controls how `ValuesToMatch` on `ExpectedHeader` will be compared to the csv headers during matching. For example, if `ValuesToMatch` contains a single value "FirstName", this is what it would match to with the different options:
-- Exact: "FirstName"
-- Strict: "FirstNme"
-- Lenient: "First"
-
-Auto matching just uses a simple Levenshtein Distance algorithm, the dependancy on `FuzzySharp` has been removed.
-
-**DisplayMatchState (RenderFragment\<MatchState\>)**: Lets you control what gets rendered in the "Matched" column.
 
 ### Multiple Types
 

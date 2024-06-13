@@ -237,7 +237,7 @@ public partial class CsvTableHeaderMatcher
         {
             foreach (var expectedHeader in ExpectedHeaders)
             {
-                expectedHeader.Value = null;
+                expectedHeader.Value = expectedHeader.Config.InitialDefaultValue;
             }
         }
         _mappedDict = new();

@@ -133,20 +133,42 @@
                                  case DefaultValueType.None:
                                      throw new ArgumentOutOfRangeException();
                                  case DefaultValueType.Text:
-                                     <MudTextField T="string" Disabled="Frozen" Class="text-field-margin-fix" Variant="Variant.Filled" Placeholder="Enter default value..." ValueChanged="str => HeaderDefaultValueChanged(expectedHeader, str)"
+                                     var strVal = expectedHeader.Value as string;
+                                        <MudTextField T="string" Disabled="Frozen" Class="text-field-margin-fix" Variant="Variant.Filled" Placeholder="Enter default value..." Value="strVal" ValueChanged="newVal => HeaderDefaultValueChanged(expectedHeader, newVal)"
                                                    Clearable OnClearButtonClick="() => HeaderDefaultValueChanged(expectedHeader, null)"></MudTextField>
                                      break;
                                  case DefaultValueType.DateTime:
-                                     <MudDatePicker Disabled="Frozen" Class="text-field-margin-fix" Variant="Variant.Filled" Placeholder="Enter default value..." DateChanged="date => HeaderDefaultValueChanged(expectedHeader, date)"Clearable></MudDatePicker>
+                                    DateTime? date = expectedHeader.Value is DateTime dateTime
+                                        ? dateTime 
+                                             : expectedHeader.Value is string str
+                                                ? DateTime.TryParse(str, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AllowInnerWhite | DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowTrailingWhite, out var parsedDate)
+                                                    ? parsedDate
+                                                    : null // failed parse
+                                                : null; // not date time or string
+
+                                     <MudDatePicker Disabled="Frozen" Class="text-field-margin-fix" Variant="Variant.Filled" Placeholder="Enter default value..." Date="date" DateChanged="date => HeaderDefaultValueChanged(expectedHeader, date)"Clearable></MudDatePicker>
                                      break;
                                  case DefaultValueType.Numerical:
-                                     <MudNumericField T="int?" Disabled="Frozen" Class="text-field-margin-fix" Variant="Variant.Filled" Placeholder="Enter default value..." ValueChanged="num => HeaderDefaultValueChanged(expectedHeader, num)"Clearable ></MudNumericField>
+                                     int? num = expectedHeader.Value is int number
+                                        ? number
+                                         : expectedHeader.Value is string intStr
+                                            ? int.TryParse(intStr, NumberStyles.Any, CultureInfo.CurrentCulture, out var parsedNum)
+                                                ?  parsedNum
+                                                :  null
+                                            : null;
+                                     <MudNumericField T="int?" Disabled="Frozen" Class="text-field-margin-fix" Variant="Variant.Filled" Placeholder="Enter default value..." Value="num" ValueChanged="num => HeaderDefaultValueChanged(expectedHeader, num)"Clearable ></MudNumericField>
                                      break;
                                  case DefaultValueType.CheckBox:
-                                     <MudCheckBox T="bool" Disabled="Frozen" Class="text-field-margin-fix" ValueChanged="val => HeaderDefaultValueChanged(expectedHeader, val)"></MudCheckBox>
+                                     bool value = expectedHeader.Value is true || expectedHeader.Value is string boolStr && bool.TryParse(boolStr, out var parsedBool) && parsedBool;
+                                     <MudCheckBox T="bool" Disabled="Frozen" Class="text-field-margin-fix" Value="value" ValueChanged="val => HeaderDefaultValueChanged(expectedHeader, val)"></MudCheckBox>
                                      break;
                                  case DefaultValueType.TriStateCheckBox:
-                                     <MudCheckBox T="bool?" TriState="true" Disabled="Frozen" Class="text-field-margin-fix" ValueChanged="val => HeaderDefaultValueChanged(expectedHeader, val)"></MudCheckBox>
+                                     bool? nullableBoolVal = expectedHeader.Value is bool boolVal
+                                         ? boolVal
+                                         : expectedHeader.Value is string nullableBoolStr && bool.TryParse(nullableBoolStr, out var parsedNullableBool)
+                                                ? parsedNullableBool
+                                                : null;
+                                     <MudCheckBox T="bool?" TriState="true" Disabled="Frozen" Class="text-field-margin-fix" Value="nullableBoolVal" ValueChanged="val => HeaderDefaultValueChanged(expectedHeader, val)"></MudCheckBox>
                                      break;
                                  default:
                                     throw new ArgumentOutOfRangeException();

@@ -82,7 +82,7 @@ else
 
     private List<Person>? _records;
 
-    private readonly List<ExpectedHeader> _expectedHeaders = new ()
+    private static readonly List<ExpectedHeader> _expectedHeaders = new ()
     {
         new ExpectedHeader(nameof(Person.FirstName), ExpectedHeaderConfig.Required),
         new ExpectedHeader(nameof(Person.LastName), ExpectedHeaderConfig.Required),

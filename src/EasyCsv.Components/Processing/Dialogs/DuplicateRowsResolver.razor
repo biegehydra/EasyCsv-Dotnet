@@ -4,7 +4,7 @@
         max-height: 500px;
     }
 </style>
-<MudDialog Style="min-width: 1000px;" @bind-IsVisible="IsVisible" Class="csv-processing-resolve-duplicates-popup" Options="_dialogOptions">
+<MudDialog Style="min-width: 1000px;" @bind-Visible="IsVisible" Class="csv-processing-resolve-duplicates-popup" Options="_dialogOptions">
     <TitleContent>
         <div style="display: flex; flex-direction: row; gap: 10px; justify-content: space-between;" >
             <MudText Class="mb-2" Typo="Typo.h5"><b>Duplicate Resolver</b></MudText>
@@ -281,13 +281,13 @@
                                 <MudTd Class="extra-dense">
                                     @if (tags?.Any() == true)
                                     {
-                                        <MudChip T="string" Set>
+                                        <MudChipSet T="string" >
                                             @foreach (var tag in tags)
                                             {
                                                 AddTag(tag);
                                                 <MudChip T="string"  Text="@tag" Color="tagColors[tag]" Size="Size.Small"/>
                                             }
-                                        </MudChip T="string" Set>
+                                        </MudChipSet>
                                     }
                                 </MudTd>
                             }

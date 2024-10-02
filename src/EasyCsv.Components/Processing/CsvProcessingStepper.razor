@@ -166,7 +166,7 @@
 </ErrorBoundary>
 @if (Runner is {CurrentCsv: not null, CurrentCsvColumnNames: not null})
 {
-    <MudDialog @bind-IsVisible="_isDownloadDialogVisible" Class="csv-processing-download-popup" Style="min-width: 600px;">
+    <MudDialog @bind-Visible="_isDownloadDialogVisible" Class="csv-processing-download-popup" Style="min-width: 600px;">
         <TitleContent>
             <div style="display: flex; flex-direction: row; gap: 10px; justify-content: space-between;" >
                 <MudText Class="mb-2" Typo="Typo.h5"><b>Download Snapshot Options</b></MudText>

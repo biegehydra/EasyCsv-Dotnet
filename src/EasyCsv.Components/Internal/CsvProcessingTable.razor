@@ -603,14 +603,14 @@
             return @<MudTd Class="extra-dense">
                        @if (tags?.Any() == true)
                        { 
-                           <MudChip T="string" Set AllClosable="@allowDelete">
+                           <MudChipSet T="string" AllClosable="@allowDelete">
                                @foreach (var tag in tags)
                                {
                                    Action? onClose = allowDelete ? () => RemoveTag(row, tagsColumnIndex, tag) : null;
                                    AddTag(tag);
                                    <MudChip T="string"  Text="@tag" Color="_tagColors[tag]" Size="Size.Small" OnClose="@(onClose!)"/>
                                }
-                           </MudChip T="string" Set>
+                           </MudChipSet>
                        }
                    </MudTd>;
         }
@@ -845,7 +845,7 @@
                        @if (references?.Any() == true && Stepper.Runner?.ReferenceCsvs.Count > 0)
                        {
                            int i = -1;
-                           <MudChip T="string" Set>
+                           <MudChipSet T="string">
                                @foreach (IGrouping<int, ProcessingReference> group in references.Where(x => Utils.IsValidIndex(x.ReferenceCsvIndex, Stepper.Runner?.ReferenceCsvs.Count ?? -1)).GroupBy(x => x.ReferenceCsvIndex))
                                {
                                    i++;
@@ -874,7 +874,7 @@
                                    </MudPopover>
 
                                }
-                           </MudChip T="string" Set>
+                           </MudChipSet>
                        }
                    </MudTd>;
         }

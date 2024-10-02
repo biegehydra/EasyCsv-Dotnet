@@ -34,7 +34,7 @@
 }
 @if (_csvToAdd != null)
 {
-    <MudDialog @bind-IsVisible="_isAddDataDialogVisible" Class="csv-processing-add-popup" Style="min-width: 1000px;">
+    <MudDialog @bind-Visible="_isAddDataDialogVisible" Class="csv-processing-add-popup" Style="min-width: 1000px;">
         <TitleContent>
             <div style="display: flex; flex-direction: row; gap: 10px; justify-content: space-between;" >
                 <MudText Class="mb-2" Typo="Typo.h5"><b>Map Columns To Working Csv</b></MudText>

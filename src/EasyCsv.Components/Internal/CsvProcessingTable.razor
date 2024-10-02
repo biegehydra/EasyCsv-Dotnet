@@ -603,14 +603,14 @@
             return @<MudTd Class="extra-dense">
                        @if (tags?.Any() == true)
                        { 
-                           <MudChipSet AllClosable="@allowDelete">
+                           <MudChip T="string" Set AllClosable="@allowDelete">
                                @foreach (var tag in tags)
                                {
                                    Action? onClose = allowDelete ? () => RemoveTag(row, tagsColumnIndex, tag) : null;
                                    AddTag(tag);
-                                   <MudChip Text="@tag" Color="_tagColors[tag]" Size="Size.Small" OnClose="@(onClose!)"/>
+                                   <MudChip T="string"  Text="@tag" Color="_tagColors[tag]" Size="Size.Small" OnClose="@(onClose!)"/>
                                }
-                           </MudChipSet>
+                           </MudChip T="string" Set>
                        }
                    </MudTd>;
         }
@@ -734,7 +734,7 @@
                             OverflowBehavior="OverflowBehavior.FlipAlways" AnchorOrigin="anchorOrigin" TransformOrigin="transformOrigin">
                    <CascadingValue TValue="CsvProcessingStepper" Value="Stepper" IsFixed="true">
                        <CascadingValue TValue="StrategyBucket" Value="_columnStrategyBuckets[column]" IsFixed="true">
-                           <MudList Clickable="true" Style="z-index: inherit">
+                           <MudList T="string" ReadOnly="false" Style="z-index: inherit">
                                <MudListSubheader>
                                    <div style="display: flex; flex-direction: row; justify-content: space-between">
                                        <MudText Class="mt-4" Typo="Typo.h5">
@@ -762,7 +762,7 @@
                                        }
                                    </div>
                                </MudListSubheader>
-                               <MudListItem>
+                               <MudListItem T="string" >
                                    <div style="display: flex; flex-direction: row; gap: 60px; align-items: baseline;" >
                                        <MudTextField T="string" Disabled="_columnStrategyBuckets[column].IsAnySelected()" Immediate="true" Label="Search strategies" Variant="Variant.Outlined" Value="_columnStrategyBuckets[column].SearchQuery"
                                                      ValueChanged="_columnStrategyBuckets[column].SetSearchQuery"
@@ -787,7 +787,7 @@
                                }
                                @if (_columnStrategyBuckets[column].IsAnySelected() || Stepper.RunOperationNoneSelectedVisibility == RunOperationNoneSelectedVisibility.Disabled)
                                {
-                                   <MudListItem>
+                                   <MudListItem T="string" >
                                        <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between;">
                                            <div></div>
                                            <MudButton Disabled="!_columnStrategyBuckets[column].StrategySelectedAndRunAllowed()" Variant="Variant.Filled" Color="Color.Info" OnClick="async x => { TogglePopover(column, false); await _columnStrategyBuckets[column].StrategyPicked(); }">Run Operation</MudButton>
@@ -814,7 +814,7 @@
                             OverflowBehavior="OverflowBehavior.FlipAlways" AnchorOrigin="anchorOrigin" TransformOrigin="transformOrigin">
                     <CascadingValue TValue="CsvProcessingStepper" Value="Stepper" IsFixed="true">
                         <CascadingValue TValue="StrategyBucket" Value="_columnStrategyBuckets[column]" IsFixed="true">
-                            <MudList Clickable="true" Style="z-index: inherit">
+                            <MudList T="string" ReadOnly="false" Style="z-index: inherit">
                                 <MudListSubheader>
                                     <div style="display: flex; flex-direction: row; justify-content: space-between">
                                         <MudText Class="mt-4" Typo="Typo.h5">
@@ -845,7 +845,7 @@
                        @if (references?.Any() == true && Stepper.Runner?.ReferenceCsvs.Count > 0)
                        {
                            int i = -1;
-                           <MudChipSet>
+                           <MudChip T="string" Set>
                                @foreach (IGrouping<int, ProcessingReference> group in references.Where(x => Utils.IsValidIndex(x.ReferenceCsvIndex, Stepper.Runner?.ReferenceCsvs.Count ?? -1)).GroupBy(x => x.ReferenceCsvIndex))
                                {
                                    i++;
@@ -856,7 +856,7 @@
                                    string text = FormatReferenceText != null
                                        ? FormatReferenceText(group)
                                        : DefaultFormatReferenceText(group);
-                                   <MudChip Text="@text" Color="@Stepper.ReferenceChipColor" Size="Size.Small" OnClick="x => _referencesOpen[referenceGroup] = true"/>
+                                   <MudChip T="string"  Text="@text" Color="@Stepper.ReferenceChipColor" Size="Size.Small" OnClick="x => _referencesOpen[referenceGroup] = true"/>
                                    <MudPopover AnchorOrigin="anchorOrigin" TransformOrigin="transformOrigin" Style="color: var(--mud-palette-dark-text); background-color: var(--mud-palette-grey-darker); padding: 10px; max-width: 1000px;" Open="_referencesOpen[referenceGroup]">
                                        <ChildContent>
                                            @{
@@ -874,7 +874,7 @@
                                    </MudPopover>
 
                                }
-                           </MudChipSet>
+                           </MudChip T="string" Set>
                        }
                    </MudTd>;
         }

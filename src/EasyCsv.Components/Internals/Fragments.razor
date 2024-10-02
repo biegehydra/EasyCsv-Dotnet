@@ -53,13 +53,13 @@
                                 <MudTd Class="extra-dense">
                                     @if (tags?.Any() == true)
                                     {
-                                        <MudChipSet>
+                                        <MudChip T="string" Set>
                                             @foreach (var tag in tags)
                                             {
                                                 AddTag(tag);
-                                                <MudChip Text="@tag" Color="tagColors[tag]" Size="Size.Small"/>
+                                                <MudChip T="string"  Text="@tag" Color="tagColors[tag]" Size="Size.Small"/>
                                             }
-                                        </MudChipSet>
+                                        </MudChip T="string" Set>
                                     }
                                 </MudTd>
                             }

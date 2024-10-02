@@ -9,15 +9,15 @@
 <StrategyItem DisplayName="@DisplayName" DescriptionStr="@DescriptionStr" Description="Description" BeforeCsvExample="BeforeExample" AfterCsvExample="AfterExample"
               ExampleOptions="@ExampleOptions" AllowRun="AllowRun" StrategyPicked="SplitPicked">
     <Options>
-        <MudListItem>
+        <MudListItem T="string" >
             <MudTextField Disabled="context" Immediate="Immediate" Label="Value To Replace" Variant="Variant.Outlined" @bind-Value="_valueToReplace"></MudTextField>
         </MudListItem>
-        <MudListItem>
+        <MudListItem T="string" >
             <MudTextField Disabled="context" Immediate="Immediate" Label="New Value" HelperTextOnFocus="true" Variant="Variant.Outlined" @bind-Value="_newValue"></MudTextField>
         </MudListItem>
         @if (ShowStringComparisonInput)
         {
-            <MudListItem>
+            <MudListItem T="string" >
                 <MudSelect Immediate="Immediate" Disabled="context" Label="String Comparison Type" T="StringComparison" @bind-Value="_comparison" Clearable="true" OnClearButtonClick="x => _comparison = DefaultStringComparisonType" 
                            Variant="@Variant" Style="min-width: 250px;" >
                     @foreach (var value in Enum.GetValues<StringComparison>())

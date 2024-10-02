@@ -18,7 +18,7 @@
 {
     <StrategyItem DisplayName="@DisplayName" OnlyOperatesOnFilteredRows="OnlyOperatesOnFilteredRows" DescriptionStr="@DescriptionStr" Description="Description" AllowRun="AllowRun" StrategyPicked="x => RunAddCsv(x)" >
         <Options>
-            <MudListItem>
+            <MudListItem T="string" >
                 <div class="add-csv-container">
                     <CsvFileInput Disabled="@context" FileName="@(_mappedCsv != null ? _csvToAddFileName : null)" CsvValid="_mappedCsv != null" InputVariant="@FileInputVariant.Button" ButtonText="Select Csv" OnCsvUpload="x => BeginAddCsv(x)"></CsvFileInput>
                     @if (!string.IsNullOrWhiteSpace(_csvToAddFileName) && _mappedCsv != null)

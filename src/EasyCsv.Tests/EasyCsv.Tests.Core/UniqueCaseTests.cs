@@ -131,6 +131,30 @@ public class UniqueCaseTests
         }
     }
 
+    public class PersonMap2 : ClassMap<Person>
+    {
+        public PersonMap2()
+        {
+            Map(m => m.Name);
+            Map(m => m.DateOfBirth).Ignore();
+            Map(x => x.Num).Name("Num").TypeConverter(new DefaultNullConverter<int?>());
+        }
+    }
+
+    public class DefaultNullConverter<T> : ITypeConverter
+    {
+        private static readonly DefaultConverter<T> Converter = new() { Culture = CultureInfo.InvariantCulture };
+        public object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
+        {
+            return Converter.Get(text);
+        }
+
+        public string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
+        {
+            return Converter.Set((T)value);
+        }
+    }
+
     public class EasyDefaultTypeConverter<T> : DefaultTypeConverter
     {
         private static readonly DefaultConverter<T> Converter = new () {Culture = CultureInfo.InvariantCulture};
@@ -157,6 +181,25 @@ public class UniqueCaseTests
         Assert.Equal(new DateTime(2000, 1, 1), records[0].DateOfBirth);
         Assert.Equal(1, records[0].Num);
     }
+
+    [Fact]
+    public async Task ClassMapTest2()
+    {
+        var service = await EasyCsvFactory.FromStringAsync("Name,Num\nJohn,4.0");
+
+        var csvContextProfile = new CsvContextProfile()
+        {
+            ClassMaps = new List<ClassMap>()
+            {
+                new PersonMap2()
+            }
+        };
+        var records = await service!.GetRecordsAsync<Person>(csvContextProfile: csvContextProfile);
+        Assert.Equal("John", records[0].Name);
+        Assert.Equal(new DateTime(2000, 1, 1), records[0].DateOfBirth);
+        Assert.Equal(1, records[0].Num);
+    }
+
 
     [Fact]
     public async Task TypeConverterTest()

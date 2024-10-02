@@ -74,7 +74,7 @@ Once you have written your strategy, to integrate it with the CsvProcessingStepp
 @inherits StrategyItemBase
 <StrategyItem DisplayName="@DisplayName" OnlyOperatesOnFilteredRows="OnlyOperatesOnFilteredRows" DescriptionStr="@DescriptionStr" Description="Description" BeforeCsvExample="BeforeExample" AfterCsvExample="AfterExample" ExampleOptions="ExampleOptions" AllowRun="AllowRun" StrategyPicked="RunDivideAndReplicate">
     <Options>
-        <MudListItem>
+        <MudListItem T="string" >
             <MudTextField Disabled="context" Label="Delimiter To Divide On" Variant="Variant.Outlined" @bind-Value="_delimiter"></MudTextField>
             @* <ColumnSelect/> *@
             @* <MultiColumnSelect/> *@

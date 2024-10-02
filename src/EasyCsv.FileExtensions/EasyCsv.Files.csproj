@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-	  <TargetFrameworks>netstandard2.0;netstandard2.1;net6.0;net7.0</TargetFrameworks>
+	  <TargetFrameworks>netstandard2.0;netstandard2.1;net7.0;net8.0</TargetFrameworks>
 	  <Nullable>enable</Nullable>
 	  <LangVersion>10.0</LangVersion>
 
@@ -53,8 +53,11 @@
   </ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Condition="'$(TargetFramework)' == 'net8.0'">
+			<Version>8.0.8</Version>
+		</PackageReference>
 		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Condition="'$(TargetFramework)' == 'net7.0'">
-			<Version>7.0.4</Version>
+			<Version>7.0.20</Version>
 		</PackageReference>
 		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Condition="'$(TargetFramework)' == 'net6.0'">
 			<Version>6.0.15</Version>

@@ -48,7 +48,7 @@
 {
     @if (Options != null)
     {
-        <MudListItem @bind-Expanded="_expanded" Class="@Class" UserAttributes="_negativeTabIndex">
+        <MudListItem T="string"  @bind-Expanded="_expanded" Class="@Class" UserAttributes="_negativeTabIndex">
             <ChildContent>
                 @MudListItemChildContent()
             </ChildContent>
@@ -59,7 +59,7 @@
     }
     else
     {
-        <MudListItem @bind-Expanded="_expanded" Class="@Class" Text="@DisplayName" UserAttributes="_negativeTabIndex" >
+        <MudListItem T="string"  @bind-Expanded="_expanded" Class="@Class" Text="@DisplayName" UserAttributes="_negativeTabIndex" >
             <ChildContent>
                 @MudListItemChildContent()
             </ChildContent>

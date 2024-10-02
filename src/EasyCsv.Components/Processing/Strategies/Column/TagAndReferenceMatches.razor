@@ -8,13 +8,13 @@
 }
 <StrategyItem DisplayName="@DisplayName" DescriptionStr="@DescriptionStr" Description="Description" AllowRun="AllowRun" StrategyPicked="DivideAndReplicate">
     <Options>
-        <MudListItem>
+        <MudListItem T="string" >
             <ReferenceCsvSelect  Immediate="@Immediate" Disabled="context" @bind-ReferenceCsvId="_referenceCsvId"></ReferenceCsvSelect>
         </MudListItem>
-        <MudListItem>
+        <MudListItem T="string" >
             <ReferenceColumnSelect ReferenceCsvId="_referenceCsvId" Immediate="@Immediate" Disabled="context" @bind-ReferenceColumnName="_referenceColumnName"></ReferenceColumnSelect>
         </MudListItem>
-        <MudListItem>
+        <MudListItem T="string" >
             <MudTextField T="string" Label="Tag to Add" Immediate="@Immediate" Variant="Variant.Outlined" Disabled="context" @bind-Value="_tagToAdd"></MudTextField>
         </MudListItem>
     </Options>

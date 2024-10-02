@@ -79,7 +79,7 @@
                             </MudTooltip>
                         </div>
                         <div class="csv-file-container">
-                            <MudChip Color="Color.Dark" Text="@EasyCsvFileName"/>
+                            <MudChip T="string"  Color="Color.Dark" Text="@EasyCsvFileName"/>
                             @_initialRowCount&nbsp;rows&nbsp;
                             <MudTooltip RootClass="csv-file-container" Text="Initial Csv">
                                 <MudIcon Color="Color.Primary" Icon="@Icons.Material.Filled.Star"></MudIcon>
@@ -88,7 +88,7 @@
                         @foreach (var (fileName, rowCount, indexAdded, rowEditAdded) in _addedCsvsWithEditIndexAdded.Where(x => x.IndexAdded <= Runner.CurrentIndex && x.EditIndexAdded < Runner.CurrentRowEditIndex))
                         {
                             <div class="csv-file-container">
-                                <MudChip Color="Color.Dark" Text="@fileName" />
+                                <MudChip T="string"  Color="Color.Dark" Text="@fileName" />
                                 @rowCount&nbsp;rows&nbsp;
                                 <MudTooltip RootClass="csv-file-container" Text="@($"This Csv was added on step {indexAdded + 1}, edit {rowEditAdded + 1}")">
                                     <MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.StarHalf"></MudIcon>
@@ -120,7 +120,7 @@
                         @foreach (var (csv, fileName) in Runner!.ReferenceCsvs)
                         {
                             <div class="csv-file-container">
-                                <MudChip Color="Color.Dark" Text="@fileName" />
+                                <MudChip T="string"  Color="Color.Dark" Text="@fileName" />
                                 @csv.RowCount()&nbsp;rows&nbsp;
                                 <MudTooltip RootClass="csv-file-container" Text="@($"This is a Reference Csv.")">
                                     <MudIcon Color="Color.Tertiary" Icon="@Icons.Material.Filled.StarBorder"></MudIcon>

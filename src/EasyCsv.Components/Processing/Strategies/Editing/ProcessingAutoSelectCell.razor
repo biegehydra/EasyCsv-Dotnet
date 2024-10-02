@@ -31,7 +31,7 @@
         Row[ColumnName] = _newValue;
     }
 
-    private Task<IEnumerable<string?>> SearchFunc(string? arg)
+    private Task<IEnumerable<string?>> SearchFunc(string? arg, CancellationToken token)
     {
         _itemsInLastQuery = AllValues.Count(x => !string.IsNullOrWhiteSpace(x) && (arg?.Equals(_newValue) == true || string.IsNullOrWhiteSpace(arg) ||
                                                                              x?.Contains(arg, StringComparison.OrdinalIgnoreCase) == true));

@@ -183,7 +183,7 @@
                                  Placeholder="Select a csv header"
                                  SelectValueOnTab="true"
                                  ToStringFunc="x => x.Pascalize()"
-                                 SearchFunc="x => SearchFileHeaders(expectedHeader, x)"
+                                 SearchFunc="(x, _) => SearchFileHeaders(expectedHeader, x)"
                                  Clearable OnClearButtonClick="() => ResetColumn(originalHeader)">
                     <ItemTemplate>
                         @context.Pascalize()

@@ -23,10 +23,10 @@ else
                            AllHeadersValidChanged="StateHasChanged" ExpectedHeaders="_expectedHeaders" AutoMatch="AutoMatching.Lenient"
                            HidePreviewInformationColumn="_hidePreviewInformationColumn" UsePagination="_usePagination" RowsPerPage="5"/>
     <div class="mt-4 d-flex gap-5" style="flex-direction: row; align-items: center;" >
-        <MudCheckBox @bind-Checked="_frozen" Color="Color.Primary">Frozen</MudCheckBox>
-        <MudCheckBox @bind-Checked="_hideDefaultValueColumn" Color="Color.Primary">Hide Default Value Column</MudCheckBox>
-        <MudCheckBox @bind-Checked="_hidePreviewInformationColumn" Color="Color.Primary">Hide Preview Information Column</MudCheckBox>
-        <MudCheckBox @bind-Checked="_usePagination" Color="Color.Primary">Use Pagination</MudCheckBox>
+        <MudCheckBox @bind-Value="_frozen" Color="Color.Primary">Frozen</MudCheckBox>
+        <MudCheckBox @bind-Value="_hideDefaultValueColumn" Color="Color.Primary">Hide Default Value Column</MudCheckBox>
+        <MudCheckBox @bind-Value="_hidePreviewInformationColumn" Color="Color.Primary">Hide Preview Information Column</MudCheckBox>
+        <MudCheckBox @bind-Value="_usePagination" Color="Color.Primary">Use Pagination</MudCheckBox>
         <MudButton Disabled="!_tableHeaderMatcher?.ValidateRequiredHeaders() ?? true" Color="Color.Primary" Variant="Variant.Filled" OnClick="GetRecords" >Get Records</MudButton>
     </div>
 }

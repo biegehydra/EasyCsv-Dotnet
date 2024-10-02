@@ -11,16 +11,16 @@
     <StrategyItem DisplayName="@DisplayName" OnlyOperatesOnFilteredRows="OnlyOperatesOnFilteredRows" Description="Description" DescriptionStr="@DescriptionStr" ExampleOptions="_exampleOptions" BeforeCsvExample="_beforeExample"
                   AfterCsvExample="_afterExample" AllowRun="AllowRun" StrategyPicked="RunCombineColumns">
         <Options>
-            <MudListItem>
+            <MudListItem T="string" >
                 <MultiColumnSelect InitializeWithStrategyBucketColumnName  Disabled="context" @bind-ColumnNames="_columnsToJoin"></MultiColumnSelect>
             </MudListItem>
-            <MudListItem>
+            <MudListItem T="string" >
                 <MudTextField Disabled="@context" Immediate="Immediate" Required="true" Label="Join Delimiter" Variant="Variant.Outlined" @bind-Value="_delimiter"></MudTextField>
             </MudListItem>
-            <MudListItem>
+            <MudListItem T="string" >
                 <MudTextField Disabled="@context" Immediate="Immediate" Required="true" Label="New Column Name" Variant="Variant.Outlined" @bind-Value="_newColumnName"></MudTextField>
             </MudListItem>
-            <MudListItem>
+            <MudListItem T="string" >
                 <MudCheckBox Disabled="@context" Label="Remove Joined Columns" @bind-Value="_removeJoinedColumns"></MudCheckBox>
             </MudListItem>
         </Options>
